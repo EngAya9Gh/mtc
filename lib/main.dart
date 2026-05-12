@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'core/config/theme/app_theme.dart';
 import 'core/services/di/di_container.dart';
 import 'core/utils/app_strings.dart';
+
+import 'core/navigation/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,13 +17,11 @@ class BlazmaLogisticsApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: AppStrings.appName,
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        primarySwatch: Colors.blue,
-      ),
+      theme: AppTheme.lightTheme,
+      routerConfig: AppRouter.router,
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
@@ -31,11 +32,6 @@ class BlazmaLogisticsApp extends StatelessWidget {
         Locale('en', 'US'),
       ],
       locale: const Locale('ar', 'SA'),
-      home: const Scaffold(
-        body: Center(
-          child: Text(AppStrings.appName),
-        ),
-      ),
     );
   }
 }
