@@ -22,6 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _rememberMe = true;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -33,7 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => AuthBloc(getIt(), getIt()),
+      create: (context) => getIt<AuthBloc>(),
       child: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           state.maybeWhen(
@@ -140,10 +141,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         labelText: 'Password',
                         hintText: 'Enter your password',
                         prefixIcon: const Icon(Icons.lock_outline, color: AppColors.primary),
-                        obscureText: true,
+                        obscureText: _obscurePassword,
                         suffixIcon: IconButton(
-                          icon: const Icon(Icons.visibility_off_outlined),
-                          onPressed: () {},
+                          icon: Icon(
+                            _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                            color: AppColors.primary,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -181,12 +189,27 @@ class _LoginScreenState extends State<LoginScreen> {
                               orElse: () => false,
                             ),
                             onPressed: () {
-                              context.read<AuthBloc>().add(
-                                    AuthEvent.loginRequested(
-                                      username: _usernameController.text,
-                                      password: _passwordController.text,
-                                    ),
-                                  );
+                              final text = _usernameController.text.trim();
+                              final password = _passwordController.text;
+                              
+                              // Check if the input is a numeric mobile number
+                              final isNumeric = RegExp(r'^[0-9]+$').hasMatch(text);
+                              
+                              if (isNumeric) {
+                                context.read<AuthBloc>().add(
+                                      AuthEvent.loginWithMobileRequested(
+                                        mobile: text,
+                                        password: password,
+                                      ),
+                                    );
+                              } else {
+                                context.read<AuthBloc>().add(
+                                      AuthEvent.loginRequested(
+                                        username: text,
+                                        password: password,
+                                      ),
+                                    );
+                              }
                             },
                           );
                         },

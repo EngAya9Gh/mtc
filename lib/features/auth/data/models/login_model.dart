@@ -4,7 +4,7 @@ part 'login_model.freezed.dart';
 part 'login_model.g.dart';
 
 @freezed
-class LoginResponse with _$LoginResponse {
+abstract class LoginResponse with _$LoginResponse {
   const factory LoginResponse({
     required bool status,
     required String message,
@@ -16,25 +16,14 @@ class LoginResponse with _$LoginResponse {
 }
 
 @freezed
-class LoginData with _$LoginData {
+abstract class LoginData with _$LoginData {
   const factory LoginData({
-    required String token,
-    required DriverInfo driver,
+    @JsonKey(name: 'api_token') required String token,
+    required int id,
+    @JsonKey(name: 'fcm_token') String? fcmToken,
+    bool? termAccepted,
   }) = _LoginData;
 
   factory LoginData.fromJson(Map<String, dynamic> json) =>
       _$LoginDataFromJson(json);
-}
-
-@freezed
-class DriverInfo with _$DriverInfo {
-  const factory DriverInfo({
-    required int id,
-    required String name,
-    required String mobile,
-    @JsonKey(name: 'car_id') int? carId,
-  }) = _DriverInfo;
-
-  factory DriverInfo.fromJson(Map<String, dynamic> json) =>
-      _$DriverInfoFromJson(json);
 }

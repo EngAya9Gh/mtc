@@ -2,10 +2,17 @@ import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/end_points.dart';
+import '../notifications/notification_service.dart';
 import '../network/api_client.dart';
 import '../../../features/auth/data/data_sources/auth_remote_data_source.dart';
 import '../../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../../features/auth/domain/repositories/auth_repository.dart';
+import '../../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../../features/medical_tasks/data/data_sources/task_remote_data_source.dart';
+import '../../../features/medical_tasks/data/repositories/task_repository_impl.dart';
+import '../../../features/medical_tasks/domain/repositories/task_repository.dart';
+import '../../../features/medical_tasks/presentation/bloc/medical_task_bloc.dart';
+import '../locale/locale_cubit.dart';
 
 final getIt = GetIt.instance;
 
@@ -13,10 +20,11 @@ Future<void> initDi() async {
   // Core
   final sharedPrefs = await SharedPreferences.getInstance();
   getIt.registerLazySingleton(() => sharedPrefs);
+  getIt.registerLazySingleton(() => NotificationService());
 
   final dio = Dio(
     BaseOptions(
-      baseUrl: EndPoints.baseUrl,
+      baseUrl: EndPoints.debugBaseUrl,
       receiveDataWhenStatusError: true,
       connectTimeout: const Duration(seconds: 60),
       receiveTimeout: const Duration(seconds: 60),
@@ -29,11 +37,17 @@ Future<void> initDi() async {
   // Data Sources
   getIt.registerLazySingleton<AuthRemoteDataSource>(
       () => AuthRemoteDataSourceImpl(getIt()));
+  getIt.registerLazySingleton<TaskRemoteDataSource>(
+      () => TaskRemoteDataSourceImpl(getIt()));
 
   // Repositories
   getIt.registerLazySingleton<AuthRepository>(
       () => AuthRepositoryImpl(getIt(), getIt()));
+  getIt.registerLazySingleton<TaskRepository>(
+      () => TaskRepositoryImpl(getIt()));
 
   // Blocs
-  // getIt.registerFactory(() => AuthBloc(getIt()));
+  getIt.registerFactory(() => AuthBloc(getIt(), getIt(), getIt()));
+  getIt.registerFactory(() => MedicalTaskBloc(getIt()));
+  getIt.registerLazySingleton(() => LocaleCubit(getIt()));
 }

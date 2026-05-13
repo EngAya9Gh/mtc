@@ -1,0 +1,36 @@
+Analyzing mtc_app...                                            
+
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/core/common/widgets/app_drop_down.dart:24:7 • deprecated_member_use
+warning • Unused import: '../../utils/end_points.dart' • lib/core/services/network/api_client.dart:3:8 • unused_import
+  error • Target of URI doesn't exist: '../models/login_model.dart' • lib/data/providers/user_info_provider.dart:1:8 • uri_does_not_exist
+  error • Undefined class 'LoginData' • lib/data/providers/user_info_provider.dart:8:3 • undefined_class
+   info • The imported package 'freezed_annotation' isn't a dependency of the importing package • lib/features/auth/data/models/login_model.dart:1:8 • depend_on_referenced_packages
+  error • Missing concrete implementations of 'getter mixin _$LoginResponse on Object.data', 'getter mixin _$LoginResponse on Object.message', 'getter mixin _$LoginResponse on Object.status', and 'mixin _$LoginResponse on Object.toJson' • lib/features/auth/data/models/login_model.dart:7:7 • non_abstract_class_inherits_abstract_member
+  error • Missing concrete implementations of 'getter mixin _$LoginData on Object.driver', 'getter mixin _$LoginData on Object.token', and 'mixin _$LoginData on Object.toJson' • lib/features/auth/data/models/login_model.dart:19:7 • non_abstract_class_inherits_abstract_member
+  error • Missing concrete implementations of 'getter mixin _$DriverInfo on Object.carId', 'getter mixin _$DriverInfo on Object.id', 'getter mixin _$DriverInfo on Object.mobile', 'getter mixin _$DriverInfo on Object.name', and 1 more • lib/features/auth/data/models/login_model.dart:30:7 • non_abstract_class_inherits_abstract_member
+warning • The value of the field '_sharedPreferences' isn't used • lib/features/auth/presentation/bloc/auth_bloc.dart:9:27 • unused_field
+   info • The imported package 'freezed_annotation' isn't a dependency of the importing package • lib/features/auth/presentation/bloc/auth_event.dart:1:8 • depend_on_referenced_packages
+   info • The imported package 'freezed_annotation' isn't a dependency of the importing package • lib/features/auth/presentation/bloc/auth_state.dart:1:8 • depend_on_referenced_packages
+warning • The value of the field '_authRepository' isn't used • lib/features/auth/presentation/bloc/terms_cubit.dart:7:24 • unused_field
+   info • The imported package 'freezed_annotation' isn't a dependency of the importing package • lib/features/auth/presentation/bloc/terms_state.dart:1:8 • depend_on_referenced_packages
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/auth/presentation/views/login_screen.dart:87:51 • deprecated_member_use
+   info • 'color' is deprecated and shouldn't be used. This property is deprecated since 3.1.0. Use the `drawer` property instead to specify the drawing color • lib/features/auth/presentation/views/terms_screen.dart:107:17 • deprecated_member_use
+   info • 'width' is deprecated and shouldn't be used. This property is deprecated since 3.1.0. Use the `drawer` property instead to specify the minimal stroke width • lib/features/auth/presentation/views/terms_screen.dart:108:17 • deprecated_member_use
+   info • 'maxWidth' is deprecated and shouldn't be used. This property is deprecated since 3.1.0. Use the `drawer` property instead to specify the maximal stroke width • lib/features/auth/presentation/views/terms_screen.dart:109:17 • deprecated_member_use
+   info • 'type' is deprecated and shouldn't be used. This property is deprecated since 3.1.0. Use the `drawer` property instead to specify the drawing type and style • lib/features/auth/presentation/views/terms_screen.dart:110:17 • deprecated_member_use
+warning • Unnecessary type check; the result is always 'true' • lib/features/auth/presentation/views/terms_screen.dart:153:31 • unnecessary_type_check
+warning • Dead code • lib/features/auth/presentation/views/terms_screen.dart:153:59 • dead_code
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/features/auth/presentation/views/terms_screen.dart:160:11 • use_build_context_synchronously
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/auth/presentation/views/terms_screen.dart:188:51 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/home/presentation/views/main_screen.dart:35:42 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/home/presentation/views/main_screen.dart:163:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/home/presentation/views/main_screen.dart:204:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/home/presentation/views/main_screen.dart:217:30 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/home/presentation/views/main_screen.dart:280:56 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/home/presentation/widgets/latest_task_card.dart:17:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/home/presentation/widgets/latest_task_card.dart:30:40 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/home/presentation/widgets/latest_task_card.dart:70:54 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/home/presentation/widgets/task_timeline.dart:32:51 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/home/presentation/widgets/task_timeline.dart:35:65 • deprecated_member_use
+
+32 issues found. (ran in 1.3s)

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1094753995290",
+    "project_id": "mtcapp-df2d2",
+    "storage_bucket": "mtcapp-df2d2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1094753995290:android:b4faf59f6ae4de91be1fa3",
+        "android_client_info": {
+          "package_name": "com.blazma.blazma_logistics"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlHWRr9TtmAU1NAzg8stwfAtgcX78jGnc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

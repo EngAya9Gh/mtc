@@ -3,19 +3,19 @@ import '../../../../core/config/theme/color_scheme.dart';
 
 class TaskTimeline extends StatelessWidget {
   final int currentStep;
-  final List<String> steps = ['NEW', 'COLLECTED', 'FREEZER', 'CLOSED'];
+  static const List<String> _steps = ['NEW', 'COLLECTED', 'FREEZER', 'CLOSED'];
 
-  TaskTimeline({super.key, required this.currentStep});
+  const TaskTimeline({super.key, required this.currentStep});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         Row(
-          children: List.generate(steps.length, (index) {
+          children: List.generate(_steps.length, (index) {
             final isCompleted = index <= currentStep;
             final isCurrent = index == currentStep;
-            final isLast = index == steps.length - 1;
+            final isLast = index == _steps.length - 1;
 
             return Expanded(
               child: Row(
@@ -69,11 +69,11 @@ class TaskTimeline extends StatelessWidget {
         const SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(steps.length, (index) {
+          children: List.generate(_steps.length, (index) {
             final isCompleted = index <= currentStep;
             return Expanded(
               child: Text(
-                steps[index],
+                _steps[index],
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 9,

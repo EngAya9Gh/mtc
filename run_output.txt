@@ -1,0 +1,76 @@
+Launching lib/main.dart on Chrome in debug mode...
+Waiting for connection from debug service on Chrome...          
+lib/features/auth/data/models/login_model.dart:7:7: Error: The non-abstract class 'LoginResponse' is missing implementations for these members:
+ - _$LoginResponse.data
+ - _$LoginResponse.message
+ - _$LoginResponse.status
+ - _$LoginResponse.toJson
+Try to either
+ - provide an implementation,
+ - inherit an implementation from a superclass or mixin,
+ - mark the class as abstract, or
+ - provide a 'noSuchMethod' implementation.
+class LoginResponse with _$LoginResponse {
+      ^^^^^^^^^^^^^
+lib/features/auth/data/models/login_model.freezed.dart:18:54: Context: '_$LoginResponse.data' is defined here.
+ bool get status; String get message; LoginData? get data;
+                                                     ^^^^
+lib/features/auth/data/models/login_model.freezed.dart:18:30: Context: '_$LoginResponse.message' is defined here.
+ bool get status; String get message; LoginData? get data;
+                             ^^^^^^^
+lib/features/auth/data/models/login_model.freezed.dart:18:11: Context: '_$LoginResponse.status' is defined here.
+ bool get status; String get message; LoginData? get data;
+          ^^^^^^
+lib/features/auth/data/models/login_model.freezed.dart:26:24: Context: '_$LoginResponse.toJson' is defined here.
+  Map<String, dynamic> toJson();
+                       ^^^^^^
+lib/features/auth/data/models/login_model.dart:19:7: Error: The non-abstract class 'LoginData' is missing implementations for these members:
+ - _$LoginData.driver
+ - _$LoginData.toJson
+ - _$LoginData.token
+Try to either
+ - provide an implementation,
+ - inherit an implementation from a superclass or mixin,
+ - mark the class as abstract, or
+ - provide a 'noSuchMethod' implementation.
+class LoginData with _$LoginData {
+      ^^^^^^^^^
+lib/features/auth/data/models/login_model.freezed.dart:311:35: Context: '_$LoginData.driver' is defined here.
+ String get token; DriverInfo get driver;
+                                  ^^^^^^
+lib/features/auth/data/models/login_model.freezed.dart:319:24: Context: '_$LoginData.toJson' is defined here.
+  Map<String, dynamic> toJson();
+                       ^^^^^^
+lib/features/auth/data/models/login_model.freezed.dart:311:13: Context: '_$LoginData.token' is defined here.
+ String get token; DriverInfo get driver;
+            ^^^^^
+lib/features/auth/data/models/login_model.dart:30:7: Error: The non-abstract class 'DriverInfo' is missing implementations for these members:
+ - _$DriverInfo.carId
+ - _$DriverInfo.id
+ - _$DriverInfo.mobile
+ - _$DriverInfo.name
+ - _$DriverInfo.toJson
+Try to either
+ - provide an implementation,
+ - inherit an implementation from a superclass or mixin,
+ - mark the class as abstract, or
+ - provide a 'noSuchMethod' implementation.
+class DriverInfo with _$DriverInfo {
+      ^^^^^^^^^^
+lib/features/auth/data/models/login_model.freezed.dart:595:83: Context: '_$DriverInfo.carId' is defined here.
+ int get id; String get name; String get mobile;@JsonKey(name: 'car_id') int? get carId;
+                                                                                  ^^^^^
+lib/features/auth/data/models/login_model.freezed.dart:595:10: Context: '_$DriverInfo.id' is defined here.
+ int get id; String get name; String get mobile;@JsonKey(name: 'car_id') int? get carId;
+         ^^
+lib/features/auth/data/models/login_model.freezed.dart:595:42: Context: '_$DriverInfo.mobile' is defined here.
+ int get id; String get name; String get mobile;@JsonKey(name: 'car_id') int? get carId;
+                                         ^^^^^^
+lib/features/auth/data/models/login_model.freezed.dart:595:25: Context: '_$DriverInfo.name' is defined here.
+ int get id; String get name; String get mobile;@JsonKey(name: 'car_id') int? get carId;
+                        ^^^^
+lib/features/auth/data/models/login_model.freezed.dart:603:24: Context: '_$DriverInfo.toJson' is defined here.
+  Map<String, dynamic> toJson();
+                       ^^^^^^
+Waiting for connection from debug service on Chrome...             21.8s
+Failed to compile application.

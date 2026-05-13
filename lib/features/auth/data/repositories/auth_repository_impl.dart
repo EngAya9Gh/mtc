@@ -10,8 +10,8 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl(this._remoteDataSource, this._sharedPreferences);
 
   @override
-  Future<LoginResponse> login(String username, String password) async {
-    final response = await _remoteDataSource.login(username, password);
+  Future<LoginResponse> login(String username, String password, String fcmToken) async {
+    final response = await _remoteDataSource.login(username, password, fcmToken);
     if (response.status && response.data != null) {
       await _sharedPreferences.setString('token', response.data!.token);
     }
@@ -19,8 +19,8 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<LoginResponse> loginWithMobile(String mobile, String password) async {
-    final response = await _remoteDataSource.loginWithMobile(mobile, password);
+  Future<LoginResponse> loginWithMobile(String mobile, String password, String fcmToken) async {
+    final response = await _remoteDataSource.loginWithMobile(mobile, password, fcmToken);
     if (response.status && response.data != null) {
       await _sharedPreferences.setString('token', response.data!.token);
     }

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -135,7 +136,7 @@ class _TermsScreenState extends State<TermsScreen> {
   }
 
   Future<void> _onAccept(BuildContext context) async {
-    if (_signatureControl.isPathEmpty) {
+    if (_signatureControl.paths.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please provide your signature first')),
       );
@@ -149,7 +150,7 @@ class _TermsScreenState extends State<TermsScreen> {
     );
 
     if (image != null) {
-      final bytes = await image.toByteData(format: ImageByteFormat.png);
+      final ByteData? bytes = image is ByteData ? image : await (image as ui.Image).toByteData(format: ui.ImageByteFormat.png);
       if (bytes != null) {
         final directory = await getTemporaryDirectory();
         final file = File('${directory.path}/signature.png');
