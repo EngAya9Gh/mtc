@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/navigation/app_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/common/widgets/app_text.dart';
 import '../../../../core/config/theme/color_scheme.dart';
@@ -114,7 +116,13 @@ class _TaskCard extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () {
-          // Handle task tap
+          if (task.status == 'NEW') {
+            context.push(AppRouter.taskMap, extra: task);
+          } else if (task.status == 'COLLECTED') {
+            // context.push(AppRouter.freezerOutBags, extra: task);
+          } else if (task.status == 'OUT_FREEZER') {
+            // context.push(AppRouter.deliveryLocation, extra: task);
+          }
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(

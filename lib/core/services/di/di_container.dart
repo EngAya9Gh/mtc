@@ -12,6 +12,13 @@ import '../../../features/medical_tasks/data/data_sources/task_remote_data_sourc
 import '../../../features/medical_tasks/data/repositories/task_repository_impl.dart';
 import '../../../features/medical_tasks/domain/repositories/task_repository.dart';
 import '../../../features/medical_tasks/presentation/bloc/medical_task_bloc.dart';
+import '../../../features/medical_tasks/presentation/bloc/sample_collection_cubit.dart';
+import '../../../features/medical_tasks/presentation/bloc/signature_submit_cubit.dart';
+import '../../../features/medical_tasks/presentation/bloc/task_map_cubit.dart';
+import '../../../features/home/presentation/bloc/car_inspection_cubit.dart';
+import '../../../features/schedule/presentation/bloc/schedule_cubit.dart';
+import '../../../features/notifications/presentation/bloc/notifications_cubit.dart';
+import '../../../features/settings/presentation/bloc/scanner_settings_cubit.dart';
 import '../locale/locale_cubit.dart';
 
 final getIt = GetIt.instance;
@@ -49,5 +56,12 @@ Future<void> initDi() async {
   // Blocs
   getIt.registerFactory(() => AuthBloc(getIt(), getIt(), getIt()));
   getIt.registerFactory(() => MedicalTaskBloc(getIt()));
+  getIt.registerFactory(() => CarInspectionCubit(getIt()));
+  getIt.registerFactory(() => SampleCollectionCubit(getIt()));
+  getIt.registerFactory(() => SignatureSubmitCubit(getIt()));
+  getIt.registerFactory(() => TaskMapCubit(getIt()));
+  getIt.registerFactory(() => ScheduleCubit(getIt()));
+  getIt.registerFactory(() => NotificationsCubit(getIt()));
+  getIt.registerFactory(() => ScannerSettingsCubit(getIt()));
   getIt.registerLazySingleton(() => LocaleCubit(getIt()));
 }

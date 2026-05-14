@@ -33,7 +33,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       } else {
         emit(AuthState.error(message: response.message));
       }
-    } catch (e) {
+    } catch (e, stack) {
+      print('❌ Login Exception: $e');
+      print('STACKTRACE: $stack');
       emit(AuthState.error(message: e.toString()));
     }
   }
@@ -53,7 +55,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       } else {
         emit(AuthState.error(message: response.message));
       }
-    } catch (e) {
+    } catch (e, stack) {
+      print('❌ Mobile Login Exception: $e');
+      print('STACKTRACE: $stack');
       emit(AuthState.error(message: e.toString()));
     }
   }

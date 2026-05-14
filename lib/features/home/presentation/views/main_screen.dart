@@ -7,6 +7,7 @@ import '../../../../core/services/locale/locale_cubit.dart';
 import '../../../../core/utils/app_localizations.dart';
 import '../../../../data/providers/user_info_provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 import '../widgets/latest_task_card.dart';
 
 class MainScreen extends StatelessWidget {
@@ -44,7 +45,7 @@ class MainScreen extends StatelessWidget {
             ),
             actions: [
               _NavAction(icon: Icons.emergency_outlined, color: Colors.red.shade300, onTap: () {}),
-              _NavAction(icon: Icons.notifications_none_rounded, color: Colors.white, badge: true, onTap: () {}),
+              _NavAction(icon: Icons.notifications_none_rounded, color: Colors.white, badge: true, onTap: () => context.push('/notifications')),
               const SizedBox(width: 8),
             ],
             flexibleSpace: FlexibleSpaceBar(
@@ -102,7 +103,7 @@ class MainScreen extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 AppText(
-                                  isArabic ? 'مرحباً بعودتك 👋' : 'Welcome back 👋',
+                                  isArabic ? 'مرحباً بعودتك ' : 'Welcome back ',
                                   style: TextStyle(
                                     color: Colors.white.withOpacity(0.8),
                                     fontSize: 13,
@@ -136,8 +137,26 @@ class MainScreen extends StatelessWidget {
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 // Latest Task
-                LatestTaskCard(),
-                const SizedBox(height: 28),
+                if (UserInfo().loginInfo?.latestTask != null) ...[
+                  LatestTaskCard(task: UserInfo().loginInfo!.latestTask!),
+                  const SizedBox(height: 28),
+                ] else ...[
+                  // Optional: Show "No active tasks" or just hide it
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Center(
+                      child: AppText(
+                        l.isArabic ? 'لا توجد مهام نشطة حالياً' : 'No active tasks at the moment',
+                        style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                ],
 
                 // Quick Actions Title
                 Row(
@@ -457,6 +476,7 @@ class _MainDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isArabic = l.isArabic;
     final driverName = UserInfo().loginInfo != null ? 'Driver #${UserInfo().userId}' : 'Driver';
     return Drawer(
       backgroundColor: const Color(0xFFF2F5FA),
@@ -492,22 +512,39 @@ class _MainDrawer extends StatelessWidget {
                       width: 72,
                       height: 72,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2.5),
+                        border: Border.all(color: Colors.white, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      child: const Icon(Icons.person_rounded, size: 40, color: Colors.white),
+                      child: ClipOval(
+                        child: Image.asset(
+                          'assets/images/logo.jpg',
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => const Icon(
+                            Icons.person_rounded,
+                            size: 40,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
                     ),
                     Positioned(
                       right: 0,
                       bottom: 0,
                       child: Container(
-                        width: 18,
-                        height: 18,
+                        width: 20,
+                        height: 20,
                         decoration: BoxDecoration(
                           color: Colors.green.shade400,
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
+                          border: Border.all(color: Colors.white, width: 2.5),
                         ),
                       ),
                     ),
@@ -530,12 +567,22 @@ class _MainDrawer extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               children: [
-                _DrawerItem(icon: Icons.person_outline_rounded, title: l.profile, onTap: () {}),
-                _DrawerItem(icon: Icons.calendar_today_outlined, title: l.mySchedule, onTap: () {}),
-                _DrawerItem(icon: Icons.directions_car_rounded, title: l.carImages, onTap: () {}),
-                _DrawerItem(icon: Icons.privacy_tip_outlined, title: l.privacyPolicy, onTap: () {}),
-                _DrawerItem(icon: Icons.share_rounded, title: l.shareApp, onTap: () {}),
-                _DrawerItem(icon: Icons.qr_code_scanner_rounded, title: l.scannerSettings, onTap: () {}),
+                _DrawerItem(icon: Icons.person_outline_rounded, title: l.profile, onTap: () => context.push('/profile')),
+                _DrawerItem(icon: Icons.calendar_today_outlined, title: l.mySchedule, onTap: () => context.push('/schedule')),
+                _DrawerItem(icon: Icons.directions_car_rounded, title: l.carImages, onTap: () => context.push('/car_inspection')),
+                _DrawerItem(icon: Icons.privacy_tip_outlined, title: l.privacyPolicy, onTap: () => context.push('/privacy_policy')),
+                _DrawerItem(
+                  icon: Icons.share_rounded,
+                  title: l.shareApp,
+                  onTap: () {
+                    Share.share(
+                      isArabic 
+                        ? 'جرّب تطبيق التوصيل: https://play.google.com/store/apps/details?id=com.blazma.logistics' 
+                        : 'Try the delivery app: https://play.google.com/store/apps/details?id=com.blazma.logistics',
+                    );
+                  },
+                ),
+                _DrawerItem(icon: Icons.qr_code_scanner_rounded, title: l.scannerSettings, onTap: () => context.push('/scanner_settings')),
 
                 const SizedBox(height: 8),
                 // Language toggle in drawer
@@ -564,7 +611,10 @@ class _MainDrawer extends StatelessWidget {
                 _DrawerItem(
                   icon: Icons.logout_rounded,
                   title: l.logout,
-                  onTap: () {},
+                  onTap: () {
+                    UserInfo().logout();
+                    context.go('/login');
+                  },
                   color: Colors.red,
                 ),
               ],

@@ -9,6 +9,11 @@ class UserInfo {
 
   int? get userId => loginInfo?.id;
   String? get token => loginInfo?.token;
+  CarData? get carInfo => loginInfo?.car;
   
   bool get isLoggedIn => loginInfo != null;
+
+  void logout() {
+    loginInfo = null;
+  }
 }

@@ -4,8 +4,11 @@ import '../../../../core/config/theme/color_scheme.dart';
 import '../../../../core/utils/app_localizations.dart';
 import 'task_timeline.dart';
 
+import '../../../../features/medical_tasks/data/models/task_model.dart';
+
 class LatestTaskCard extends StatelessWidget {
-  const LatestTaskCard({super.key});
+  final MedicalTask task;
+  const LatestTaskCard({super.key, required this.task});
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +59,7 @@ class LatestTaskCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: AppText(
-                      l.newBadge,
+                      task.status == 'NEW' ? l.newBadge : task.status,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 10,
@@ -92,17 +95,17 @@ class LatestTaskCard extends StatelessWidget {
                         child: const Icon(Icons.local_hospital_rounded, color: AppColors.secondary, size: 26),
                       ),
                       const SizedBox(width: 14),
-                      const Expanded(
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             AppText(
-                              'Al-Salam Hospital',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                              task.clientName,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                             ),
                             AppText(
-                              'Task #12940',
-                              style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                              'Task #${task.id}',
+                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
                             ),
                           ],
                         ),
@@ -111,13 +114,13 @@ class LatestTaskCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
-                          color: Colors.orange.withOpacity(0.12),
+                          color: _getStatusColor(task.status).withOpacity(0.12),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const AppText(
-                          'ACTIVE',
+                        child: AppText(
+                          task.status,
                           style: TextStyle(
-                            color: Colors.orange,
+                            color: _getStatusColor(task.status),
                             fontWeight: FontWeight.bold,
                             fontSize: 10,
                           ),
@@ -126,7 +129,7 @@ class LatestTaskCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  TaskTimeline(currentStep: 0),
+                  TaskTimeline(currentStep: _getStepFromStatus(task.status)),
                   const SizedBox(height: 20),
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -138,7 +141,7 @@ class LatestTaskCard extends StatelessWidget {
                       children: [
                         _buildLocationPoint(
                           label: l.pickup,
-                          value: 'Riyadh Main Office',
+                          value: task.fromLocationName,
                           icon: Icons.circle,
                           iconColor: AppColors.primary,
                         ),
@@ -158,7 +161,7 @@ class LatestTaskCard extends StatelessWidget {
                         ),
                         _buildLocationPoint(
                           label: l.dropoff,
-                          value: 'Central Lab',
+                          value: task.toLocationName,
                           icon: Icons.location_on_rounded,
                           iconColor: Colors.red,
                           align: CrossAxisAlignment.end,
@@ -173,6 +176,28 @@ class LatestTaskCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'NEW': return Colors.blue;
+      case 'COLLECTED': return Colors.orange;
+      case 'IN_FREEZER': return Colors.cyan;
+      case 'OUT_FREEZER': return Colors.purple;
+      case 'CLOSED': return Colors.green;
+      default: return Colors.grey;
+    }
+  }
+
+  int _getStepFromStatus(String status) {
+    switch (status) {
+      case 'NEW': return 0;
+      case 'COLLECTED': return 1;
+      case 'IN_FREEZER': return 2;
+      case 'OUT_FREEZER': return 3;
+      case 'CLOSED': return 4;
+      default: return 0;
+    }
   }
 
   Widget _buildLocationPoint({
