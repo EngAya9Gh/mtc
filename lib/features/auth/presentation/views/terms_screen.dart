@@ -14,6 +14,7 @@ import '../../../../core/navigation/app_router.dart';
 import '../../../../core/services/di/di_container.dart';
 import '../bloc/terms_cubit.dart';
 import '../bloc/terms_state.dart';
+import '../../../../core/utils/app_localizations.dart';
 
 class TermsScreen extends StatefulWidget {
   const TermsScreen({super.key});

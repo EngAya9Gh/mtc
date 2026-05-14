@@ -9,7 +9,7 @@ plugins {
 android {
     namespace = "com.blazma.blazma_logistics"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "29.0.14206865"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

@@ -23,6 +23,14 @@ subprojects {
     project.evaluationDependsOn(":app")
 }
 
+subprojects {
+    project.extensions.findByName("android")?.let { android ->
+        if (android is com.android.build.gradle.BaseExtension) {
+            android.ndkVersion = "29.0.14206865"
+        }
+    }
+}
+
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
