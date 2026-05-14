@@ -6,6 +6,8 @@ import '../models/login_model.dart';
 abstract class AuthRemoteDataSource {
   Future<LoginResponse> login(String username, String password, String fcmToken);
   Future<LoginResponse> loginWithMobile(String mobile, String password, String fcmToken);
+  Future<Map<String, dynamic>> getTerms();
+  Future<bool> acceptTerms(int driverId, String filePath);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -46,5 +48,26 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     );
     print('Mobile login response: ${response.data}');
     return LoginResponse.fromJson(response.data);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getTerms() async {
+    final response = await _apiClient.get('driver/terms/get');
+    return response.data;
+  }
+
+  @override
+  Future<bool> acceptTerms(int driverId, String filePath) async {
+    final formData = FormData.fromMap({
+      'driver_id': driverId,
+      'signature_file': await MultipartFile.fromFile(filePath, filename: 'signature.jpg'),
+    });
+
+    final response = await _apiClient.post(
+      'driver/terms/accept',
+      data: formData,
+    );
+    
+    return response.data['status'] == true;
   }
 }

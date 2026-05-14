@@ -27,13 +27,23 @@ class _TermsScreenState extends State<TermsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final isArabic = l.isArabic;
+    
     return BlocProvider(
       create: (context) => TermsCubit(getIt())..getTerms(),
       child: BlocConsumer<TermsCubit, TermsState>(
         listener: (context, state) {
           state.maybeWhen(
             success: () {
-              context.go(AppRouter.main);
+              // Only go to main if we came from login, otherwise just show success
+              if (GoRouterState.of(context).uri.toString() == '/terms') {
+                 ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(isArabic ? 'تم قبول الشروط بنجاح' : 'Terms accepted successfully'), backgroundColor: Colors.green),
+                );
+              } else {
+                context.go(AppRouter.main);
+              }
             },
             error: (message) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -46,14 +56,17 @@ class _TermsScreenState extends State<TermsScreen> {
         builder: (context, state) {
           return Scaffold(
             appBar: AppBar(
-              title: const Text('Terms & Conditions'),
+              title: AppText(
+                isArabic ? 'الشروط والأحكام' : 'Terms & Conditions',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
               centerTitle: true,
             ),
             body: state.maybeWhen(
               loading: () => const Center(child: CircularProgressIndicator()),
-              loaded: (arLink, enLink) => _buildBody(context, arLink, enLink, state),
+              loaded: (arLink, enLink) => _buildBody(context, arLink, enLink, state, l),
               submitting: () => const Center(child: CircularProgressIndicator()),
-              orElse: () => _buildBody(context, '', '', state),
+              orElse: () => _buildBody(context, '', '', state, l),
             ),
           );
         },
@@ -61,17 +74,34 @@ class _TermsScreenState extends State<TermsScreen> {
     );
   }
 
-  Widget _buildBody(BuildContext context, String arLink, String enLink, TermsState state) {
+  Widget _buildBody(BuildContext context, String arLink, String enLink, TermsState state, AppLocalizations l) {
+    final isArabic = l.isArabic;
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const AppText(
-            'Review the terms in your preferred language:',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline_rounded, color: AppColors.primary),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: AppText(
+                    isArabic ? 'يرجى مراجعة الشروط بلغتك المفضلة' : 'Review the terms in your preferred language:',
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           Row(
             children: [
               Expanded(
@@ -89,41 +119,58 @@ class _TermsScreenState extends State<TermsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 40),
-          const AppText(
-            'Please provide your digital signature below:',
-            style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary),
+          const SizedBox(height: 32),
+          AppText(
+            isArabic ? 'التوقيع الرقمي' : 'Digital Signature',
+            style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary, fontSize: 16),
+          ),
+          AppText(
+            isArabic ? 'يرجى التوقيع في المساحة أدناه' : 'Please sign in the space below',
+            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
           ),
           const SizedBox(height: 12),
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.grey[50],
+                color: Colors.white,
                 border: Border.all(color: Colors.grey[300]!),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.02),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: HandSignature(
-                control: _signatureControl,
-                color: AppColors.primary,
-                width: 3.0,
-                maxWidth: 10.0,
-                type: SignatureDrawType.shape,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: HandSignature(
+                  control: _signatureControl,
+                  color: AppColors.primary,
+                  width: 3.0,
+                  maxWidth: 10.0,
+                  type: SignatureDrawType.shape,
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           Row(
             children: [
               TextButton.icon(
                 onPressed: () => _signatureControl.clear(),
-                icon: const Icon(Icons.delete_outline, color: Colors.red),
-                label: const Text('Clear', style: TextStyle(color: Colors.red)),
+                icon: const Icon(Icons.refresh_rounded, color: Colors.redAccent),
+                label: AppText(
+                  isArabic ? 'مسح التوقيع' : 'Clear',
+                  style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w600),
+                ),
               ),
               const Spacer(),
               SizedBox(
-                width: 150,
+                width: 160,
                 child: AppElevatedButton(
-                  text: 'Accept',
+                  text: isArabic ? 'موافق' : 'ACCEPT',
                   isLoading: state is Submitting,
                   onPressed: () => _onAccept(context),
                 ),
@@ -136,9 +183,13 @@ class _TermsScreenState extends State<TermsScreen> {
   }
 
   Future<void> _onAccept(BuildContext context) async {
+    final l = AppLocalizations.of(context);
     if (_signatureControl.paths.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please provide your signature first')),
+        SnackBar(
+          content: Text(l.isArabic ? 'يرجى وضع توقيعك أولاً' : 'Please provide your signature first'),
+          backgroundColor: AppColors.error,
+        ),
       );
       return;
     }

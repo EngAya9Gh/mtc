@@ -121,6 +121,10 @@ class AppRouter {
         builder: (context, state) => const NotificationsScreen(),
       ),
       GoRoute(
+        path: '/terms',
+        builder: (context, state) => const TermsScreen(),
+      ),
+      GoRoute(
         path: '/privacy_policy',
         builder: (context, state) => const PrivacyPolicyScreen(),
       ),

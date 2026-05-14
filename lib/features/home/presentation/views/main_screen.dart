@@ -569,6 +569,7 @@ class _MainDrawer extends StatelessWidget {
               children: [
                 _DrawerItem(icon: Icons.person_outline_rounded, title: l.profile, onTap: () => context.push('/profile')),
                 _DrawerItem(icon: Icons.calendar_today_outlined, title: l.mySchedule, onTap: () => context.push('/schedule')),
+                _DrawerItem(icon: Icons.assignment_outlined, title: isArabic ? 'الشروط والأحكام' : 'Terms & Conditions', onTap: () => context.push('/terms')),
                 _DrawerItem(icon: Icons.directions_car_rounded, title: l.carImages, onTap: () => context.push('/car_inspection')),
                 _DrawerItem(icon: Icons.privacy_tip_outlined, title: l.privacyPolicy, onTap: () => context.push('/privacy_policy')),
                 _DrawerItem(
