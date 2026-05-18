@@ -525,7 +525,7 @@ class _MainDrawer extends StatelessWidget {
                       ),
                       child: ClipOval(
                         child: Image.asset(
-                          'assets/images/logo.jpg',
+                          'assets/images/logo.png',
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) => const Icon(
                             Icons.person_rounded,
