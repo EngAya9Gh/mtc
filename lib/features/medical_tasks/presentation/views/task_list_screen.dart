@@ -119,7 +119,7 @@ class _TaskCard extends StatelessWidget {
           if (task.status == 'NEW') {
             context.push(AppRouter.taskMap, extra: task);
           } else if (task.status == 'COLLECTED') {
-            // context.push(AppRouter.freezerOutBags, extra: task);
+            context.push(AppRouter.freezerOutBags, extra: task);
           } else if (task.status == 'OUT_FREEZER') {
             // context.push(AppRouter.deliveryLocation, extra: task);
           }

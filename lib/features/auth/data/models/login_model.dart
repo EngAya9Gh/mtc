@@ -46,10 +46,27 @@ abstract class CarData with _$CarData {
     String? color,
     @JsonKey(name: 'contact_person') String? contactPerson,
     @JsonKey(fromJson: ParserUtils.toInt) int? status,
+    List<ContainerData>? containers,
   }) = _CarData;
 
   factory CarData.fromJson(Map<String, dynamic> json) =>
       _$CarDataFromJson(json);
+}
+
+@freezed
+abstract class ContainerData with _$ContainerData {
+  const factory ContainerData({
+    @JsonKey(fromJson: _toIntRequired) required int id,
+    @JsonKey(name: 'car_id', fromJson: ParserUtils.toInt) int? carId,
+    String? imei,
+    String? model,
+    String? type,
+    String? description,
+    @JsonKey(fromJson: ParserUtils.toInt) int? status,
+  }) = _ContainerData;
+
+  factory ContainerData.fromJson(Map<String, dynamic> json) =>
+      _$ContainerDataFromJson(json);
 }
 
 int _toIntRequired(dynamic val) => ParserUtils.toInt(val) ?? 0;

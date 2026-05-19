@@ -33,7 +33,19 @@ void main() async {
   }
 
   await initDi();
-  runApp(const BlazmaLogisticsApp());
+  
+  final binding = WidgetsFlutterBinding.ensureInitialized();
+  final implicitView = binding.platformDispatcher.implicitView;
+  if (implicitView != null) {
+    runApp(const BlazmaLogisticsApp());
+  } else {
+    runWidget(
+      View(
+        view: binding.platformDispatcher.views.first,
+        child: const BlazmaLogisticsApp(),
+      ),
+    );
+  }
 }
 
 class BlazmaLogisticsApp extends StatelessWidget {

@@ -20,6 +20,10 @@ import '../../../features/schedule/presentation/bloc/schedule_cubit.dart';
 import '../../../features/notifications/presentation/bloc/notifications_cubit.dart';
 import '../../../features/settings/presentation/bloc/scanner_settings_cubit.dart';
 import '../locale/locale_cubit.dart';
+import '../../../features/freezer/data/data_sources/freezer_remote_data_source.dart';
+import '../../../features/freezer/data/repositories/freezer_repository_impl.dart';
+import '../../../features/freezer/domain/repositories/freezer_repository.dart';
+import '../../../features/freezer/presentation/bloc/freezer_placement_cubit.dart';
 
 final getIt = GetIt.instance;
 
@@ -46,12 +50,16 @@ Future<void> initDi() async {
       () => AuthRemoteDataSourceImpl(getIt()));
   getIt.registerLazySingleton<TaskRemoteDataSource>(
       () => TaskRemoteDataSourceImpl(getIt()));
+  getIt.registerLazySingleton<FreezerRemoteDataSource>(
+      () => FreezerRemoteDataSourceImpl(getIt()));
 
   // Repositories
   getIt.registerLazySingleton<AuthRepository>(
       () => AuthRepositoryImpl(getIt(), getIt()));
   getIt.registerLazySingleton<TaskRepository>(
       () => TaskRepositoryImpl(getIt()));
+  getIt.registerLazySingleton<FreezerRepository>(
+      () => FreezerRepositoryImpl(getIt()));
 
   // Blocs
   getIt.registerFactory(() => AuthBloc(getIt(), getIt(), getIt()));
@@ -63,5 +71,6 @@ Future<void> initDi() async {
   getIt.registerFactory(() => ScheduleCubit(getIt()));
   getIt.registerFactory(() => NotificationsCubit(getIt()));
   getIt.registerFactory(() => ScannerSettingsCubit(getIt()));
+  getIt.registerFactory(() => FreezerPlacementCubit(getIt()));
   getIt.registerLazySingleton(() => LocaleCubit(getIt()));
 }

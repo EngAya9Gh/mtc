@@ -6,7 +6,10 @@ import '../../../../core/config/theme/color_scheme.dart';
 import '../../../../core/utils/app_localizations.dart';
 
 class BagScanScreen extends StatefulWidget {
-  const BagScanScreen({super.key});
+  final String? temp;
+  final String? type;
+
+  const BagScanScreen({super.key, this.temp, this.type});
 
   @override
   State<BagScanScreen> createState() => _BagScanScreenState();
@@ -39,15 +42,43 @@ class _BagScanScreenState extends State<BagScanScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.shopping_bag_outlined, size: 100, color: AppColors.primary),
-            const SizedBox(height: 30),
+            const SizedBox(height: 24),
             AppText(
               isArabic 
                 ? 'يرجى مسح باركود كيس الخطر الحيوي قبل المتابعة' 
                 : 'Please scan the biohazard bag barcode before proceeding',
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, color: Colors.grey),
+              style: const TextStyle(fontSize: 15, color: Colors.grey),
             ),
-            const SizedBox(height: 40),
+            if (widget.temp != null || widget.type != null) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.primary.withOpacity(0.15)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.info_outline, color: AppColors.primary, size: 18),
+                    const SizedBox(width: 8),
+                    AppText(
+                      isArabic
+                          ? 'الفئة: ${widget.temp ?? ""} | النوع: ${widget.type ?? ""}'
+                          : 'Temp: ${widget.temp ?? ""} | Type: ${widget.type ?? ""}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 32),
             
             // Bag Code Input/Display
             TextField(

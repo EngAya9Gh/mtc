@@ -17,6 +17,8 @@ import '../../features/settings/presentation/views/privacy_policy_screen.dart';
 import '../../features/settings/presentation/views/scanner_settings_screen.dart';
 import '../../features/home/presentation/views/car_inspection_screen.dart';
 import '../../features/medical_tasks/data/models/task_model.dart';
+import '../../features/freezer/presentation/views/freezer_out_bags_screen.dart';
+import '../../features/freezer/presentation/views/task_status_screen.dart';
 
 import '../../data/providers/user_info_provider.dart';
 
@@ -28,6 +30,8 @@ class AppRouter {
   static const String taskList = '/task_list/:status';
   static const String taskMap = '/task_map';
   static const String sampleCollection = '/sample_collection';
+  static const String freezerOutBags = '/freezer_out_bags';
+  static const String taskStatus = '/task_status';
 
   static final router = GoRouter(
     initialLocation: login,
@@ -102,7 +106,13 @@ class AppRouter {
       ),
       GoRoute(
         path: '/bag_scan',
-        builder: (context, state) => const BagScanScreen(),
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return BagScanScreen(
+            temp: extra?['temp'] as String?,
+            type: extra?['type'] as String?,
+          );
+        },
       ),
       GoRoute(
         path: '/car_inspection',
@@ -131,6 +141,24 @@ class AppRouter {
       GoRoute(
         path: '/scanner_settings',
         builder: (context, state) => const ScannerSettingsScreen(),
+      ),
+      GoRoute(
+        path: freezerOutBags,
+        builder: (context, state) {
+          final task = state.extra as MedicalTask;
+          return FreezerOutBagsScreen(task: task);
+        },
+      ),
+      GoRoute(
+        path: taskStatus,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          return TaskStatusScreen(
+            isSuccess: extra['isSuccess'] as bool,
+            message: extra['message'] as String,
+            taskId: extra['taskId'] as int?,
+          );
+        },
       ),
     ],
   );

@@ -111,7 +111,7 @@ class _TaskMapScreenViewState extends State<_TaskMapScreenView> {
     } else if (!isStarted) {
       buttonText = isArabic ? 'بدء المهمة' : 'START TASK';
     } else {
-      buttonText = isArabic ? 'إعدادات العينة' : 'Setting SAMPLES';
+      buttonText = isArabic ? 'جمع العينات' : 'COLLECT SAMPLES';
     }
     
     return BlocConsumer<TaskMapCubit, TaskMapState>(
@@ -264,7 +264,7 @@ class _TaskMapScreenViewState extends State<_TaskMapScreenView> {
                               lng: 46.749398,
                             );
                           } else {
-                            context.push('/first_sample_info', extra: _currentTask);
+                            context.push('/sample_collection', extra: _currentTask);
                           }
                         },
                       ),

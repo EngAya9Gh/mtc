@@ -98,59 +98,90 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
   void _onSaveSamples() async {
     if (_scannedBarcodes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please scan at least one sample.')),
+        SnackBar(content: Text(AppLocalizations.of(context).isArabic ? 'يرجى مسح عينة واحدة على الأقل.' : 'Please scan at least one sample.')),
       );
       return;
     }
 
-    // 1. Navigate to BagScanScreen to get the bag barcode
-    final bagCode = await context.push<String>('/bag_scan');
-    
-    if (bagCode == null || bagCode.isEmpty) {
-      return; // User cancelled or didn't scan
-    }
-
-    // Group barcodes by (temp, type) to send correct API calls
     final cubit = context.read<SampleCollectionCubit>();
-    
-    // We get unique combinations of temp and type
-    final combinations = _scannedBarcodes.map((e) => '${e['temp']}|${e['type']}').toSet();
+    final combinations = _scannedBarcodes.map((e) => '${e['temp']}|${e['type']}').toSet().toList();
+
+    bool allSavedSuccessfully = true;
+    final List<Map<String, String>> savedBarcodes = [];
 
     for (var combo in combinations) {
       final parts = combo.split('|');
       final temp = parts[0];
       final type = parts[1];
 
-      final barcodes = _scannedBarcodes
+      final comboSamples = _scannedBarcodes
           .where((e) => e['temp'] == temp && e['type'] == type)
-          .map((e) => e['barcode']!)
           .toList();
 
-      if (barcodes.isNotEmpty) {
+      if (comboSamples.isNotEmpty) {
+        // 1. Navigate to BagScanScreen to get the bag barcode for this specific category
+        final bagCode = await context.push<String>('/bag_scan', extra: {
+          'temp': temp,
+          'type': type,
+        });
+        
+        if (bagCode == null || bagCode.isEmpty) {
+          allSavedSuccessfully = false;
+          break; // User cancelled scanning bag for this category, stop loop
+        }
+
         await cubit.saveSamplesSequentially(
           taskId: widget.task.id,
           locationId: widget.task.fromLocation ?? 0,
-          scannedSamples: _scannedBarcodes.where((e) => e['temp'] == temp && e['type'] == type).toList(),
+          scannedSamples: comboSamples,
           bagCode: bagCode,
         );
+
+        // Check if last state was success
+        if (cubit.state.maybeWhen(success: (_) => true, orElse: () => false)) {
+          savedBarcodes.addAll(comboSamples);
+        } else {
+          allSavedSuccessfully = false;
+          break; // Stop on error
+        }
       }
+    }
+
+    // Remove saved barcodes from the scanned list
+    if (savedBarcodes.isNotEmpty) {
+      setState(() {
+        _scannedBarcodes.removeWhere((item) => savedBarcodes.contains(item));
+      });
+    }
+
+    if (allSavedSuccessfully && savedBarcodes.isNotEmpty && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).isArabic 
+              ? 'تم حفظ جميع العينات بنجاح!' 
+              : 'All samples saved successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
     }
   }
 
   void _onNoSamples() {
+    final l = AppLocalizations.of(context);
+    final isArabic = l.isArabic;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: AppText('Are you sure?'),
-        content: AppText('You are about to report no samples for this task.'),
+        title: AppText(isArabic ? 'هل أنت متأكد؟' : 'Are you sure?'),
+        content: AppText(isArabic ? 'أنت على وشك الإبلاغ عن عدم وجود عينات لهذه المهمة.' : 'You are about to report no samples for this task.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const AppText('CANCEL')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: AppText(isArabic ? 'إلغاء' : 'CANCEL')),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               context.read<SampleCollectionCubit>().reportNoSamples(widget.task.id);
             },
-            child: const AppText('CONFIRM', style: TextStyle(color: Colors.red)),
+            child: AppText(isArabic ? 'تأكيد' : 'CONFIRM', style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -158,6 +189,28 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
   }
 
   void _onFinishCollecting() {
+    final l = AppLocalizations.of(context);
+    final isArabic = l.isArabic;
+    if (_scannedBarcodes.isNotEmpty) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: AppText(isArabic ? 'تنبيه' : 'Warning'),
+          content: AppText(
+            isArabic
+                ? 'لديك عينات ممسوحة غير محفوظة. يرجى حفظها أولاً أو حذفها.'
+                : 'You have scanned samples that are not saved. Please save them first or delete them.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: AppText(isArabic ? 'موافق' : 'OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
     context.push('/signature', extra: widget.task);
   }
 
@@ -179,11 +232,13 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
       listener: (context, state) {
         state.whenOrNull(
           success: (msg) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(msg), backgroundColor: Colors.green),
-            );
-            // Navigate to signature screen automatically
-            context.push('/signature', extra: widget.task);
+            // Show snackbar for reportNoSamples or generic success
+            if (msg.toLowerCase().contains('no samples') || msg.contains('لا يوجد')) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(msg), backgroundColor: Colors.green),
+              );
+              context.push('/signature', extra: widget.task);
+            }
           },
           error: (msg) {
             ScaffoldMessenger.of(context).showSnackBar(
