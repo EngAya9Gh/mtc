@@ -24,7 +24,10 @@ import '../../../features/freezer/data/data_sources/freezer_remote_data_source.d
 import '../../../features/freezer/data/repositories/freezer_repository_impl.dart';
 import '../../../features/freezer/domain/repositories/freezer_repository.dart';
 import '../../../features/freezer/presentation/bloc/freezer_placement_cubit.dart';
-
+import '../../../features/samples_pull_out/data/data_sources/samples_pull_out_remote_data_source.dart';
+import '../../../features/samples_pull_out/data/repositories/samples_pull_out_repository_impl.dart';
+import '../../../features/samples_pull_out/domain/repositories/samples_pull_out_repository.dart';
+import '../../../features/samples_pull_out/presentation/bloc/pull_out_cubit.dart';
 final getIt = GetIt.instance;
 
 Future<void> initDi() async {
@@ -52,6 +55,8 @@ Future<void> initDi() async {
       () => TaskRemoteDataSourceImpl(getIt()));
   getIt.registerLazySingleton<FreezerRemoteDataSource>(
       () => FreezerRemoteDataSourceImpl(getIt()));
+  getIt.registerLazySingleton<SamplesPullOutRemoteDataSource>(
+      () => SamplesPullOutRemoteDataSourceImpl(getIt()));
 
   // Repositories
   getIt.registerLazySingleton<AuthRepository>(
@@ -60,6 +65,8 @@ Future<void> initDi() async {
       () => TaskRepositoryImpl(getIt()));
   getIt.registerLazySingleton<FreezerRepository>(
       () => FreezerRepositoryImpl(getIt()));
+  getIt.registerLazySingleton<SamplesPullOutRepository>(
+      () => SamplesPullOutRepositoryImpl(getIt()));
 
   // Blocs
   getIt.registerFactory(() => AuthBloc(getIt(), getIt(), getIt()));
@@ -72,5 +79,6 @@ Future<void> initDi() async {
   getIt.registerFactory(() => NotificationsCubit(getIt()));
   getIt.registerFactory(() => ScannerSettingsCubit(getIt()));
   getIt.registerFactory(() => FreezerPlacementCubit(getIt()));
+  getIt.registerFactory(() => PullOutCubit(getIt()));
   getIt.registerLazySingleton(() => LocaleCubit(getIt()));
 }

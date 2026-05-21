@@ -78,6 +78,17 @@ class TaskTypeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 _TaskTypeCard(
+                  title: isArabic ? 'سحب العينات من الحاوية' : 'Samples Pull Out',
+                  subtitle: isArabic ? 'مهام جاهزة لسحبها للتسليم' : 'Tasks ready to be pulled out',
+                  icon: Icons.outbox_rounded,
+                  iconColor: const Color(0xFFE65100), // Dark orange
+                  iconBgColor: const Color(0xFFFFF3E0), // Light orange bg
+                  onTap: () {
+                    context.push('/pull_out_tasks');
+                  },
+                ),
+                const SizedBox(height: 16),
+                _TaskTypeCard(
                   title: l.dropOffSamples,
                   subtitle: isArabic ? 'مهام خارج الفريزر للتسليم' : 'Tasks out of freezer',
                   icon: Icons.local_shipping_outlined,
@@ -87,6 +98,7 @@ class TaskTypeScreen extends StatelessWidget {
                     context.push('/task_list/OUT_FREEZER');
                   },
                 ),
+           
               ],
             ),
           ),

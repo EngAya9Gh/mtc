@@ -17,9 +17,13 @@ import '../../features/settings/presentation/views/privacy_policy_screen.dart';
 import '../../features/settings/presentation/views/scanner_settings_screen.dart';
 import '../../features/home/presentation/views/car_inspection_screen.dart';
 import '../../features/medical_tasks/data/models/task_model.dart';
+import '../../features/samples_pull_out/data/models/client_task_model.dart';
 import '../../features/freezer/presentation/views/freezer_out_bags_screen.dart';
 import '../../features/freezer/presentation/views/task_status_screen.dart';
-
+import '../../features/samples_pull_out/presentation/views/pull_out_tasks_screen.dart';
+import '../../features/samples_pull_out/presentation/views/pull_out_scan_container_screen.dart';
+import '../../features/samples_pull_out/presentation/views/pull_out_remove_bags_screen.dart';
+import '../../features/samples_pull_out/presentation/bloc/pull_out_cubit.dart';
 import '../../data/providers/user_info_provider.dart';
 
 class AppRouter {
@@ -32,6 +36,9 @@ class AppRouter {
   static const String sampleCollection = '/sample_collection';
   static const String freezerOutBags = '/freezer_out_bags';
   static const String taskStatus = '/task_status';
+  static const String pullOutTasks = '/pull_out_tasks';
+  static const String pullOutScanContainer = '/pull_out_scan_container';
+  static const String pullOutRemoveBags = '/pull_out_remove_bags';
 
   static final router = GoRouter(
     initialLocation: login,
@@ -158,6 +165,24 @@ class AppRouter {
             message: extra['message'] as String,
             taskId: extra['taskId'] as int?,
           );
+        },
+      ),
+      GoRoute(
+        path: pullOutTasks,
+        builder: (context, state) => const PullOutTasksScreen(),
+      ),
+      GoRoute(
+        path: pullOutScanContainer,
+        builder: (context, state) {
+          final destination = state.extra as ClientTaskModel;
+          return PullOutScanContainerScreen(destination: destination);
+        },
+      ),
+      GoRoute(
+        path: pullOutRemoveBags,
+        builder: (context, state) {
+          final cubit = state.extra as PullOutCubit;
+          return PullOutRemoveBagsScreen(cubit: cubit);
         },
       ),
     ],
