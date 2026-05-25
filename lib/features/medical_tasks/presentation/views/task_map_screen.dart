@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:geolocator/geolocator.dart';
+import '../../../../core/navigation/app_router.dart';
 import '../../../../core/common/widgets/app_text.dart';
 import '../../../../core/common/widgets/app_elevated_button.dart';
 import '../../../../core/config/theme/color_scheme.dart';
@@ -41,30 +43,79 @@ class _TaskMapScreenViewState extends State<_TaskMapScreenView> {
   Set<Marker> _markers = {};
   late MedicalTask _currentTask;
 
+  double? _distanceInMeters;
+  double? _driverLat;
+  double? _driverLng;
+
   @override
   void initState() {
     super.initState();
     _currentTask = widget.task;
     _setupMarkers();
+    _calculateDistance();
+  }
+
+  Future<void> _calculateDistance() async {
+    try {
+      final clientLat = _currentTask.fromLocationLat ?? 24.688629;
+      final clientLng = _currentTask.fromLocationLng ?? 46.644596;
+      
+      // Get current location (fallback to some default if fails or no permission)
+      Position? position;
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (serviceEnabled) {
+        LocationPermission permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.always || permission == LocationPermission.whileInUse) {
+           position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+        } else {
+           permission = await Geolocator.requestPermission();
+           if (permission == LocationPermission.always || permission == LocationPermission.whileInUse) {
+             position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+           }
+        }
+      }
+
+      final driverLat = position?.latitude ?? 24.671086;
+      final driverLng = position?.longitude ?? 46.749398;
+
+      final distance = Geolocator.distanceBetween(
+        driverLat, driverLng, 
+        clientLat, clientLng
+      );
+      
+      if (mounted) {
+        setState(() {
+          _driverLat = driverLat;
+          _driverLng = driverLng;
+          _distanceInMeters = distance;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error calculating distance: $e");
+    }
+  }
+
+  void _openGoogleMaps(double lat, double lng) async {
+    final url = 'http://maps.google.com/maps?daddr=$lat,$lng';
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   void _setupMarkers() {
-    final fromLoc = LatLng(_currentTask.fromLocationLat ?? 24.671086, _currentTask.fromLocationLng ?? 46.749398);
-    final toLoc = LatLng(_currentTask.toLocationLat ?? 24.688629955350198, _currentTask.toLocationLng ?? 46.644596757671906);
+    final clientLat = _currentTask.fromLocationLat ?? 24.688629;
+    final clientLng = _currentTask.fromLocationLng ?? 46.644596;
+    final clientLoc = LatLng(clientLat, clientLng);
 
     setState(() {
       _markers = {
         Marker(
-          markerId: const MarkerId('from'),
-          position: fromLoc,
+          markerId: const MarkerId('client'),
+          position: clientLoc,
           infoWindow: InfoWindow(title: _currentTask.fromLocationName),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-        ),
-        Marker(
-          markerId: const MarkerId('to'),
-          position: toLoc,
-          infoWindow: InfoWindow(title: _currentTask.toLocationName),
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+          onTap: () => _openGoogleMaps(clientLat, clientLng),
         ),
       };
     });
@@ -74,16 +125,11 @@ class _TaskMapScreenViewState extends State<_TaskMapScreenView> {
     _controller.complete(controller);
     
     Future.delayed(const Duration(milliseconds: 500), () {
-      final fromLoc = LatLng(_currentTask.fromLocationLat ?? 24.671086, _currentTask.fromLocationLng ?? 46.749398);
-      final toLoc = LatLng(_currentTask.toLocationLat ?? 24.688629955350198, _currentTask.toLocationLng ?? 46.644596757671906);
+      final clientLoc = LatLng(_currentTask.fromLocationLat ?? 24.688629, _currentTask.fromLocationLng ?? 46.644596);
 
       controller.animateCamera(
-        CameraUpdate.newLatLngBounds(
-          LatLngBounds(
-            southwest: fromLoc.latitude < toLoc.latitude ? fromLoc : toLoc,
-            northeast: fromLoc.latitude > toLoc.latitude ? fromLoc : toLoc,
-          ),
-          50.0,
+        CameraUpdate.newCameraPosition(
+          CameraPosition(target: clientLoc, zoom: 14),
         ),
       );
     });
@@ -102,7 +148,7 @@ class _TaskMapScreenViewState extends State<_TaskMapScreenView> {
     final isArabic = l.isArabic;
     
     // Determine button state based on task logic
-    final bool isConfirmed = _currentTask.driverConfirmFromLocation == 1;
+    final bool isConfirmed = _currentTask.driverConfirmFromLocation == 1 || _currentTask.driverConfirmFromLocation == '1';
     final bool isStarted = _currentTask.driverStartDate != null;
 
     String buttonText = '';
@@ -159,6 +205,35 @@ class _TaskMapScreenViewState extends State<_TaskMapScreenView> {
                 myLocationEnabled: true,
                 myLocationButtonEnabled: false,
               ),
+
+              // Show OTP if exists at the top
+              if (_currentTask.otp != null && _currentTask.otp!.isNotEmpty)
+                Positioned(
+                  top: 20,
+                  left: 20,
+                  right: 20,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.security, color: AppColors.primary),
+                        const SizedBox(width: 8),
+                        AppText(
+                          isArabic 
+                            ? 'يرجى مشاركة رمز التحقق: ${_currentTask.otp}' 
+                            : 'Please share OTP: ${_currentTask.otp}',
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.primary),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               
               // Bottom Details Card
               Positioned(
@@ -210,15 +285,27 @@ class _TaskMapScreenViewState extends State<_TaskMapScreenView> {
                       _LocationRow(
                         icon: Icons.circle,
                         color: Colors.green,
-                        title: isArabic ? 'من:' : 'From:',
+                        title: isArabic ? 'موقع العميل:' : 'Client Location:',
                         value: _currentTask.fromLocationName,
                       ),
+                      
                       const SizedBox(height: 12),
-                      _LocationRow(
-                        icon: Icons.location_on,
-                        color: Colors.red,
-                        title: isArabic ? 'إلى:' : 'To:',
-                        value: _currentTask.toLocationName,
+                      Row(
+                        children: [
+                          const Icon(Icons.route, color: Colors.blue, size: 16),
+                          const SizedBox(width: 8),
+                          AppText(
+                            isArabic ? 'المسافة:' : 'Distance:',
+                            style: const TextStyle(color: Colors.grey, fontSize: 12),
+                          ),
+                          const SizedBox(width: 4),
+                          AppText(
+                            _distanceInMeters != null 
+                              ? '${(_distanceInMeters! / 1000).toStringAsFixed(2)} KM'
+                              : '...',
+                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                          ),
+                        ],
                       ),
                       
                       const SizedBox(height: 16),
@@ -254,17 +341,24 @@ class _TaskMapScreenViewState extends State<_TaskMapScreenView> {
                             context.read<TaskMapCubit>().confirmLocation(
                               taskId: _currentTask.id,
                               locationId: _currentTask.fromLocation ?? 0,
-                              lat: 24.671086, // In real app, use geolocator
-                              lng: 46.749398,
+                              lat: _driverLat ?? 24.671086, 
+                              lng: _driverLng ?? 46.749398,
                             );
                           } else if (!isStarted) {
-                            context.read<TaskMapCubit>().startTask(
-                              taskId: _currentTask.id,
-                              lat: 24.671086,
-                              lng: 46.749398,
-                            );
+                            if (_currentTask.isSwap == 1) {
+                              // For swap tasks, startTask API might be different if needed, 
+                              // but using the generic startTask handles it normally
+                              context.read<TaskMapCubit>().startTask(
+                                taskId: _currentTask.id,
+                                lat: _driverLat ?? 24.671086,
+                                lng: _driverLng ?? 46.749398,
+                              );
+                            } else {
+                              // Normal tasks just transition to selection (API is called later)
+                              context.push(AppRouter.taskType, extra: _currentTask);
+                            }
                           } else {
-                            context.push('/sample_collection', extra: _currentTask);
+                            context.push(AppRouter.taskType, extra: _currentTask);
                           }
                         },
                       ),

@@ -175,4 +175,26 @@ class DropOffCubit extends Cubit<DropOffState> {
       orElse: () async {},
     );
   }
+
+  Future<void> reachDropOffLocation(ClientTaskModel selectedTask) async {
+    emit(const DropOffState.loading('جاري تأكيد الوصول للموقع...'));
+    try {
+      final driverId = UserInfo().userId;
+      if (driverId == null) throw Exception('لم يتم العثور على بيانات السائق');
+      final locationId = selectedTask.toLocation;
+      if (locationId == null) throw Exception('الموقع غير معروف');
+
+      List<int> taskIds = selectedTask.tasks?.map((t) => t.id).toList() ?? [];
+      if (taskIds.isEmpty) taskIds = selectedTask.taskIds ?? [];
+
+      await _repository.confirmToLocation(driverId, locationId, taskIds);
+      
+      // Refresh the list to get updated status
+      emit(const DropOffState.locationCheckSuccess());
+      getDropOffTasks(); 
+    } catch (e) {
+      emit(DropOffState.error(e.toString()));
+      getDropOffTasks(); 
+    }
+  }
 }

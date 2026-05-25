@@ -12,6 +12,7 @@ abstract class DropOffRemoteDataSource {
     required int toLocationId,
     String takasiNumber = '',
   });
+  Future<void> confirmToLocation(int driverId, int toLocationId, List<int> taskIds);
   Future<void> closeDropOffTasks(List<int> taskIds, List<int>? signatureBytes);
 }
 
@@ -74,6 +75,28 @@ class DropOffRemoteDataSourceImpl implements DropOffRemoteDataSource {
     final json = response.data as Map<String, dynamic>;
     if (json['status'] == false) {
       throw Exception(json['message'] ?? 'Failed to check location');
+    }
+  }
+
+  @override
+  Future<void> confirmToLocation(int driverId, int toLocationId, List<int> taskIds) async {
+    final response = await _apiClient.post(
+      EndPoints.confirmToLocation,
+      data: jsonEncode({
+        'driver_id': driverId,
+        'to_location': toLocationId,
+        'task_ids': taskIds,
+        'lat': 0.0,
+        'lng': 0.0,
+      }),
+      options: Options(
+        headers: {'Content-Type': 'application/json'},
+      ),
+    );
+
+    final json = response.data as Map<String, dynamic>;
+    if (json['status'] == false) {
+      throw Exception(json['message'] ?? 'Failed to confirm location');
     }
   }
 

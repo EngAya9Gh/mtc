@@ -10,6 +10,11 @@ abstract class ClientTaskModel with _$ClientTaskModel {
     String? name,
     @JsonKey(name: 'arabic_name') String? arabicName,
     @JsonKey(name: 'english_name') String? englishName,
+    @JsonKey(name: 'lat') double? toLocationLat,
+    @JsonKey(name: 'lng') double? toLocationLng,
+    String? ayenati,
+    String? dropOffOtp,
+    @JsonKey(name: 'driver_confirm_to_location') String? driverConfirmToLocation,
     @Default([]) List<GroupedTaskModel> tasks,
     @Default([]) List<int> taskIds,
   }) = _ClientTaskModel;

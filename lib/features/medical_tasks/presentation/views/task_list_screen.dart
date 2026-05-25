@@ -134,9 +134,18 @@ class _TaskCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    child: AppText(
-                      task.clientName,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AppText(
+                          'Task #${task.id}',
+                          style: const TextStyle(color: Colors.grey, fontSize: 12),
+                        ),
+                        AppText(
+                          task.clientName,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                      ],
                     ),
                   ),
                   _StatusBadge(confirmed: task.confirmedByDriver == 1),

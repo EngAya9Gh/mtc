@@ -7,6 +7,7 @@ import '../../../../core/config/theme/color_scheme.dart';
 import '../../../../core/utils/app_localizations.dart';
 import '../../../../core/services/di/di_container.dart';
 import '../../../../core/navigation/app_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../bloc/drop_off_cubit.dart';
 import '../bloc/drop_off_state.dart';
 import '../../../samples_pull_out/data/models/client_task_model.dart';
@@ -83,6 +84,16 @@ class _DropOffTasksScreenView extends StatelessWidget {
                       destination: destinationGroup,
                       isArabic: isArabic,
                       onTap: () {
+                        final isConfirmed = destinationGroup.driverConfirmToLocation == 'YES' || destinationGroup.driverConfirmToLocation == '1';
+                        if (!isConfirmed) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: AppText(isArabic ? 'يجب تأكيد الوصول للموقع أولاً' : 'You must confirm reach first'),
+                              backgroundColor: Colors.orange,
+                            ),
+                          );
+                          return;
+                        }
                         context.read<DropOffCubit>().proceedToScanBags(destinationGroup);
                         context.push(
                           AppRouter.dropOffScanBags,
@@ -152,15 +163,24 @@ class _DropOffDestinationCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    child: AppText(
-                      destinationName,
-                      style: const TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AppText(
+                          'Tasks #${(destination.taskIds.isNotEmpty) ? destination.taskIds.join(", ") : destination.tasks?.map((t) => t.id).join(", ")}',
+                          style: const TextStyle(color: Colors.grey, fontSize: 12),
+                        ),
+                        AppText(
+                          destinationName,
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
                   ),
                   Container(
@@ -182,22 +202,135 @@ class _DropOffDestinationCard extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Icon(Icons.outbox_rounded, color: Colors.orange, size: 18),
-                  const SizedBox(width: 8),
-                  AppText(
-                    '${isArabic ? "إجمالي الأكياس للتسليم:" : "Total Bags to Drop Off:"} $totalBags',
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 13,
-                    ),
+                  Row(
+                    children: [
+                      const Icon(Icons.outbox_rounded, color: Colors.orange, size: 18),
+                      const SizedBox(width: 8),
+                      AppText(
+                        '${isArabic ? "إجمالي الأكياس:" : "Total Bags:"} $totalBags',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
                   ),
+                  if (destination.toLocationLat != null && destination.toLocationLng != null)
+                    IconButton(
+                      icon: const Icon(Icons.location_on, color: Colors.red),
+                      onPressed: () async {
+                        final url = 'https://www.google.com/maps/search/?api=1&query=${destination.toLocationLat},${destination.toLocationLng}';
+                        final uri = Uri.parse(url);
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        }
+                      },
+                      tooltip: isArabic ? 'فتح في الخرائط' : 'Open in Maps',
+                    ),
                 ],
               ),
+              if (destination.driverConfirmToLocation != 'YES' && destination.driverConfirmToLocation != '1') ...[
+                const Divider(height: 24, color: Color(0xFFEEEEEE)),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => _handleReach(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: AppText(
+                      isArabic ? 'تأكيد الوصول للموقع' : 'Confirm Reach',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
       ),
+    );
+  }
+
+  void _handleReach(BuildContext context) {
+    if (destination.ayenati == 'YES' && destination.dropOffOtp != null && destination.dropOffOtp!.isNotEmpty) {
+      _showOtpDialog(context);
+    } else {
+      context.read<DropOffCubit>().reachDropOffLocation(destination);
+    }
+  }
+
+  void _showOtpDialog(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final isArabic = l.isArabic;
+    final otpController = TextEditingController();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: AppText(
+            isArabic ? 'رمز التحقق (OTP)' : 'OTP Verification',
+            style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppText(
+                isArabic 
+                  ? 'هذه المهمة تتطلب رمز تحقق للتسليم. يرجى إدخال الرمز:'
+                  : 'This task requires a drop off OTP. Please enter the code:',
+                style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: otpController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  hintText: isArabic ? 'رمز التحقق' : 'OTP Code',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: AppText(isArabic ? 'إلغاء' : 'Cancel', style: const TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (otpController.text.trim() == destination.dropOffOtp) {
+                  Navigator.pop(ctx);
+                  context.read<DropOffCubit>().reachDropOffLocation(destination);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: AppText(isArabic ? 'الرمز غير صحيح' : 'Invalid OTP Code'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: AppText(isArabic ? 'تأكيد' : 'Confirm'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
