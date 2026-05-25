@@ -1,18 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/common/widgets/app_text.dart';
+import '../../../../core/common/widgets/app_loader.dart';
 import '../../../../core/config/theme/color_scheme.dart';
 import '../../../../core/utils/app_localizations.dart';
-import '../../../../data/providers/user_info_provider.dart';
+import '../bloc/profile_cubit.dart';
+import '../bloc/profile_state.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<ProfileCubit>().fetchProfile();
+  }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final isArabic = l.isArabic;
-    final user = UserInfo().loginInfo;
-    final car = UserInfo().carInfo;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
@@ -23,68 +35,100 @@ class ProfileScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         foregroundColor: AppColors.primary,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            // Avatar and Name Header
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
-                ],
-              ),
+      body: BlocBuilder<ProfileCubit, ProfileState>(
+        builder: (context, state) {
+          return state.when(
+            initial: () => const SizedBox.shrink(),
+            loading: () => const Center(child: AppLoader()),
+            error: (message) => Center(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundColor: AppColors.primary.withOpacity(0.1),
-                    child: const Icon(Icons.person, size: 50, color: AppColors.primary),
-                  ),
+                  const Icon(Icons.error_outline, color: Colors.red, size: 48),
                   const SizedBox(height: 16),
-                  AppText(
-                    user?.name ?? (isArabic ? 'سائق' : 'Driver'),
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.primary),
-                  ),
-                  const SizedBox(height: 4),
-                  AppText(
-                    user?.mobile ?? '',
-                    style: const TextStyle(fontSize: 14, color: Colors.grey),
+                  AppText(message, style: const TextStyle(color: Colors.red)),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => context.read<ProfileCubit>().fetchProfile(),
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                    child: AppText(isArabic ? 'إعادة المحاولة' : 'Retry', style: const TextStyle(color: Colors.white)),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            loaded: (profile) {
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    // Avatar and Name Header
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          CircleAvatar(
+                            radius: 50,
+                            backgroundColor: AppColors.primary.withOpacity(0.1),
+                            child: const Icon(Icons.person, size: 50, color: AppColors.primary),
+                          ),
+                          const SizedBox(height: 16),
+                          AppText(
+                            profile.txtName ?? (isArabic ? 'سائق' : 'Driver'),
+                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.primary),
+                          ),
+                          const SizedBox(height: 4),
+                          AppText(
+                            profile.txtMobileNumber ?? '',
+                            style: const TextStyle(fontSize: 14, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
 
-            // Driver Details Section
-            _buildSectionHeader(isArabic ? 'معلومات السائق' : 'Driver Information'),
-            _buildInfoCard([
-              _buildInfoRow(Icons.badge_outlined, isArabic ? 'رقم السائق' : 'Driver ID', user?.id?.toString() ?? ''),
-              _buildInfoRow(Icons.phone_android_outlined, isArabic ? 'رقم الجوال' : 'Mobile Number', user?.mobile ?? ''),
-            ]),
+                    // Driver Details Section
+                    _buildSectionHeader(isArabic ? 'معلومات السائق' : 'Driver Information'),
+                    _buildInfoCard([
+                      _buildInfoRow(Icons.person_outline, isArabic ? 'الاسم' : 'Name', profile.txtName ?? ''),
+                      _buildInfoRow(Icons.account_circle_outlined, isArabic ? 'اسم المستخدم' : 'Username', profile.txtUserName ?? ''),
+                      _buildInfoRow(Icons.email_outlined, isArabic ? 'البريد الإلكتروني' : 'Email', profile.txtEmail ?? ''),
+                      _buildInfoRow(Icons.phone_android_outlined, isArabic ? 'رقم الجوال' : 'Mobile Number', profile.txtMobileNumber ?? ''),
+                      _buildInfoRow(Icons.location_city_outlined, isArabic ? 'المدينة' : 'City', profile.txtCity ?? ''),
+                      _buildInfoRow(Icons.badge_outlined, isArabic ? 'رقم السائق' : 'Driver ID', profile.txtDriverID ?? ''),
+                    ]),
 
-            const SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-            // Car Details Section
-            _buildSectionHeader(isArabic ? 'معلومات السيارة' : 'Car Information'),
-            _buildInfoCard([
-              _buildInfoRow(Icons.directions_car_filled_outlined, isArabic ? 'رقم اللوحة' : 'Plate Number', car?.plateNumber ?? '---'),
-              _buildInfoRow(Icons.settings_outlined, isArabic ? 'رقم السيارة' : 'Car ID', car?.id?.toString() ?? '---'),
-            ]),
-            
-            const SizedBox(height: 40),
-            
-            // Version Info
-            AppText(
-              'Version 1.0.0',
-              style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
-            ),
-          ],
-        ),
+                    // Car Details Section
+                    _buildSectionHeader(isArabic ? 'معلومات السيارة' : 'Car Information'),
+                    _buildInfoCard([
+                      _buildInfoRow(Icons.directions_car_filled_outlined, isArabic ? 'موديل السيارة' : 'Model', profile.txtModel ?? '---'),
+                      _buildInfoRow(Icons.color_lens_outlined, isArabic ? 'لون السيارة' : 'Color', profile.txtColor ?? '---'),
+                      _buildInfoRow(Icons.confirmation_number_outlined, isArabic ? 'رقم اللوحة' : 'Plate Number', profile.txtCarNumber ?? '---'),
+                      _buildInfoRow(Icons.description_outlined, isArabic ? 'الوصف' : 'Description', profile.txtDescription ?? '---'),
+                    ]),
+                    
+                    const SizedBox(height: 40),
+                    
+                    // Version Info
+                    AppText(
+                      'Version 1.0.0',
+                      style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }

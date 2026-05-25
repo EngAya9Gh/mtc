@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'dart:convert';
 import '../../utils/end_points.dart';
 import 'api_interceptor.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -88,6 +89,8 @@ class CustomLogInterceptor extends Interceptor {
       if (options.data is FormData) {
         print('   FormData: ${(options.data as FormData).fields}');
         print('   Files: ${(options.data as FormData).files.map((e) => e.key).toList()}');
+      } else if (options.data is Map || options.data is List) {
+        print(jsonEncode(options.data));
       } else {
         print(options.data.toString());
       }

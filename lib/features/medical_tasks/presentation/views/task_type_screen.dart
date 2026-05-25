@@ -95,7 +95,7 @@ class TaskTypeScreen extends StatelessWidget {
                   iconColor: const Color(0xFF4CAF50),
                   iconBgColor: const Color(0xFFE8F5E9),
                   onTap: () {
-                    context.push('/task_list/OUT_FREEZER');
+                    context.push('/drop_off_tasks');
                   },
                 ),
            

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../bloc/release_car_cubit.dart';
 import '../../../../core/common/widgets/app_text.dart';
+import '../bloc/emergency_cubit.dart';
 import '../../../../core/config/theme/color_scheme.dart';
 import '../../../../core/navigation/app_router.dart';
 import '../../../../core/services/locale/locale_cubit.dart';
@@ -19,10 +21,46 @@ class MainScreen extends StatelessWidget {
     final isArabic = l.isArabic;
     final driverName = UserInfo().loginInfo != null ? 'Driver #${UserInfo().userId}' : 'Driver';
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF2F5FA),
-      body: CustomScrollView(
-        slivers: [
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<EmergencyCubit, EmergencyState>(
+          listener: (context, state) {
+            if (state is EmergencyLoading) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(isArabic ? 'جاري الإرسال...' : 'Sending...')),
+              );
+            } else if (state is EmergencySuccess) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(state.message), backgroundColor: Colors.green),
+              );
+            } else if (state is EmergencyFailure) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(state.error), backgroundColor: Colors.red),
+              );
+            }
+          },
+        ),
+        BlocListener<ReleaseCarCubit, ReleaseCarState>(
+          listener: (context, state) {
+            if (state is ReleaseCarLoading) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(isArabic ? 'جاري إخلاء السيارة...' : 'Releasing car...')),
+              );
+            } else if (state is ReleaseCarSuccess) {
+              UserInfo().logout();
+              context.go('/login');
+            } else if (state is ReleaseCarFailure) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(state.error), backgroundColor: Colors.red),
+              );
+            }
+          },
+        ),
+      ],
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF2F5FA),
+        body: CustomScrollView(
+          slivers: [
           // ─── Sliver App Bar ───────────────────────────────────────────
           SliverAppBar(
             expandedHeight: 190,
@@ -44,7 +82,13 @@ class MainScreen extends StatelessWidget {
               ),
             ),
             actions: [
-              _NavAction(icon: Icons.emergency_outlined, color: Colors.red.shade300, onTap: () {}),
+              _NavAction(
+                icon: Icons.emergency_outlined, 
+                color: Colors.red.shade300, 
+                onTap: () {
+                  _showEmergencyConfirmDialog(context, isArabic);
+                }
+              ),
               _NavAction(icon: Icons.notifications_none_rounded, color: Colors.white, badge: true, onTap: () => context.push('/notifications')),
               const SizedBox(width: 8),
             ],
@@ -207,7 +251,7 @@ class MainScreen extends StatelessWidget {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      onPressed: () {},
+                      onPressed: () => context.push('/swap_tasks'),
                     ),
                     _QuickActionCard(
                       title: l.pharmaTask,
@@ -245,6 +289,47 @@ class MainScreen extends StatelessWidget {
         ],
       ),
       drawer: _MainDrawer(l: l),
+      ),
+    );
+  }
+
+  void _showEmergencyConfirmDialog(BuildContext context, bool isArabic) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: AppText(
+            isArabic ? 'تأكيد حالة طوارئ' : 'Emergency Confirmation',
+            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+          ),
+          content: AppText(
+            isArabic 
+                ? 'هل أنت متأكد من إرسال طلب طوارئ؟' 
+                : 'Do you really want to make an emergency request?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: AppText(
+                isArabic ? 'إلغاء' : 'Cancel',
+                style: const TextStyle(color: Colors.grey),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                context.read<EmergencyCubit>().sendEmergencyRequest();
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: AppText(
+                isArabic ? 'إرسال' : 'Send',
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -570,7 +655,14 @@ class _MainDrawer extends StatelessWidget {
                 _DrawerItem(icon: Icons.person_outline_rounded, title: l.profile, onTap: () => context.push('/profile')),
                 _DrawerItem(icon: Icons.calendar_today_outlined, title: l.mySchedule, onTap: () => context.push('/schedule')),
                 _DrawerItem(icon: Icons.assignment_outlined, title: isArabic ? 'الشروط والأحكام' : 'Terms & Conditions', onTap: () => context.push('/terms')),
-                _DrawerItem(icon: Icons.directions_car_rounded, title: l.carImages, onTap: () => context.push('/car_inspection')),
+                _DrawerItem(icon: Icons.directions_car_rounded, title: isArabic ? 'استلام السيارة' : 'Receive Car', onTap: () => context.push('/car_inspection')),
+                _DrawerItem(
+                  icon: Icons.time_to_leave_rounded, 
+                  title: isArabic ? 'إخلاء السيارة' : 'Release Car', 
+                  onTap: () {
+                    _showReleaseCarConfirmDialog(context, isArabic);
+                  },
+                ),
                 _DrawerItem(icon: Icons.privacy_tip_outlined, title: l.privacyPolicy, onTap: () => context.push('/privacy_policy')),
                 _DrawerItem(
                   icon: Icons.share_rounded,
@@ -624,6 +716,46 @@ class _MainDrawer extends StatelessWidget {
           const SizedBox(height: 24),
         ],
       ),
+    );
+  }
+
+  void _showReleaseCarConfirmDialog(BuildContext context, bool isArabic) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: AppText(
+            isArabic ? 'إخلاء السيارة' : 'Release Car',
+            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
+          ),
+          content: AppText(
+            isArabic 
+                ? 'هل أنت متأكد من تسليم/إخلاء السيارة الخاصة بك لليوم؟ سيؤدي ذلك إلى تسجيل خروجك من التطبيق.' 
+                : 'Are you sure you want to release your car for today? This will log you out.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: AppText(
+                isArabic ? 'إلغاء' : 'Cancel',
+                style: const TextStyle(color: Colors.grey),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                context.read<ReleaseCarCubit>().releaseCar();
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+              child: AppText(
+                isArabic ? 'تأكيد الإخلاء' : 'Confirm Release',
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

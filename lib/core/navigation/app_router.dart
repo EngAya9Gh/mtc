@@ -1,6 +1,13 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/views/login_screen.dart';
+import '../../features/home/presentation/bloc/emergency_cubit.dart';
+import '../../features/home/presentation/bloc/release_car_cubit.dart';
 import '../../features/home/presentation/views/main_screen.dart';
+import '../../features/swap_tasks/presentation/bloc/swap_tasks_cubit.dart';
+import '../../features/swap_tasks/presentation/views/swap_task_scan_bags_screen.dart';
+import '../../features/swap_tasks/presentation/views/swap_tasks_list_screen.dart';
+import '../services/di/di_container.dart';
 
 import '../../features/auth/presentation/views/terms_screen.dart';
 import '../../features/medical_tasks/presentation/views/task_type_screen.dart';
@@ -11,11 +18,14 @@ import '../../features/medical_tasks/presentation/views/signature_submit_screen.
 import '../../features/medical_tasks/presentation/views/bag_scan_screen.dart';
 import '../../features/medical_tasks/presentation/views/first_sample_info_screen.dart';
 import '../../features/profile/presentation/views/profile_screen.dart';
+import '../../features/profile/presentation/bloc/profile_cubit.dart';
+import '../../features/car_inspection/presentation/views/car_inspection_screen.dart';
+import '../../features/car_inspection/presentation/bloc/car_inspection_cubit.dart';
 import '../../features/schedule/presentation/views/schedule_screen.dart';
 import '../../features/notifications/presentation/views/notifications_screen.dart';
 import '../../features/settings/presentation/views/privacy_policy_screen.dart';
 import '../../features/settings/presentation/views/scanner_settings_screen.dart';
-import '../../features/home/presentation/views/car_inspection_screen.dart';
+
 import '../../features/medical_tasks/data/models/task_model.dart';
 import '../../features/samples_pull_out/data/models/client_task_model.dart';
 import '../../features/freezer/presentation/views/freezer_out_bags_screen.dart';
@@ -24,6 +34,12 @@ import '../../features/samples_pull_out/presentation/views/pull_out_tasks_screen
 import '../../features/samples_pull_out/presentation/views/pull_out_scan_container_screen.dart';
 import '../../features/samples_pull_out/presentation/views/pull_out_remove_bags_screen.dart';
 import '../../features/samples_pull_out/presentation/bloc/pull_out_cubit.dart';
+import '../../features/drop_off_samples/presentation/views/drop_off_tasks_screen.dart';
+import '../../features/drop_off_samples/presentation/views/drop_off_location_check_screen.dart';
+import '../../features/drop_off_samples/presentation/views/drop_off_task_token_screen.dart';
+import '../../features/drop_off_samples/presentation/views/drop_off_scan_bags_screen.dart';
+import '../../features/drop_off_samples/presentation/views/drop_off_signature_screen.dart';
+import '../../features/drop_off_samples/presentation/bloc/drop_off_cubit.dart';
 import '../../data/providers/user_info_provider.dart';
 
 class AppRouter {
@@ -39,6 +55,12 @@ class AppRouter {
   static const String pullOutTasks = '/pull_out_tasks';
   static const String pullOutScanContainer = '/pull_out_scan_container';
   static const String pullOutRemoveBags = '/pull_out_remove_bags';
+  static const String dropOffTasks = '/drop_off_tasks';
+  static const String dropOffLocationCheck = '/drop_off_location_check';
+  static const String dropOffTaskToken = '/drop_off_task_token';
+  static const String dropOffScanBags = '/drop_off_scan_bags';
+  static const String dropOffSignature = '/drop_off_signature';
+  static const String profile = '/profile';
 
   static final router = GoRouter(
     initialLocation: login,
@@ -62,7 +84,13 @@ class AppRouter {
       ),
       GoRoute(
         path: main,
-        builder: (context, state) => const MainScreen(),
+        builder: (context, state) => MultiBlocProvider(
+          providers: [
+            BlocProvider(create: (context) => getIt<EmergencyCubit>()),
+            BlocProvider(create: (context) => getIt<ReleaseCarCubit>()),
+          ],
+          child: const MainScreen(),
+        ),
       ),
       GoRoute(
         path: taskType,
@@ -123,11 +151,17 @@ class AppRouter {
       ),
       GoRoute(
         path: '/car_inspection',
-        builder: (context, state) => const CarInspectionScreen(),
+        builder: (context, state) => BlocProvider(
+          create: (context) => getIt<CarInspectionCubit>(),
+          child: const CarInspectionScreen(),
+        ),
       ),
       GoRoute(
-        path: '/profile',
-        builder: (context, state) => const ProfileScreen(),
+        path: profile,
+        builder: (context, state) => BlocProvider(
+          create: (context) => getIt<ProfileCubit>(),
+          child: const ProfileScreen(),
+        ),
       ),
       GoRoute(
         path: '/schedule',
@@ -183,6 +217,59 @@ class AppRouter {
         builder: (context, state) {
           final cubit = state.extra as PullOutCubit;
           return PullOutRemoveBagsScreen(cubit: cubit);
+        },
+      ),
+      GoRoute(
+        path: dropOffTasks,
+        builder: (context, state) => const DropOffTasksScreen(),
+      ),
+      GoRoute(
+        path: dropOffLocationCheck,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          final cubit = extra['cubit'] as DropOffCubit;
+          final destination = extra['destination'] as ClientTaskModel;
+          return DropOffLocationCheckScreen(cubit: cubit, destination: destination);
+        },
+      ),
+      GoRoute(
+        path: dropOffTaskToken,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          final cubit = extra['cubit'] as DropOffCubit;
+          final destination = extra['destination'] as ClientTaskModel;
+          return DropOffTaskTokenScreen(cubit: cubit, destination: destination);
+        },
+      ),
+      GoRoute(
+        path: dropOffScanBags,
+        builder: (context, state) {
+          final cubit = state.extra as DropOffCubit;
+          return DropOffScanBagsScreen(cubit: cubit);
+        },
+      ),
+      GoRoute(
+        path: dropOffSignature,
+        builder: (context, state) {
+          final cubit = state.extra as DropOffCubit;
+          return DropOffSignatureScreen(cubit: cubit);
+        },
+      ),
+      GoRoute(
+        path: '/swap_tasks',
+        builder: (context, state) => BlocProvider(
+          create: (context) => getIt<SwapTasksCubit>(),
+          child: const SwapTasksListScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/swap_scan_bags',
+        builder: (context, state) {
+          final cubit = state.extra as SwapTasksCubit;
+          return BlocProvider.value(
+            value: cubit,
+            child: const SwapTaskScanBagsScreen(),
+          );
         },
       ),
     ],

@@ -290,6 +290,46 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
     );
   }
 
+  Widget _buildTemperatureBadge(String type) {
+    Color bgColor;
+    Color textColor;
+    switch (type.toUpperCase()) {
+      case 'ROOM':
+      case 'ROOM_TEMP':
+        bgColor = const Color(0xFFE8F5E9); // Soft Green
+        textColor = const Color(0xFF2E7D32);
+        break;
+      case 'REFRIGERATE':
+      case 'COLD':
+        bgColor = const Color(0xFFE3F2FD); // Soft Blue
+        textColor = const Color(0xFF1565C0);
+        break;
+      case 'FROZEN':
+        bgColor = const Color(0xFFEDE7F6); // Soft Purple
+        textColor = const Color(0xFF651FFF);
+        break;
+      default:
+        bgColor = const Color(0xFFFFF3E0); // Soft Orange
+        textColor = const Color(0xFFE65100);
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: AppText(
+        type,
+        style: TextStyle(
+          color: textColor,
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
   Widget _buildBagRemovalView(
     BuildContext context, 
     bool isArabic, 
@@ -411,41 +451,101 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
             itemBuilder: (context, index) {
               final bag = currentContainerBags[index];
               return Container(
-                margin: const EdgeInsets.only(bottom: 10),
-                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.only(bottom: 12),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade100),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4, offset: const Offset(0, 2)),
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
                   ],
                 ),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Styled Header for Task ID
                     Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        shape: BoxShape.circle,
+                        color: AppColors.primary.withOpacity(0.06),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(12),
+                          topRight: Radius.circular(12),
+                        ),
                       ),
-                      child: const Icon(Icons.shopping_bag_outlined, color: Colors.grey, size: 20),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.assignment_outlined,
+                            size: 16,
+                            color: AppColors.primary,
+                          ),
+                          const SizedBox(width: 6),
+                          AppText(
+                            isArabic 
+                                ? 'رقم المهمة: #${bag.taskId}' 
+                                : 'Task ID: #${bag.taskId}',
+                            style: const TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const Spacer(),
+                          _buildTemperatureBadge(bag.temperatureType),
+                        ],
+                      ),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: AppText(
-                        bag.bagCode,
-                        style: const TextStyle(fontFamily: 'monospace', fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade50,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: AppText(
-                        bag.temperatureType,
-                        style: TextStyle(color: Colors.orange.shade700, fontSize: 11, fontWeight: FontWeight.bold),
+                    
+                    // Card Body containing Bag Code
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.08),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.shopping_bag_outlined,
+                              color: AppColors.primary,
+                              size: 22,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                AppText(
+                                  isArabic ? 'كود الكيس' : 'Bag Code',
+                                  style: TextStyle(
+                                    color: Colors.grey.shade500,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                AppText(
+                                  bag.bagCode,
+                                  style: const TextStyle(
+                                    fontFamily: 'monospace',
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: AppColors.textPrimary,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
