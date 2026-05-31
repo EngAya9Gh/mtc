@@ -6,6 +6,7 @@ import '../../domain/repositories/auth_repository.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 import '../../../../core/services/notifications/notification_service.dart';
+import '../../../../core/services/background/background_location_service.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _authRepository;
@@ -28,7 +29,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final response = await _authRepository.login(event.username, event.password, fcmToken);
       if (response.status && response.data != null) {
         await _sharedPreferences.setString('token', response.data!.token);
+        await _sharedPreferences.setString('api_token', response.data!.token);
+        await _sharedPreferences.setInt('driver_id', response.data!.id);
         UserInfo().loginInfo = response.data;
+        BackgroundLocationService().startService();
         emit(AuthState.authenticated(data: response.data!));
       } else {
         emit(AuthState.error(message: response.message));
@@ -50,7 +54,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final response = await _authRepository.loginWithMobile(event.mobile, event.password, fcmToken);
       if (response.status && response.data != null) {
         await _sharedPreferences.setString('token', response.data!.token);
+        await _sharedPreferences.setString('api_token', response.data!.token);
+        await _sharedPreferences.setInt('driver_id', response.data!.id);
         UserInfo().loginInfo = response.data;
+        BackgroundLocationService().startService();
         emit(AuthState.authenticated(data: response.data!));
       } else {
         emit(AuthState.error(message: response.message));
@@ -66,6 +73,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     LogoutRequested event,
     Emitter<AuthState> emit,
   ) {
+    BackgroundLocationService().stopService();
     emit(const AuthState.unauthenticated());
   }
 }

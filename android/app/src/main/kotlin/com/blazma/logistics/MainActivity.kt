@@ -1,4 +1,4 @@
-package com.blazma.blazma_logistics
+package com.blazma.logistics
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -8,6 +8,8 @@ import 'core/services/di/di_container.dart';
 import 'core/services/locale/locale_cubit.dart';
 import 'core/utils/app_strings.dart';
 import 'core/navigation/app_router.dart';
+import 'core/services/background/background_location_service.dart';
+import 'core/services/notifications/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,6 +35,15 @@ void main() async {
   }
 
   await initDi();
+  
+  if (!kIsWeb) {
+    try {
+      await NotificationService().initialize();
+      await BackgroundLocationService().initialize();
+    } catch (e) {
+      debugPrint('Service init failed: $e');
+    }
+  }
   
   final binding = WidgetsFlutterBinding.ensureInitialized();
   final implicitView = binding.platformDispatcher.implicitView;

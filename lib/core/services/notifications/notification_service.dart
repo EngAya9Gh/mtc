@@ -1,10 +1,137 @@
+import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:go_router/go_router.dart';
+import '../navigation/app_router.dart';
+import '../../../features/medical_tasks/data/models/task_model.dart';
+import '../../../features/samples_pull_out/data/models/client_task_model.dart';
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Setup background message handling if needed.
+}
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
   NotificationService._internal();
+
+  final FlutterLocalNotificationsPlugin _localNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
+  Future<void> initialize() async {
+    try {
+      if (kIsWeb) return;
+
+      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+      // Request permissions
+      final messaging = FirebaseMessaging.instance;
+      await messaging.requestPermission();
+
+      // Initialize local notifications
+      const AndroidInitializationSettings initializationSettingsAndroid =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
+      const DarwinInitializationSettings initializationSettingsIOS =
+          DarwinInitializationSettings(
+        requestAlertPermission: true,
+        requestBadgePermission: true,
+        requestSoundPermission: true,
+      );
+      const InitializationSettings initializationSettings =
+          InitializationSettings(
+        android: initializationSettingsAndroid,
+        iOS: initializationSettingsIOS,
+      );
+      
+      await _localNotificationsPlugin.initialize(
+        initializationSettings,
+        onDidReceiveNotificationResponse: (response) {
+           // Handle local notification tap
+        },
+      );
+
+      // Terminated State (App is completely closed)
+      RemoteMessage? initialMessage = await messaging.getInitialMessage();
+      if (initialMessage != null) {
+        _handleNotificationTap(initialMessage);
+      }
+
+      // Foreground State
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        _showLocalNotification(message);
+      });
+
+      // Background State (App is in background but not killed)
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        _handleNotificationTap(message);
+      });
+    } catch (e) {
+      debugPrint("Notification init failed: $e");
+    }
+  }
+
+  void _showLocalNotification(RemoteMessage message) {
+    final notification = message.notification;
+    final android = message.notification?.android;
+    if (notification != null && android != null && !kIsWeb) {
+      _localNotificationsPlugin.show(
+        notification.hashCode,
+        notification.title,
+        notification.body,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'high_importance_channel',
+            'High Importance Notifications',
+            channelDescription: 'This channel is used for important notifications.',
+            importance: Importance.max,
+            priority: Priority.high,
+          ),
+        ),
+      );
+    }
+  }
+
+  void _handleNotificationTap(RemoteMessage message) {
+    if (message.data.containsKey('action') && message.data['action'] == 'open_task') {
+      try {
+        final taskType = message.data['task_type'];
+        final taskObjectStr = message.data['task_object'];
+        
+        if (taskObjectStr == null) return;
+        
+        final Map<String, dynamic> taskJson = jsonDecode(taskObjectStr);
+
+        switch (taskType) {
+          case 'NEW':
+            final task = MedicalTask.fromJson(taskJson);
+            AppRouter.router.push(AppRouter.taskMap, extra: task);
+            break;
+          case 'COLLECTED':
+            final task = MedicalTask.fromJson(taskJson);
+            AppRouter.router.push(AppRouter.freezerOutBags, extra: task);
+            break;
+          case 'IN_FREEZER':
+            // E.g. scan container barcode. Currently mapping to pull out main screen or equivalent
+            final task = MedicalTask.fromJson(taskJson);
+            AppRouter.router.push(AppRouter.pullOutTasks); 
+            break;
+          case 'OUT_FREEZER':
+            // Handle ClientTaskModel for Phase 2
+            // If the backend passes a single task we might need a dummy ClientTaskModel wrapper
+            final clientTask = ClientTaskModel.fromJson(taskJson);
+            AppRouter.router.push(AppRouter.deliveryLocation, extra: clientTask);
+            break;
+          default:
+            debugPrint("Unknown task_type: $taskType");
+        }
+      } catch (e) {
+        debugPrint("Error handling deep link routing: $e");
+      }
+    }
+  }
 
   Future<String?> getToken() async {
     try {

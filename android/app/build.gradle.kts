@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.blazma.blazma_logistics"
+    namespace = "com.blazma.logistics"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "29.0.14206865"
 
@@ -22,7 +22,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.blazma.blazma_logistics"
+        applicationId = "com.blazma.logistics"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
