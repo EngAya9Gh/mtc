@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:go_router/go_router.dart';
-import '../navigation/app_router.dart';
+import '../../navigation/app_router.dart';
 import '../../../features/medical_tasks/data/models/task_model.dart';
 import '../../../features/samples_pull_out/data/models/client_task_model.dart';
 
@@ -18,7 +18,7 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _localNotificationsPlugin =
+  final dynamic _localNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
   Future<void> initialize() async {
@@ -31,27 +31,29 @@ class NotificationService {
       final messaging = FirebaseMessaging.instance;
       await messaging.requestPermission();
 
-      // Initialize local notifications
-      const AndroidInitializationSettings initializationSettingsAndroid =
-          AndroidInitializationSettings('@mipmap/ic_launcher');
-      const DarwinInitializationSettings initializationSettingsIOS =
-          DarwinInitializationSettings(
-        requestAlertPermission: true,
-        requestBadgePermission: true,
-        requestSoundPermission: true,
-      );
-      const InitializationSettings initializationSettings =
-          InitializationSettings(
-        android: initializationSettingsAndroid,
-        iOS: initializationSettingsIOS,
-      );
-      
-      await _localNotificationsPlugin.initialize(
-        initializationSettings,
-        onDidReceiveNotificationResponse: (response) {
-           // Handle local notification tap
-        },
-      );
+      if (!kIsWeb) {
+        // Initialize local notifications
+        const AndroidInitializationSettings initializationSettingsAndroid =
+            AndroidInitializationSettings('@mipmap/ic_launcher');
+        const DarwinInitializationSettings initializationSettingsIOS =
+            DarwinInitializationSettings(
+          requestAlertPermission: true,
+          requestBadgePermission: true,
+          requestSoundPermission: true,
+        );
+        const InitializationSettings initializationSettings =
+            InitializationSettings(
+          android: initializationSettingsAndroid,
+          iOS: initializationSettingsIOS,
+        );
+        
+        await _localNotificationsPlugin.initialize(
+          initializationSettings,
+          onDidReceiveNotificationResponse: (response) {
+             // Handle local notification tap
+          },
+        );
+      }
 
       // Terminated State (App is completely closed)
       RemoteMessage? initialMessage = await messaging.getInitialMessage();
@@ -74,14 +76,12 @@ class NotificationService {
   }
 
   void _showLocalNotification(RemoteMessage message) {
+    if (kIsWeb) return;
+    
     final notification = message.notification;
-    final android = message.notification?.android;
-    if (notification != null && android != null && !kIsWeb) {
-      _localNotificationsPlugin.show(
-        notification.hashCode,
-        notification.title,
-        notification.body,
-        const NotificationDetails(
+    if (notification != null) {
+      try {
+        const NotificationDetails notificationDetails = NotificationDetails(
           android: AndroidNotificationDetails(
             'high_importance_channel',
             'High Importance Notifications',
@@ -89,8 +89,18 @@ class NotificationService {
             importance: Importance.max,
             priority: Priority.high,
           ),
-        ),
-      );
+          iOS: DarwinNotificationDetails(),
+        );
+
+        _localNotificationsPlugin.show(
+          notification.hashCode,
+          notification.title,
+          notification.body,
+          notificationDetails,
+        );
+      } catch (e) {
+        debugPrint('Local notification error: $e');
+      }
     }
   }
 
@@ -122,7 +132,7 @@ class NotificationService {
             // Handle ClientTaskModel for Phase 2
             // If the backend passes a single task we might need a dummy ClientTaskModel wrapper
             final clientTask = ClientTaskModel.fromJson(taskJson);
-            AppRouter.router.push(AppRouter.deliveryLocation, extra: clientTask);
+            AppRouter.router.push(AppRouter.dropOffLocationCheck, extra: clientTask);
             break;
           default:
             debugPrint("Unknown task_type: $taskType");

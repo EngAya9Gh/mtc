@@ -7,6 +7,7 @@ import '../../../../core/utils/app_localizations.dart';
 import '../bloc/swap_tasks_cubit.dart';
 import '../bloc/swap_tasks_state.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import '../../../../core/common/widgets/app_scanner.dart';
 
 class SwapTaskScanBagsScreen extends StatefulWidget {
   const SwapTaskScanBagsScreen({super.key});
@@ -16,14 +17,7 @@ class SwapTaskScanBagsScreen extends StatefulWidget {
 }
 
 class _SwapTaskScanBagsScreenState extends State<SwapTaskScanBagsScreen> {
-  final MobileScannerController _scannerController = MobileScannerController();
   bool _isScanning = true;
-
-  @override
-  void dispose() {
-    _scannerController.dispose();
-    super.dispose();
-  }
 
   void _onDetect(BarcodeCapture capture) {
     if (!_isScanning) return;
@@ -100,8 +94,7 @@ class _SwapTaskScanBagsScreenState extends State<SwapTaskScanBagsScreen> {
                     height: 250,
                     child: Stack(
                       children: [
-                        MobileScanner(
-                          controller: _scannerController,
+                        AppScanner(
                           onDetect: _onDetect,
                         ),
                         // Scanner Overlay

@@ -9,6 +9,7 @@ import '../../../../core/utils/app_localizations.dart';
 import '../../../../core/navigation/app_router.dart';
 import '../bloc/pull_out_cubit.dart';
 import '../bloc/pull_out_state.dart';
+import '../../../../core/common/widgets/app_scanner_screen.dart';
 import '../../data/models/client_task_model.dart';
 
 class PullOutRemoveBagsScreen extends StatelessWidget {
@@ -46,6 +47,23 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
     if (code.isNotEmpty) {
       context.read<PullOutCubit>().scanBagToRemove(code);
       _bagController.clear();
+    }
+  }
+
+  void _onScanBagBarcode() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const AppScannerScreen(multiScan: true, title: 'Scan Bags to Remove')),
+    );
+    if (result is List<String> && result.isNotEmpty) {
+      for (final code in result) {
+        context.read<PullOutCubit>().scanBagToRemove(code);
+      }
+    } else if (result is String && result.isNotEmpty) {
+      setState(() {
+        _bagController.text = result;
+      });
+      _onManualBagSubmit();
     }
   }
 
@@ -340,78 +358,14 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          // Camera simulation box for bags
-          Container(
-            height: 180,
+          // Scanner Button
+          SizedBox(
             width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.black87,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.secondary, width: 2),
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.qr_code_scanner,
-                      size: 56,
-                      color: AppColors.secondary.withOpacity(0.8),
-                    ),
-                    const SizedBox(height: 12),
-                    AppText(
-                      isArabic ? 'وجّه الكاميرا لمسح كيس العينة لإزالته' : 'Point camera to scan bag to remove',
-                      style: const TextStyle(color: Colors.white70, fontSize: 13),
-                    ),
-                  ],
-                ),
-                Positioned(
-                  top: 90,
-                  left: 20,
-                  right: 20,
-                  child: Container(
-                    height: 2,
-                    decoration: const BoxDecoration(
-                      color: Colors.redAccent,
-                      boxShadow: [
-                        BoxShadow(color: Colors.redAccent, blurRadius: 4, spreadRadius: 1),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+            child: AppElevatedButton(
+              text: isArabic ? 'مسح الكيس بالماسح لإزالته' : 'SCAN BAG TO REMOVE',
+              onPressed: _onScanBagBarcode,
             ),
           ),
-          const SizedBox(height: 20),
-
-          // Manual text field for bags
-          TextField(
-            controller: _bagController,
-            decoration: InputDecoration(
-              hintText: isArabic ? 'أو أدخل باركود الكيس يدوياً لإزالته' : 'Or type bag barcode to remove',
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-              suffixIcon: IconButton(
-                icon: const Icon(Icons.arrow_forward),
-                onPressed: _onManualBagSubmit,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Simulate button for testing
-          if (currentContainerBags.isNotEmpty)
-            TextButton.icon(
-              icon: const Icon(Icons.bug_report),
-              label: AppText(isArabic ? 'مسح الكيس الأول وهمياً' : 'Mock scan first bag'),
-              onPressed: () {
-                _bagController.text = currentContainerBags.first.bagCode;
-                _onManualBagSubmit();
-              },
-            ),
             
           const SizedBox(height: 24),
 

@@ -5,6 +5,7 @@ import '../../../../core/common/widgets/app_elevated_button.dart';
 import '../../../../core/config/theme/color_scheme.dart';
 import '../../../../core/utils/app_localizations.dart';
 import '../../data/models/task_model.dart';
+import '../../../../core/common/widgets/app_scanner_screen.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/services/di/di_container.dart';
@@ -81,14 +82,24 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
     {'api': 'Others', 'ar': 'أخرى', 'en': 'Others'},
   ];
 
-  void _onScanBarcode() {
-    _addBarcode(_selectedSampleType);
+  void _onScanBarcode() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const AppScannerScreen(multiScan: true, title: 'Scan Samples')),
+    );
+    if (result is List<String> && result.isNotEmpty) {
+      for (final code in result) {
+        _addBarcode(_selectedSampleType, code);
+      }
+    } else if (result is String && result.isNotEmpty) {
+      _addBarcode(_selectedSampleType, result);
+    }
   }
 
-  void _addBarcode(String sampleType) {
+  void _addBarcode(String sampleType, String barcode) {
     setState(() {
       _scannedBarcodes.add({
-        'barcode': 'BLZ-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
+        'barcode': barcode,
         'temp': _selectedTemp,
         'type': sampleType,
       });

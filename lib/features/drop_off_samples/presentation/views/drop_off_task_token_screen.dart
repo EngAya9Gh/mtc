@@ -9,6 +9,7 @@ import '../../../../core/navigation/app_router.dart';
 import '../bloc/drop_off_cubit.dart';
 import '../bloc/drop_off_state.dart';
 import '../../../samples_pull_out/data/models/client_task_model.dart';
+import '../../../../core/common/widgets/app_scanner_screen.dart';
 
 class DropOffTaskTokenScreen extends StatefulWidget {
   final DropOffCubit cubit;
@@ -37,6 +38,19 @@ class _DropOffTaskTokenScreenState extends State<DropOffTaskTokenScreen> {
     final code = _tokenController.text.trim();
     if (code.isNotEmpty) {
       widget.cubit.checkTaskToken(widget.destination, code);
+    }
+  }
+
+  void _onOpenScanner() async {
+    final String? scannedBarcode = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const AppScannerScreen()),
+    );
+    if (scannedBarcode != null && scannedBarcode.isNotEmpty) {
+      setState(() {
+        _tokenController.text = scannedBarcode;
+      });
+      _onScan();
     }
   }
 
@@ -97,7 +111,7 @@ class _DropOffTaskTokenScreenState extends State<DropOffTaskTokenScreen> {
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       suffixIcon: IconButton(
                         icon: const Icon(Icons.qr_code_scanner),
-                        onPressed: () {},
+                        onPressed: _onOpenScanner,
                       ),
                     ),
                   ),

@@ -11,6 +11,7 @@ import '../../../../data/providers/user_info_provider.dart';
 import '../../data/models/client_task_model.dart';
 import '../bloc/pull_out_cubit.dart';
 import '../bloc/pull_out_state.dart';
+import '../../../../core/common/widgets/app_scanner_screen.dart';
 
 class PullOutScanContainerScreen extends StatelessWidget {
   final ClientTaskModel destination;
@@ -46,6 +47,19 @@ class _PullOutScanContainerScreenViewState extends State<_PullOutScanContainerSc
     final code = _containerController.text.trim();
     if (code.isNotEmpty) {
       context.read<PullOutCubit>().validateContainer(code);
+    }
+  }
+
+  void _onScanContainerBarcode() async {
+    final String? scannedBarcode = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const AppScannerScreen()),
+    );
+    if (scannedBarcode != null && scannedBarcode.isNotEmpty) {
+      setState(() {
+        _containerController.text = scannedBarcode;
+      });
+      _onManualContainerSubmit();
     }
   }
 
@@ -128,62 +142,12 @@ class _PullOutScanContainerScreenViewState extends State<_PullOutScanContainerSc
                     ),
                     const SizedBox(height: 32),
 
-                    // Camera simulation box
-                    Container(
-                      height: 220,
+                    // Scanner Button
+                    SizedBox(
                       width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.black87,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: isContainerValidated ? Colors.green : AppColors.primary, width: 2),
-                        boxShadow: [
-                          BoxShadow(
-                            color: (isContainerValidated ? Colors.green : AppColors.primary).withOpacity(0.2),
-                            blurRadius: 15,
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                isContainerValidated ? Icons.check_circle : Icons.qr_code_scanner,
-                                size: 70,
-                                color: (isContainerValidated ? Colors.green : AppColors.primary).withOpacity(0.8),
-                              ),
-                              const SizedBox(height: 16),
-                              AppText(
-                                isContainerValidated
-                                    ? (isArabic ? 'تم التحقق من الحاوية بنجاح' : 'Container Verified Successfully')
-                                    : (isArabic ? 'وجّه الكاميرا نحو باركود الحاوية' : 'Point camera to container barcode'),
-                                style: TextStyle(
-                                  color: isContainerValidated ? Colors.green.shade200 : Colors.white70,
-                                  fontSize: 14,
-                                  fontWeight: isContainerValidated ? FontWeight.bold : FontWeight.normal,
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (!isContainerValidated)
-                            Positioned(
-                              top: 110,
-                              left: 30,
-                              right: 30,
-                              child: Container(
-                                height: 2,
-                                decoration: const BoxDecoration(
-                                  color: Colors.redAccent,
-                                  boxShadow: [
-                                    BoxShadow(color: Colors.redAccent, blurRadius: 4, spreadRadius: 1),
-                                  ],
-                                ),
-                              ),
-                            ),
-                        ],
+                      child: AppElevatedButton(
+                        text: isArabic ? 'مسح الحاوية بالماسح' : 'SCAN CONTAINER',
+                        onPressed: _onScanContainerBarcode,
                       ),
                     ),
                     const SizedBox(height: 32),

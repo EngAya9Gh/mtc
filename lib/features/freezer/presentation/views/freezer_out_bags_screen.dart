@@ -13,6 +13,7 @@ import '../bloc/freezer_placement_cubit.dart';
 import '../bloc/freezer_placement_state.dart';
 import '../../../../data/providers/user_info_provider.dart';
 import '../../data/models/bag_item_model.dart';
+import '../../../../core/common/widgets/app_scanner_screen.dart';
 
 class FreezerOutBagsScreen extends StatelessWidget {
   final MedicalTask task;
@@ -48,68 +49,39 @@ class _FreezerOutBagsScreenViewState extends State<_FreezerOutBagsScreenView> {
     super.dispose();
   }
 
-  void _onSimulateContainerScan(String currentTemp) {
-    final containers = UserInfo().carInfo?.containers;
-    String mockBarcode = '';
-    if (containers != null && containers.isNotEmpty) {
-      final matched = containers.firstWhere(
-        (c) {
-          final type = (c.type ?? '').toUpperCase();
-          final target = currentTemp.toUpperCase();
-          if (target == 'REF') {
-            return type == 'REFRIGERATE';
-          }
-          if (target == 'FRZ') {
-            return type == 'FROZEN';
-          }
-          return type == target;
-        },
-        orElse: () => containers.first,
-      );
-      mockBarcode = matched.id.toString();
-    } else {
-      mockBarcode = 'CONT-${currentTemp.toUpperCase()}-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
+  void _onSimulateContainerScan(String currentTemp) async {
+    final String? scannedBarcode = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const AppScannerScreen()),
+    );
+    if (scannedBarcode != null && scannedBarcode.isNotEmpty) {
+      setState(() {
+        _containerController.text = scannedBarcode;
+      });
+      if (mounted) {
+        context.read<FreezerPlacementCubit>().validateContainer(scannedBarcode);
+      }
     }
-
-    setState(() {
-      _containerController.text = mockBarcode;
-    });
-    context.read<FreezerPlacementCubit>().validateContainer(mockBarcode);
   }
 
-  void _onSimulateBagScan(List<BagItemModel> remainingBags) {
-    if (remainingBags.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: AppText(
-            AppLocalizations.of(context).isArabic 
-                ? 'تم مسح جميع الأكياس لهذه الحاوية' 
-                : 'All bags scanned for this container',
-          ),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-    // Scan the first remaining bag
-    final bagToScan = remainingBags.first.bagCode;
-    setState(() {
-      _bagController.text = bagToScan;
-    });
-    
-    final success = context.read<FreezerPlacementCubit>().scanBag(bagToScan);
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: AppText(
-            AppLocalizations.of(context).isArabic 
-                ? 'تم مسح الكيس: $bagToScan بنجاح' 
-                : 'Scanned bag: $bagToScan successfully',
-          ),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 1),
-        ),
-      );
+  void _onSimulateBagScan(List<BagItemModel> remainingBags) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const AppScannerScreen(multiScan: true, title: 'Scan Bags to Freezer')),
+    );
+    if (result is List<String> && result.isNotEmpty) {
+      for (final code in result) {
+        if (mounted) {
+          context.read<FreezerPlacementCubit>().scanBag(code);
+        }
+      }
+    } else if (result is String && result.isNotEmpty) {
+      setState(() {
+        _bagController.text = result;
+      });
+      if (mounted) {
+        context.read<FreezerPlacementCubit>().scanBag(result);
+      }
     }
   }
 
@@ -521,12 +493,13 @@ class _FreezerOutBagsScreenViewState extends State<_FreezerOutBagsScreenView> {
         ),
         const SizedBox(height: 20),
 
-        // Simulated scanner button
-        AppElevatedButton(
-          text: isArabic ? 'مسح حاوية افتراضي' : 'SIMULATE CONTAINER SCAN',
-          backgroundColor: AppColors.secondary,
-          foregroundColor: Colors.white,
-          onPressed: () => _onSimulateContainerScan(currentTemp),
+        // Scanner button
+        SizedBox(
+          width: double.infinity,
+          child: AppElevatedButton(
+            text: isArabic ? 'مسح حاوية' : 'SCAN CONTAINER',
+            onPressed: () => _onSimulateContainerScan(currentTemp),
+          ),
         ),
         const SizedBox(height: 20),
 
@@ -687,12 +660,13 @@ class _FreezerOutBagsScreenViewState extends State<_FreezerOutBagsScreenView> {
         ),
         const SizedBox(height: 16),
 
-        // Simulate bag scan button
-        AppElevatedButton(
-          text: isArabic ? 'مسح كيس افتراضي' : 'SIMULATE BAG SCAN',
-          backgroundColor: AppColors.secondary,
-          foregroundColor: Colors.white,
-          onPressed: () => _onSimulateBagScan(remainingBags),
+        // Scanner bag button
+        SizedBox(
+          width: double.infinity,
+          child: AppElevatedButton(
+            text: isArabic ? 'مسح كيس' : 'SCAN BAG',
+            onPressed: () => _onSimulateBagScan(remainingBags),
+          ),
         ),
         const SizedBox(height: 16),
 

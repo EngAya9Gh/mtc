@@ -345,20 +345,13 @@ class _TaskMapScreenViewState extends State<_TaskMapScreenView> {
                               lng: _driverLng ?? 46.749398,
                             );
                           } else if (!isStarted) {
-                            if (_currentTask.isSwap == 1) {
-                              // For swap tasks, startTask API might be different if needed, 
-                              // but using the generic startTask handles it normally
-                              context.read<TaskMapCubit>().startTask(
-                                taskId: _currentTask.id,
-                                lat: _driverLat ?? 24.671086,
-                                lng: _driverLng ?? 46.749398,
-                              );
-                            } else {
-                              // Normal tasks just transition to selection (API is called later)
-                              context.push(AppRouter.taskType, extra: _currentTask);
-                            }
+                            context.read<TaskMapCubit>().startTask(
+                              taskId: _currentTask.id,
+                              lat: _driverLat ?? 24.671086,
+                              lng: _driverLng ?? 46.749398,
+                            );
                           } else {
-                            context.push(AppRouter.taskType, extra: _currentTask);
+                            context.push(AppRouter.sampleCollection, extra: _currentTask);
                           }
                         },
                       ),

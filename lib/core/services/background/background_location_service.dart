@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:geolocator/geolocator.dart';
@@ -27,14 +28,16 @@ class BackgroundLocationService {
       importance: Importance.low, // low importance prevents sound
     );
 
-    final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-        FlutterLocalNotificationsPlugin();
+    if (!kIsWeb) {
+      final dynamic flutterLocalNotificationsPlugin =
+          FlutterLocalNotificationsPlugin();
 
-    // Create channel on the device
-    await flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(channel);
+      // Create channel on the device
+      await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(channel);
+    }
 
     await service.configure(
       androidConfiguration: AndroidConfiguration(
@@ -45,6 +48,7 @@ class BackgroundLocationService {
         initialNotificationTitle: 'خدمة التتبع تعمل',
         initialNotificationContent: 'يتم الآن تتبع الموقع في الخلفية',
         foregroundServiceNotificationId: notificationId,
+        foregroundServiceTypes: [AndroidForegroundType.location],
       ),
       iosConfiguration: IosConfiguration(
         autoStart: false,

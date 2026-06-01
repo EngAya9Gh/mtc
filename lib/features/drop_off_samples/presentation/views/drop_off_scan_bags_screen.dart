@@ -8,6 +8,7 @@ import '../../../../core/utils/app_localizations.dart';
 import '../../../../core/navigation/app_router.dart';
 import '../bloc/drop_off_cubit.dart';
 import '../bloc/drop_off_state.dart';
+import '../../../../core/common/widgets/app_scanner_screen.dart';
 
 class DropOffScanBagsScreen extends StatelessWidget {
   final DropOffCubit cubit;
@@ -44,6 +45,23 @@ class _DropOffScanBagsScreenViewState extends State<_DropOffScanBagsScreenView> 
     if (code.isNotEmpty) {
       context.read<DropOffCubit>().scanBagToDeliver(code);
       _bagController.clear();
+    }
+  }
+
+  void _onScanBagBarcode() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const AppScannerScreen(multiScan: true, title: 'Scan Drop Off Bags')),
+    );
+    if (result is List<String> && result.isNotEmpty) {
+      for (final code in result) {
+        context.read<DropOffCubit>().scanBagToDeliver(code);
+      }
+    } else if (result is String && result.isNotEmpty) {
+      setState(() {
+        _bagController.text = result;
+      });
+      _onManualBagSubmit();
     }
   }
 
@@ -122,78 +140,14 @@ class _DropOffScanBagsScreenViewState extends State<_DropOffScanBagsScreenView> 
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    // Camera simulation box for bags
-                    Container(
-                      height: 180,
+                    // Scanner Button
+                    SizedBox(
                       width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.black87,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.secondary, width: 2),
-                      ),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.qr_code_scanner,
-                                size: 56,
-                                color: AppColors.secondary.withOpacity(0.8),
-                              ),
-                              const SizedBox(height: 12),
-                              AppText(
-                                isArabic ? 'وجّه الكاميرا لمسح كيس العينة لتسليمه' : 'Point camera to scan bag to drop off',
-                                style: const TextStyle(color: Colors.white70, fontSize: 13),
-                              ),
-                            ],
-                          ),
-                          Positioned(
-                            top: 90,
-                            left: 20,
-                            right: 20,
-                            child: Container(
-                              height: 2,
-                              decoration: const BoxDecoration(
-                                color: Colors.redAccent,
-                                boxShadow: [
-                                  BoxShadow(color: Colors.redAccent, blurRadius: 4, spreadRadius: 1),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
+                      child: AppElevatedButton(
+                        text: isArabic ? 'مسح الكيس بالماسح' : 'SCAN BAG',
+                        onPressed: _onScanBagBarcode,
                       ),
                     ),
-                    const SizedBox(height: 20),
-
-                    // Manual text field for bags
-                    TextField(
-                      controller: _bagController,
-                      decoration: InputDecoration(
-                        hintText: isArabic ? 'أو أدخل باركود الكيس يدوياً' : 'Or type bag barcode',
-                        filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.arrow_forward),
-                          onPressed: _onManualBagSubmit,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Simulate button for testing
-                    if (remainingBags.isNotEmpty)
-                      TextButton.icon(
-                        icon: const Icon(Icons.bug_report),
-                        label: AppText(isArabic ? 'مسح الكيس الأول وهمياً' : 'Mock scan first bag'),
-                        onPressed: () {
-                          _bagController.text = remainingBags.first.bagCode;
-                          _onManualBagSubmit();
-                        },
-                      ),
                       
                     const SizedBox(height: 24),
 

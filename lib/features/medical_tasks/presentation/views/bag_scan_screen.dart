@@ -4,6 +4,7 @@ import '../../../../core/common/widgets/app_text.dart';
 import '../../../../core/common/widgets/app_elevated_button.dart';
 import '../../../../core/config/theme/color_scheme.dart';
 import '../../../../core/utils/app_localizations.dart';
+import '../../../../core/common/widgets/app_scanner_screen.dart';
 
 class BagScanScreen extends StatefulWidget {
   final String? temp;
@@ -19,11 +20,17 @@ class _BagScanScreenState extends State<BagScanScreen> {
   final TextEditingController _bagController = TextEditingController();
   bool _isScanned = false;
 
-  void _onSimulateScan() {
-    setState(() {
-      _bagController.text = 'BAG-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
-      _isScanned = true;
-    });
+  void _onScanBarcode() async {
+    final String? scannedBarcode = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const AppScannerScreen()),
+    );
+    if (scannedBarcode != null && scannedBarcode.isNotEmpty) {
+      setState(() {
+        _bagController.text = scannedBarcode;
+        _isScanned = true;
+      });
+    }
   }
 
   @override
@@ -98,7 +105,7 @@ class _BagScanScreenState extends State<BagScanScreen> {
             
             AppElevatedButton(
               text: isArabic ? 'فتح الماسح' : 'OPEN SCANNER',
-              onPressed: _onSimulateScan, // In real app, open mobile_scanner
+              onPressed: _onScanBarcode,
             ),
             
             const Spacer(),

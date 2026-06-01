@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/common/widgets/app_text.dart';
+import '../../../../core/common/widgets/app_elevated_button.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/common/widgets/app_text.dart';
 import '../../../../core/config/theme/color_scheme.dart';
 import '../../../../core/utils/app_localizations.dart';
 import '../../../../core/services/di/di_container.dart';
@@ -67,8 +70,70 @@ class _ScannerSettingsScreenView extends StatelessWidget {
                     state.flash,
                     (val) => context.read<ScannerSettingsCubit>().toggleFlash(val),
                   ),
+                  _buildSwitchTile(
+                    Icons.autorenew,
+                    isArabic ? 'الاستئناف التلقائي' : 'Auto-Resume',
+                    isArabic ? 'استئناف المسح تلقائياً بعد القراءة' : 'Resume scanning automatically after reading',
+                    state.autoResume,
+                    (val) => context.read<ScannerSettingsCubit>().toggleAutoResume(val),
+                  ),
+                  _buildSliderTile(
+                    Icons.timer_outlined,
+                    isArabic ? 'الانتظار بين اللقطات' : 'Hold Time / Filter',
+                    isArabic ? '${state.holdTime.toStringAsFixed(1)} ثانية' : '${state.holdTime.toStringAsFixed(1)} seconds',
+                    state.holdTime,
+                    (val) => context.read<ScannerSettingsCubit>().setHoldTime(val),
+                    isArabic,
+                  ),
+                  _buildDropdownTile(
+                    Icons.hd_outlined,
+                    isArabic ? 'دقة الكاميرا' : 'Camera Resolution',
+                    state.cameraResolution,
+                    (val) => context.read<ScannerSettingsCubit>().setCameraResolution(val ?? 'Full HD'),
+                  ),
                 ],
               ),
+              const SizedBox(height: 20),
+              _buildSettingsGroup(
+                isArabic ? 'أنواع الباركود المدعومة' : 'Supported Symbologies',
+                [
+                  for (final entry in state.symbologies.entries)
+                    _buildSwitchTile(
+                      Icons.qr_code_scanner,
+                      entry.key,
+                      isArabic ? 'تفعيل ${entry.key}' : 'Enable ${entry.key}',
+                      entry.value,
+                      (val) => context.read<ScannerSettingsCubit>().toggleSymbology(entry.key, val),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 30),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppElevatedButton(
+                      text: isArabic ? 'استعادة الافتراضيات' : 'Reset to Defaults',
+                      backgroundColor: Colors.redAccent,
+                      onPressed: () {
+                        context.read<ScannerSettingsCubit>().resetToDefaults();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(isArabic ? 'تمت استعادة الافتراضيات' : 'Defaults restored')),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: AppElevatedButton(
+                      text: isArabic ? 'تطبيق' : 'Apply',
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
             ],
           );
         },
@@ -109,6 +174,66 @@ class _ScannerSettingsScreenView extends StatelessWidget {
       trailing: Switch.adaptive(
         value: value,
         activeColor: AppColors.primary,
+        onChanged: onChanged,
+      ),
+    );
+  }
+
+  Widget _buildSliderTile(IconData icon, String title, String subtitle, double value, Function(double) onChanged, bool isArabic) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.05), borderRadius: BorderRadius.circular(10)),
+                child: Icon(icon, color: AppColors.primary, size: 22),
+              ),
+              const SizedBox(width: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppText(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  AppText(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                ],
+              ),
+            ],
+          ),
+          Slider(
+            value: value,
+            min: 0.5,
+            max: 3.0,
+            divisions: 25,
+            activeColor: AppColors.primary,
+            label: '${value.toStringAsFixed(1)}s',
+            onChanged: onChanged,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDropdownTile(IconData icon, String title, String value, Function(String?) onChanged) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.05), borderRadius: BorderRadius.circular(10)),
+        child: Icon(icon, color: AppColors.primary, size: 22),
+      ),
+      title: AppText(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+      trailing: DropdownButton<String>(
+        value: value,
+        underline: const SizedBox(),
+        items: ['HD', 'Full HD', 'UHD'].map((String res) {
+          return DropdownMenuItem<String>(
+            value: res,
+            child: AppText(res, style: const TextStyle(fontSize: 14)),
+          );
+        }).toList(),
         onChanged: onChanged,
       ),
     );
