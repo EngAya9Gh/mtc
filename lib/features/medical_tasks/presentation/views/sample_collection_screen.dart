@@ -55,7 +55,14 @@ class _SampleCollectionScreenView extends StatefulWidget {
 class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView> {
   late String _selectedTemp;
   late String _selectedSampleType;
+  final TextEditingController _manualScanController = TextEditingController();
   final List<Map<String, String>> _scannedBarcodes = [];
+
+  @override
+  void dispose() {
+    _manualScanController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -97,6 +104,16 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
   }
 
   void _addBarcode(String sampleType, String barcode) {
+    // if (_scannedBarcodes.any((e) => e['barcode'] == barcode)) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     SnackBar(
+    //       content: Text(AppLocalizations.of(context).isArabic ? 'تم مسح هذا الباركود مسبقاً' : 'This barcode is already scanned'),
+    //       backgroundColor: Colors.orange,
+    //     ),
+    //   );
+    //   return;
+    // }
+
     setState(() {
       _scannedBarcodes.add({
         'barcode': barcode,
@@ -268,15 +285,15 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
             centerTitle: true,
           ),
           body: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(8),
             child: Column(
               children: [
                 // Top Stats Card
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(2),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(6),
                     boxShadow: [
                       BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
                     ],
@@ -296,7 +313,7 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
                           ),
                           // Temp Dropdown
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                             decoration: BoxDecoration(
                               color: _getTempColor(_selectedTemp).withOpacity(0.1),
                               borderRadius: BorderRadius.circular(12),
@@ -362,12 +379,11 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
                           ),
                         ],
                       ),
+
                     ],
                   ),
                 ),
-                const SizedBox(height: 20),
-
-                // Barcodes List
+                const SizedBox(height: 12),
                 Expanded(
                   child: _scannedBarcodes.isEmpty
                       ? Center(
@@ -415,7 +431,9 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
                                       children: [
                                         AppText(bCode['barcode'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                                         const SizedBox(height: 6),
-                                        Row(
+                                        Wrap(
+                                          spacing: 6,
+                                          runSpacing: 6,
                                           children: [
                                             // Temp Label
                                             Container(
@@ -429,7 +447,6 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
                                                 style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                                               ),
                                             ),
-                                            const SizedBox(width: 6),
                                             // Type Label
                                             Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -439,7 +456,9 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
                                                 border: Border.all(color: AppColors.primary.withOpacity(0.3)),
                                               ),
                                               child: AppText(
-                                                bCode['type'] ?? '',
+                                                isArabic 
+                                                    ? _sampleTypes.firstWhere((t) => t['api'] == bCode['type'], orElse: () => {'ar': bCode['type'] ?? ''})['ar']!
+                                                    : bCode['type'] ?? '',
                                                 style: const TextStyle(color: AppColors.primary, fontSize: 10, fontWeight: FontWeight.bold),
                                               ),
                                             ),
@@ -460,33 +479,79 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
                           },
                         ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 6),
 
                 // Action Buttons
                 Row(
                   children: [
                     Expanded(
-                      child: AppElevatedButton(
-                        text: isArabic ? 'لا يوجد عينات' : 'NO SAMPLES',
-                        onPressed: isLoading ? null : _onNoSamples,
+                      child: TextFormField(
+                        controller: _manualScanController,
+                        decoration: InputDecoration(
+                          hintText: isArabic ? 'إدخال يدوي للباركود' : 'Manual barcode',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          isDense: true,
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: AppElevatedButton(
-                        text: isArabic ? 'مسح باركود' : 'SCAN BARCODE',
-                        onPressed: isLoading ? null : _onScanBarcode,
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      onPressed: () {
+                        if (_manualScanController.text.trim().isNotEmpty) {
+                          _addBarcode(_selectedSampleType, _manualScanController.text.trim());
+                          _manualScanController.clear();
+                        }
+                      },
+                      child: AppText(isArabic ? 'إضافة' : 'ADD', style: const TextStyle(color: Colors.white, fontSize: 13)),
+                    ),
+                    const SizedBox(width: 8),
+                    InkWell(
+                      onTap: isLoading ? null : _onScanBarcode,
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.black87,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.qr_code_scanner, color: Colors.white),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 12),
-                AppElevatedButton(
-                  text: isArabic ? 'حفظ العينات' : 'SAVE SAMPLES',
-                  isLoading: isLoading,
-                  onPressed: _onSaveSamples,
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: AppElevatedButton(
+                        text: isArabic ? 'حفظ العينات' : 'SAVE SAMPLES',
+                        isLoading: isLoading,
+                        onPressed: _onSaveSamples,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 1,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red.shade50,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: isLoading ? null : _onNoSamples,
+                        child: AppText(isArabic ? 'لا توجد عينات' : 'NO SAMPLES', style: const TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 4),
                 SizedBox(
                   width: double.infinity,
                   child: TextButton(

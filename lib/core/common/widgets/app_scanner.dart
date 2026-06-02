@@ -1,17 +1,16 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:vibration/vibration.dart';
-import 'package:flutter/services.dart';
 import '../../../features/settings/presentation/bloc/scanner_settings_cubit.dart';
 import '../../services/di/di_container.dart';
 
 class AppScanner extends StatefulWidget {
   final void Function(BarcodeCapture capture) onDetect;
   final Widget? overlay;
+  final Rect? scanWindow;
 
-  const AppScanner({super.key, required this.onDetect, this.overlay});
+  const AppScanner({super.key, required this.onDetect, this.overlay, this.scanWindow});
 
   @override
   State<AppScanner> createState() => _AppScannerState();
@@ -19,6 +18,7 @@ class AppScanner extends StatefulWidget {
 
 class _AppScannerState extends State<AppScanner> {
   MobileScannerController? _controller;
+  String? _lastScannedCode;
   DateTime? _lastScanTime;
   late ScannerSettingsCubit _settingsCubit;
 
@@ -38,10 +38,7 @@ class _AppScannerState extends State<AppScanner> {
     if (settings.symbologies['UPC-E'] == true) formats.add(BarcodeFormat.upcE);
     if (settings.symbologies['QR Code'] == true) formats.add(BarcodeFormat.qrCode);
 
-    // Provide a sensible default if none selected
-    if (formats.isEmpty) {
-      formats = [BarcodeFormat.all];
-    }
+    if (formats.isEmpty) formats = [BarcodeFormat.all];
 
     Size? resolution;
     if (settings.cameraResolution == 'HD') {
@@ -49,13 +46,15 @@ class _AppScannerState extends State<AppScanner> {
     } else if (settings.cameraResolution == 'UHD') {
       resolution = const Size(3840, 2160);
     } else {
-      resolution = const Size(1920, 1080); // Full HD
+      // Default to HD — fast enough for all barcodes, much faster than Full HD
+      resolution = const Size(1280, 720);
     }
 
     _controller = MobileScannerController(
       formats: formats,
       cameraResolution: resolution,
       torchEnabled: settings.flash,
+      detectionSpeed: DetectionSpeed.unrestricted,
     );
   }
 
@@ -66,34 +65,30 @@ class _AppScannerState extends State<AppScanner> {
   }
 
   void _handleDetection(BarcodeCapture capture) async {
-    final settings = _settingsCubit.state;
+    if (capture.barcodes.isEmpty) return;
+
+    final code = capture.barcodes.first.rawValue ?? '';
+    if (code.isEmpty) return;
+
     final now = DateTime.now();
+    final settings = _settingsCubit.state;
 
-    // Duplicate filter / Hold time
-    if (_lastScanTime != null) {
-      final diff = now.difference(_lastScanTime!).inMilliseconds;
-      if (diff < (settings.holdTime * 1000)) {
-        return; // Ignore duplicate/rapid scans
-      }
+    if (_lastScannedCode == code && _lastScanTime != null) {
+      // Same barcode: enforce minimum cooldown (800ms) to avoid MLKit duplicates
+      if (now.difference(_lastScanTime!).inMilliseconds < 800) return;
     }
+    // Different barcode: scan immediately — no wait
 
+    _lastScannedCode = code;
     _lastScanTime = now;
 
-    // Feedback
-    if (settings.beep) {
-      SystemSound.play(SystemSoundType.click);
-    }
+    // Vibration feedback
     if (settings.vibrate) {
-      bool? hasVibrator = await Vibration.hasVibrator();
-      if (hasVibrator == true) {
-        Vibration.vibrate(duration: 100);
-      }
+      final hasVibrator = await Vibration.hasVibrator();
+      if (hasVibrator == true) Vibration.vibrate(duration: 50);
     }
 
-    // Auto-Resume logic
-    if (!settings.autoResume) {
-      _controller?.stop(); // Or pause if available. stop() requires starting again.
-    }
+    if (!settings.autoResume) _controller?.stop();
 
     widget.onDetect(capture);
   }
@@ -102,14 +97,11 @@ class _AppScannerState extends State<AppScanner> {
   Widget build(BuildContext context) {
     return BlocConsumer<ScannerSettingsCubit, ScannerSettingsState>(
       bloc: _settingsCubit,
-      listenWhen: (previous, current) {
-        // Rebuild controller if critical settings change
-        return previous.flash != current.flash ||
-            previous.cameraResolution != current.cameraResolution ||
-            previous.symbologies != current.symbologies;
-      },
+      listenWhen: (prev, curr) =>
+          prev.flash != curr.flash ||
+          prev.cameraResolution != curr.cameraResolution ||
+          prev.symbologies != curr.symbologies,
       listener: (context, state) {
-        // Re-initialize controller when settings are applied
         _controller?.dispose();
         setState(() {
           _initController(state);
@@ -125,24 +117,25 @@ class _AppScannerState extends State<AppScanner> {
           children: [
             MobileScanner(
               controller: _controller!,
+              scanWindow: widget.scanWindow,
               onDetect: _handleDetection,
             ),
             Positioned(
               top: 16,
               right: 16,
-              child: IconButton(
-                icon: ValueListenableBuilder<MobileScannerState>(
-                  valueListenable: _controller!,
-                  builder: (context, state, child) {
-                    final torchState = state.torchState;
-                    return Icon(
-                      torchState == TorchState.on ? Icons.flash_on : Icons.flash_off,
-                      color: torchState == TorchState.on ? Colors.yellow : Colors.white,
+              child: ValueListenableBuilder<MobileScannerState>(
+                valueListenable: _controller!,
+                builder: (context, state, child) {
+                  final torchOn = state.torchState == TorchState.on;
+                  return IconButton(
+                    icon: Icon(
+                      torchOn ? Icons.flash_on : Icons.flash_off,
+                      color: torchOn ? Colors.yellow : Colors.white,
                       size: 32,
-                    );
-                  },
-                ),
-                onPressed: () => _controller!.toggleTorch(),
+                    ),
+                    onPressed: () => _controller!.toggleTorch(),
+                  );
+                },
               ),
             ),
             if (widget.overlay != null) widget.overlay!,
