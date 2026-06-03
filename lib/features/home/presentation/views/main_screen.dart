@@ -676,6 +676,13 @@ class _MainDrawer extends StatelessWidget {
                   },
                 ),
                 _DrawerItem(icon: Icons.qr_code_scanner_rounded, title: l.scannerSettings, onTap: () => context.push('/scanner_settings')),
+                _DrawerItem(
+                  icon: Icons.bug_report_rounded,
+                  title: isArabic ? 'سجل الأخطاء' : 'Crash Log',
+                  onTap: () => context.push('/crash_log'),
+                  color: Colors.orange,
+                ),
+
 
                 const SizedBox(height: 8),
                 // Language toggle in drawer

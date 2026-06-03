@@ -92,7 +92,7 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
   void _onScanBarcode() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const AppScannerScreen(multiScan: true, title: 'Scan Samples')),
+      MaterialPageRoute(builder: (_) => const AppScannerScreen(multiScan: true, allowDuplicates: true, title: 'Scan Samples')),
     );
     if (result is List<String> && result.isNotEmpty) {
       for (final code in result) {
@@ -128,6 +128,19 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context).isArabic ? 'يرجى مسح عينة واحدة على الأقل.' : 'Please scan at least one sample.')),
       );
+      return;
+    }
+
+    if (widget.task.taskType == 'BOX') {
+      context.push('/first_task_count', extra: {
+        'task': widget.task,
+        'scannedSamples': _scannedBarcodes,
+        'onBoxSaved': () {
+          setState(() {
+            _scannedBarcodes.clear();
+          });
+        },
+      });
       return;
     }
 
@@ -220,26 +233,47 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
     final l = AppLocalizations.of(context);
     final isArabic = l.isArabic;
     if (_scannedBarcodes.isNotEmpty) {
-      showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: AppText(isArabic ? 'تنبيه' : 'Warning'),
-          content: AppText(
-            isArabic
-                ? 'لديك عينات ممسوحة غير محفوظة. يرجى حفظها أولاً أو حذفها.'
-                : 'You have scanned samples that are not saved. Please save them first or delete them.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: AppText(isArabic ? 'موافق' : 'OK'),
+      if (widget.task.taskType == 'BOX') {
+        context.push('/first_task_count', extra: {
+          'task': widget.task,
+          'scannedSamples': _scannedBarcodes,
+          'onBoxSaved': () {
+            setState(() {
+              _scannedBarcodes.clear();
+            });
+          },
+        });
+      } else {
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: AppText(isArabic ? 'تنبيه' : 'Warning'),
+            content: AppText(
+              isArabic
+                  ? 'لديك عينات ممسوحة غير محفوظة. يرجى حفظها أولاً أو حذفها.'
+                  : 'You have scanned samples that are not saved. Please save them first or delete them.',
             ),
-          ],
-        ),
-      );
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: AppText(isArabic ? 'موافق' : 'OK'),
+              ),
+            ],
+          ),
+        );
+      }
       return;
     }
-    context.push('/signature', extra: widget.task);
+    
+    if (widget.task.taskType == 'BOX') {
+      context.push('/first_task_count', extra: {
+        'task': widget.task,
+        'scannedSamples': <Map<String, String>>[],
+        'onBoxSaved': () {},
+      });
+    } else {
+      context.push('/signature', extra: widget.task);
+    }
   }
 
   Color _getTempColor(String temp) {

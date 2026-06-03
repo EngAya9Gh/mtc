@@ -51,7 +51,7 @@ class _DropOffScanBagsScreenViewState extends State<_DropOffScanBagsScreenView> 
   void _onScanBagBarcode() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const AppScannerScreen(multiScan: true, title: 'Scan Drop Off Bags')),
+      MaterialPageRoute(builder: (_) => const AppScannerScreen(multiScan: true, allowDuplicates: true, title: 'Scan Drop Off Bags')),
     );
     if (result is List<String> && result.isNotEmpty) {
       for (final code in result) {

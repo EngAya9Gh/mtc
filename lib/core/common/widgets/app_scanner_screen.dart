@@ -8,11 +8,14 @@ import 'app_text.dart';
 class AppScannerScreen extends StatefulWidget {
   final bool multiScan;
   final String title;
-  
+  /// When true, the same barcode can be scanned multiple times (each scan adds one count)
+  final bool allowDuplicates;
+
   const AppScannerScreen({
-    super.key, 
+    super.key,
     this.multiScan = false,
     this.title = 'Scan Barcode',
+    this.allowDuplicates = false,
   });
 
   @override
@@ -33,18 +36,22 @@ class _AppScannerScreenState extends State<AppScannerScreen> {
     final barcodes = capture.barcodes;
     if (barcodes.isNotEmpty && barcodes.first.rawValue != null) {
       final code = barcodes.first.rawValue!;
-      
-      if (widget.multiScan) {
-        if (!_scannedItems.contains(code)) {
-          setState(() {
-            _scannedItems.add(code);
-          });
-          _playBeep();
-        }
-      } else {
+      _handleCode(code);
+    }
+  }
+
+  void _handleCode(String code) {
+    if (widget.multiScan) {
+      if (widget.allowDuplicates || !_scannedItems.contains(code)) {
+        setState(() {
+          _scannedItems.add(code);
+        });
         _playBeep();
-        Navigator.pop(context, code);
       }
+      // If duplicate blocked: no beep, no registration — silent ignore
+    } else {
+      _playBeep();
+      Navigator.pop(context, code);
     }
   }
 
@@ -79,40 +86,39 @@ class _AppScannerScreenState extends State<AppScannerScreen> {
           // Top Section: Camera Scanner
           Expanded(
             flex: widget.multiScan ? 4 : 10,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // scanWindow: 120px strip centered on laser line (widget coordinate space).
-                // mobile_scanner v7 converts this internally to camera coordinates.
-                final double centerY = constraints.maxHeight / 2;
-                final Rect scanWindow = Rect.fromLTRB(
-                  0,
-                  centerY - 60,
-                  constraints.maxWidth,
-                  centerY + 60,
-                );
-                return Stack(
-                  children: [
-                    AppScanner(onDetect: _onDetect, scanWindow: scanWindow),
-                    // Red laser line aligned exactly to scanWindow center
-                    Center(
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 32),
-                        height: 2,
-                        decoration: BoxDecoration(
-                          color: Colors.redAccent,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.redAccent.withValues(alpha: 0.9),
-                              blurRadius: 8,
-                              spreadRadius: 2,
-                            ),
-                          ],
+            child: Stack(
+              children: [
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final double centerY = constraints.maxHeight / 2;
+                    // Logical-pixel rect centered on the red laser line (±60 px)
+                    final Rect scanWindow = Rect.fromLTRB(
+                      0,
+                      centerY - 60,
+                      constraints.maxWidth,
+                      centerY + 60,
+                    );
+                    return AppScanner(onDetect: _onDetect, scanWindow: scanWindow);
+                  },
+                ),
+                // Red laser line — aligned to center
+                Center(
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 32),
+                    height: 2,
+                    decoration: BoxDecoration(
+                      color: Colors.redAccent,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.redAccent.withValues(alpha: 0.9),
+                          blurRadius: 8,
+                          spreadRadius: 2,
                         ),
-                      ),
+                      ],
                     ),
-                  ],
-                );
-              },
+                  ),
+                ),
+              ],
             ),
           ),
 

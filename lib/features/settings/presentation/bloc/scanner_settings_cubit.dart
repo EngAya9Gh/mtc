@@ -16,7 +16,7 @@ class ScannerSettingsState {
     this.flash = false,
     this.autoResume = true,
     this.holdTime = 1.0,
-    this.cameraResolution = 'Full HD',
+    this.cameraResolution = 'HD',
     this.symbologies = const {
       'Code 128': true,
       'Code 39': true,
@@ -61,7 +61,7 @@ class ScannerSettingsCubit extends Cubit<ScannerSettingsState> {
     final flash = _prefs.getBool('scanner_flash') ?? false;
     final autoResume = _prefs.getBool('scanner_auto_resume') ?? true;
     final holdTime = _prefs.getDouble('scanner_hold_time') ?? 1.5;
-    final cameraResolution = _prefs.getString('scanner_camera_resolution') ?? 'UHD';
+    final cameraResolution = _prefs.getString('scanner_camera_resolution') ?? 'HD';
     
     final Map<String, bool> symbologies = {
       'Code 128': _prefs.getBool('sym_code128') ?? true,
@@ -139,7 +139,7 @@ class ScannerSettingsCubit extends Cubit<ScannerSettingsState> {
     await _prefs.setBool('scanner_flash', false);
     await _prefs.setBool('scanner_auto_resume', true);
     await _prefs.setDouble('scanner_hold_time', 1.5);
-    await _prefs.setString('scanner_camera_resolution', 'UHD');
+    await _prefs.setString('scanner_camera_resolution', 'HD');
     await _prefs.setBool('sym_code128', true);
     await _prefs.setBool('sym_code39', true);
     await _prefs.setBool('sym_ean13', true);

@@ -78,4 +78,58 @@ class SampleCollectionCubit extends Cubit<SampleCollectionState> {
       emit(SampleCollectionState.error(e.toString()));
     }
   }
+
+  Future<void> saveBoxTask({
+    required int taskId,
+    required int locationId,
+    required List<Map<String, String>> scannedSamples,
+    required int boxCount,
+    required int sampleCount,
+  }) async {
+    final containers = ['ROOM', 'REFRIGERATE', 'FROZEN'];
+
+    for (String container in containers) {
+      final barcodes = scannedSamples
+          .where((s) => s['temp'] == container)
+          .map((s) => s['barcode'] as String)
+          .toList();
+
+      if (barcodes.isNotEmpty) {
+        emit(SampleCollectionState.loading('Uploading $container box samples...'));
+        try {
+          final matchingSample = scannedSamples.firstWhere(
+            (s) => s['temp'] == container,
+            orElse: () => <String, String>{},
+          );
+          final sampleType = matchingSample['type'] ?? 'Tubes';
+
+          final response = await _apiClient.post(
+            'samples/box/add',
+            data: {
+              'task_id': taskId,
+              'location_id': locationId,
+              'barcode_ids': barcodes,
+              'temperature_type': container,
+              'box_count': boxCount,
+              'sample_count': sampleCount,
+              'sample_type': sampleType,
+            },
+          );
+
+          if (response.data['status'] != true) {
+            emit(SampleCollectionState.error('Failed to upload $container box: ${response.data['message']}'));
+            return;
+          }
+        } on DioException catch (e) {
+          emit(SampleCollectionState.error('Network Error during $container box upload: ${e.message}'));
+          return;
+        } catch (e) {
+          emit(SampleCollectionState.error('Error during $container box upload: $e'));
+          return;
+        }
+      }
+    }
+
+    emit(const SampleCollectionState.success('All boxes uploaded successfully!'));
+  }
 }

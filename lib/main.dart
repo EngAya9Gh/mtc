@@ -10,6 +10,7 @@ import 'core/utils/app_strings.dart';
 import 'core/navigation/app_router.dart';
 import 'core/services/background/background_location_service.dart';
 import 'core/services/notifications/notification_service.dart';
+import 'core/services/crash/crash_log_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,7 +36,25 @@ void main() async {
   }
 
   await initDi();
-  
+
+  // ── Global Crash Handlers ─────────────────────────────────────────────────
+  // Level 1: Flutter framework / widget rendering errors
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details); // keep debug console output
+    CrashLogService.instance.log(
+      details.exceptionAsString(),
+      details.stack,
+      context: 'FlutterError',
+    );
+  };
+
+  // Level 2: Dart async / unhandled future errors
+  PlatformDispatcher.instance.onError = (error, stack) {
+    CrashLogService.instance.log(error, stack, context: 'PlatformDispatcher');
+    return true; // mark handled — prevents system crash dialog
+  };
+  // ─────────────────────────────────────────────────────────────────────────
+
   if (!kIsWeb) {
     try {
       await NotificationService().initialize();
@@ -44,7 +63,7 @@ void main() async {
       debugPrint('Service init failed: $e');
     }
   }
-  
+
   final binding = WidgetsFlutterBinding.ensureInitialized();
   final implicitView = binding.platformDispatcher.implicitView;
   if (implicitView != null) {

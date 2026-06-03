@@ -67,7 +67,7 @@ class _FreezerOutBagsScreenViewState extends State<_FreezerOutBagsScreenView> {
   void _onSimulateBagScan(List<BagItemModel> remainingBags) async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const AppScannerScreen(multiScan: true, title: 'Scan Bags to Freezer')),
+      MaterialPageRoute(builder: (_) => const AppScannerScreen(multiScan: true, allowDuplicates: true, title: 'Scan Bags to Freezer')),
     );
     if (result is List<String> && result.isNotEmpty) {
       for (final code in result) {

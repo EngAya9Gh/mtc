@@ -5,6 +5,7 @@ import '../../../../core/common/widgets/app_elevated_button.dart';
 import '../../../../core/config/theme/color_scheme.dart';
 import '../../../../core/utils/app_localizations.dart';
 import '../../../../core/navigation/app_router.dart';
+import '../../../../data/providers/user_info_provider.dart';
 import '../../data/models/task_model.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -44,6 +45,16 @@ class _SignatureSubmitViewState extends State<_SignatureSubmitView> {
   List<dynamic> _samples = [];
 
   @override
+  void initState() {
+    super.initState();
+    final userInfo = UserInfo();
+    if (widget.task.taskType == 'BOX') {
+      _boxCountController.text = userInfo.boxCount?.toString() ?? '';
+      _sampleCountController.text = userInfo.sampleCount?.toString() ?? '';
+    }
+  }
+
+  @override
   void dispose() {
     _boxCountController.dispose();
     _sampleCountController.dispose();
@@ -81,10 +92,17 @@ class _SignatureSubmitViewState extends State<_SignatureSubmitView> {
                     ),
                     const SizedBox(height: 20),
                     AppElevatedButton(
-                      text: isArabic ? 'العودة للرئيسية' : 'Back to Home',
+                      text: isCollection
+                          ? (isArabic ? 'الذهاب لوضع الفريزر' : 'Go to Freezer Placement')
+                          : (isArabic ? 'العودة للرئيسية' : 'Back to Home'),
                       onPressed: () {
                         Navigator.pop(ctx);
-                        context.go(AppRouter.main);
+                        if (isCollection) {
+                          context.go(AppRouter.main);
+                          context.push(AppRouter.freezerOutBags, extra: widget.task);
+                        } else {
+                          context.go(AppRouter.main);
+                        }
                       },
                     ),
                   ],
@@ -166,12 +184,21 @@ class _SignatureSubmitViewState extends State<_SignatureSubmitView> {
                             children: [
                               const Icon(Icons.qr_code_2, size: 20, color: Colors.blueGrey),
                               const SizedBox(width: 12),
-                              Expanded(child: AppText(sample['barcode'] ?? 'N/A', style: const TextStyle(fontSize: 14))),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(6)),
-                                child: AppText(sample['container'] ?? '', style: const TextStyle(fontSize: 10, color: Colors.blue)),
-                              ),
+                              Expanded(child: AppText(sample['barcode_id'] ?? 'N/A', style: const TextStyle(fontSize: 14))),
+                              if (sample['temperature_type'] != null) ...[
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(6)),
+                                  child: AppText(sample['temperature_type']!, style: const TextStyle(fontSize: 10, color: Colors.blue)),
+                                ),
+                                const SizedBox(width: 6),
+                              ],
+                              if (sample['sample_type'] != null)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(color: Colors.purple.shade50, borderRadius: BorderRadius.circular(6)),
+                                  child: AppText(sample['sample_type']!, style: const TextStyle(fontSize: 10, color: Colors.purple)),
+                                ),
                             ],
                           );
                         },

@@ -53,7 +53,7 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
   void _onScanBagBarcode() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const AppScannerScreen(multiScan: true, title: 'Scan Bags to Remove')),
+      MaterialPageRoute(builder: (_) => const AppScannerScreen(multiScan: true, allowDuplicates: true, title: 'Scan Bags to Remove')),
     );
     if (result is List<String> && result.isNotEmpty) {
       for (final code in result) {

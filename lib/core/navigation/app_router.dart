@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/views/login_screen.dart';
@@ -17,6 +18,7 @@ import '../../features/medical_tasks/presentation/views/sample_collection_screen
 import '../../features/medical_tasks/presentation/views/signature_submit_screen.dart';
 import '../../features/medical_tasks/presentation/views/bag_scan_screen.dart';
 import '../../features/medical_tasks/presentation/views/first_sample_info_screen.dart';
+import '../../features/medical_tasks/presentation/views/first_task_count_screen.dart';
 import '../../features/profile/presentation/views/profile_screen.dart';
 import '../../features/profile/presentation/bloc/profile_cubit.dart';
 import '../../features/car_inspection/presentation/views/car_inspection_screen.dart';
@@ -41,6 +43,7 @@ import '../../features/drop_off_samples/presentation/views/drop_off_scan_bags_sc
 import '../../features/drop_off_samples/presentation/views/drop_off_signature_screen.dart';
 import '../../features/drop_off_samples/presentation/bloc/drop_off_cubit.dart';
 import '../../data/providers/user_info_provider.dart';
+import '../../features/crash_log/presentation/views/crash_log_screen.dart';
 
 class AppRouter {
   static const String login = '/login';
@@ -61,6 +64,7 @@ class AppRouter {
   static const String dropOffScanBags = '/drop_off_scan_bags';
   static const String dropOffSignature = '/drop_off_signature';
   static const String profile = '/profile';
+  static const String crashLog = '/crash_log';
 
   static final router = GoRouter(
     initialLocation: login,
@@ -115,6 +119,17 @@ class AppRouter {
         builder: (context, state) {
           final task = state.extra as MedicalTask;
           return FirstSampleInfoScreen(task: task);
+        },
+      ),
+      GoRoute(
+        path: '/first_task_count',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          return FirstTaskCountScreen(
+            task: extra['task'] as MedicalTask,
+            scannedSamples: extra['scannedSamples'] as List<Map<String, String>>,
+            onBoxSaved: extra['onBoxSaved'] as VoidCallback?,
+          );
         },
       ),
       GoRoute(
@@ -271,6 +286,10 @@ class AppRouter {
             child: const SwapTaskScanBagsScreen(),
           );
         },
+      ),
+      GoRoute(
+        path: '/crash_log',
+        builder: (context, state) => const CrashLogScreen(),
       ),
     ],
   );
