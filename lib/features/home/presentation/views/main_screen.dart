@@ -8,6 +8,8 @@ import '../../../../core/navigation/app_router.dart';
 import '../../../../core/services/locale/locale_cubit.dart';
 import '../../../../core/utils/app_localizations.dart';
 import '../../../../data/providers/user_info_provider.dart';
+import '../../../../core/services/di/di_container.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import '../widgets/latest_task_card.dart';
@@ -47,8 +49,8 @@ class MainScreen extends StatelessWidget {
                 SnackBar(content: Text(isArabic ? 'جاري إخلاء السيارة...' : 'Releasing car...')),
               );
             } else if (state is ReleaseCarSuccess) {
-              UserInfo().logout();
-              context.go('/login');
+              UserInfo().logout(getIt<SharedPreferences>());
+              context.go(AppRouter.login);
             } else if (state is ReleaseCarFailure) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(state.error), backgroundColor: Colors.red),
@@ -712,8 +714,8 @@ class _MainDrawer extends StatelessWidget {
                   icon: Icons.logout_rounded,
                   title: l.logout,
                   onTap: () {
-                    UserInfo().logout();
-                    context.go('/login');
+                    UserInfo().logout(getIt<SharedPreferences>());
+                    context.go(AppRouter.login);
                   },
                   color: Colors.red,
                 ),

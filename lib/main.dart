@@ -11,6 +11,8 @@ import 'core/navigation/app_router.dart';
 import 'core/services/background/background_location_service.dart';
 import 'core/services/notifications/notification_service.dart';
 import 'core/services/crash/crash_log_service.dart';
+import 'data/providers/user_info_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,6 +38,8 @@ void main() async {
   }
 
   await initDi();
+  final prefs = getIt<SharedPreferences>();
+  await UserInfo().init(prefs);
 
   // ── Global Crash Handlers ─────────────────────────────────────────────────
   // Level 1: Flutter framework / widget rendering errors

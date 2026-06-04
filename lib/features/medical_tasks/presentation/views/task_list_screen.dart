@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/navigation/app_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/common/widgets/app_text.dart';
+import '../../../../core/utils/app_localizations.dart';
 import '../../../../core/config/theme/color_scheme.dart';
 import '../../../../core/services/di/di_container.dart';
 import '../../../../data/providers/user_info_provider.dart';
@@ -17,6 +18,7 @@ class TaskListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isArabic = AppLocalizations.of(context).isArabic;
     return BlocProvider(
       create: (context) {
         final driverId = UserInfo().userId ?? 0;
@@ -25,7 +27,7 @@ class TaskListScreen extends StatelessWidget {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(_getTitle()),
+          title: AppText(_getTitle(isArabic)),
           centerTitle: true,
         ),
         body: BlocBuilder<MedicalTaskBloc, MedicalTaskState>(
@@ -75,7 +77,7 @@ class TaskListScreen extends StatelessWidget {
                               driverId: driverId,
                               status: status));
                     },
-                    label: const Text('Accept All'),
+                    label: AppText(isArabic ? 'قبول الكل' : 'Accept All'),
                     icon: const Icon(Icons.done_all),
                   );
                 }
@@ -85,20 +87,21 @@ class TaskListScreen extends StatelessWidget {
             );
           },
         ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       ),
     );
   }
 
-  String _getTitle() {
+  String _getTitle(bool isArabic) {
     switch (status) {
       case 'NEW':
-        return 'Pickup Samples';
+        return isArabic ? 'استلام العينات' : 'Pickup Samples';
       case 'COLLECTED':
-        return 'Samples Placement';
+        return isArabic ? 'إيداع العينات' : 'Samples Placement';
       case 'OUT_FREEZER':
-        return 'Drop Off Samples';
+        return isArabic ? 'تسليم العينات' : 'Drop Off Samples';
       default:
-        return 'Tasks';
+        return isArabic ? 'المهام' : 'Tasks';
     }
   }
 }
@@ -110,6 +113,7 @@ class _TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isArabic = AppLocalizations.of(context).isArabic;
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
@@ -138,7 +142,7 @@ class _TaskCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         AppText(
-                          'Task #${task.id}',
+                          isArabic ? 'مهمة #${task.id}' : 'Task #${task.id}',
                           style: const TextStyle(color: Colors.grey, fontSize: 12),
                         ),
                         AppText(
@@ -154,14 +158,14 @@ class _TaskCard extends StatelessWidget {
               const Divider(height: 24),
               _LocationRow(
                 icon: Icons.location_on_outlined,
-                label: 'From',
+                label: isArabic ? 'من' : 'From',
                 value: task.fromLocationName,
                 color: Colors.green,
               ),
               const SizedBox(height: 12),
               _LocationRow(
                 icon: Icons.location_on,
-                label: 'To',
+                label: isArabic ? 'إلى' : 'To',
                 value: task.toLocationName,
                 color: Colors.red,
               ),
@@ -189,6 +193,7 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isArabic = AppLocalizations.of(context).isArabic;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -196,7 +201,9 @@ class _StatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: AppText(
-        confirmed ? 'CONFIRMED' : 'PENDING',
+        confirmed 
+            ? (isArabic ? 'مؤكد' : 'CONFIRMED') 
+            : (isArabic ? 'قيد الانتظار' : 'PENDING'),
         style: TextStyle(
           color: confirmed ? Colors.blue : Colors.orange,
           fontSize: 10,

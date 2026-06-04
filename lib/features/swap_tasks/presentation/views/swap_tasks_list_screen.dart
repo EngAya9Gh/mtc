@@ -224,7 +224,7 @@ class _SwapTasksListScreenState extends State<SwapTasksListScreen> {
                 const SizedBox(height: 12),
                 
                 Row(
-                  mainAxisAlignment: isArabic ? MainAxisAlignment.end : MainAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     TextButton.icon(
                       onPressed: () {

@@ -75,6 +75,11 @@ class AppRouter {
       if (!isLoggedIn && !isLoggingIn) {
         return login;
       }
+      
+      if (isLoggedIn && isLoggingIn) {
+        return main;
+      }
+
       return null;
     },
     routes: [

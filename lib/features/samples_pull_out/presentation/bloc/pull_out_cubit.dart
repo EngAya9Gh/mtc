@@ -119,8 +119,8 @@ class PullOutCubit extends Cubit<PullOutState> {
   void scanBagToRemove(String bagCode) async {
     if (_selectedTask == null || _scannedContainerId == null) return;
 
-    final index = _currentContainerBags.indexWhere((b) => b.bagCode == bagCode);
-    if (index == -1) {
+    final matchingBags = _currentContainerBags.where((b) => b.bagCode == bagCode).toList();
+    if (matchingBags.isEmpty) {
       emit(const PullOutState.error('هذا الكيس غير موجود في هذه الحاوية أو تم مسحه مسبقاً!'));
       _emitCurrentState();
       return;
@@ -129,14 +129,17 @@ class PullOutCubit extends Cubit<PullOutState> {
     _emitCurrentState(isRemoving: true);
 
     try {
-      final bag = _currentContainerBags[index];
-      await _repository.removeBagFromContainer(
-        taskId: bag.taskId ?? 0,
-        bagCode: bagCode,
-        containerId: _scannedContainerId!,
-      );
+      final uniqueTaskIds = matchingBags.map((b) => b.taskId ?? 0).toSet();
 
-      _currentContainerBags.removeAt(index);
+      for (final taskId in uniqueTaskIds) {
+        await _repository.removeBagFromContainer(
+          taskId: taskId,
+          bagCode: bagCode,
+          containerId: _scannedContainerId!,
+        );
+      }
+
+      _currentContainerBags.removeWhere((b) => b.bagCode == bagCode);
       _allDestinationBags.removeWhere((b) => b.bagCode == bagCode);
 
       emit(PullOutState.success('تمت إزالة الكيس $bagCode بنجاح'));

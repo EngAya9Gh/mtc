@@ -290,6 +290,7 @@ class _SignatureSubmitViewState extends State<_SignatureSubmitView> {
                     );
                   },
                 ),
+                SizedBox(height: MediaQuery.of(context).padding.bottom),
               ],
             ),
           ),

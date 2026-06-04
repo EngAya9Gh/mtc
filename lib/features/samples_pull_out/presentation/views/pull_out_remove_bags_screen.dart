@@ -107,7 +107,7 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
         title: AppText(isArabic ? 'سحب العينات' : 'Remove Bags'),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.primary,
         iconTheme: const IconThemeData(color: AppColors.primary),
       ),
       body: BlocConsumer<PullOutCubit, PullOutState>(
@@ -354,6 +354,14 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
     List<SampleSummaryModel> currentContainerBags,
     bool isRemoving,
   ) {
+    final uniqueBags = <String, SampleSummaryModel>{};
+    for (var bag in currentContainerBags) {
+      if (!uniqueBags.containsKey(bag.bagCode)) {
+        uniqueBags[bag.bagCode] = bag;
+      }
+    }
+    final displayBags = uniqueBags.values.toList();
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -374,7 +382,7 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
                 child: TextFormField(
                   controller: _bagController,
                   decoration: InputDecoration(
-                    hintText: isArabic ? 'أو أدخل الباركود يدوياً (وهمي)' : 'Or enter barcode manually',
+                    hintText: isArabic ? 'أو أدخل الباركود يدوياً' : 'Or enter barcode manually',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
@@ -410,7 +418,7 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: AppText(
-                  '${currentContainerBags.length}',
+                  '${displayBags.length}',
                   style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
                 ),
               ),
@@ -427,9 +435,9 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: currentContainerBags.length,
+            itemCount: displayBags.length,
             itemBuilder: (context, index) {
-              final bag = currentContainerBags[index];
+              final bag = displayBags[index];
               return Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 decoration: BoxDecoration(
@@ -533,6 +541,7 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
               );
             },
           ),
+          SizedBox(height: MediaQuery.of(context).padding.bottom),
         ],
       ),
     );

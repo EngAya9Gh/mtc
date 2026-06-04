@@ -158,25 +158,45 @@ class _TermsScreenState extends State<TermsScreen> {
           ),
           const SizedBox(height: 24),
           Row(
-            children: [
-              TextButton.icon(
-                onPressed: () => _signatureControl.clear(),
-                icon: const Icon(Icons.refresh_rounded, color: Colors.redAccent),
-                label: AppText(
-                  isArabic ? 'مسح التوقيع' : 'Clear',
-                  style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w600),
-                ),
-              ),
-              const Spacer(),
-              SizedBox(
-                width: 160,
-                child: AppElevatedButton(
-                  text: isArabic ? 'موافق' : 'ACCEPT',
-                  isLoading: state is Submitting,
-                  onPressed: () => _onAccept(context),
-                ),
-              ),
-            ],
+            children: isArabic 
+              ? [
+                  SizedBox(
+                    width: 160,
+                    child: AppElevatedButton(
+                      text: 'موافق',
+                      isLoading: state is Submitting,
+                      onPressed: () => _onAccept(context),
+                    ),
+                  ),
+                  const Spacer(),
+                  TextButton.icon(
+                    onPressed: () => _signatureControl.clear(),
+                    icon: const Icon(Icons.refresh_rounded, color: Colors.redAccent),
+                    label: const AppText(
+                      'مسح التوقيع',
+                      style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ]
+              : [
+                  TextButton.icon(
+                    onPressed: () => _signatureControl.clear(),
+                    icon: const Icon(Icons.refresh_rounded, color: Colors.redAccent),
+                    label: const AppText(
+                      'Clear',
+                      style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  const Spacer(),
+                  SizedBox(
+                    width: 160,
+                    child: AppElevatedButton(
+                      text: 'ACCEPT',
+                      isLoading: state is Submitting,
+                      onPressed: () => _onAccept(context),
+                    ),
+                  ),
+                ],
           ),
         ],
       ),

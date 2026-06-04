@@ -1,3 +1,4 @@
+import 'dart:convert';
 import '../../domain/repositories/auth_repository.dart';
 import '../data_sources/auth_remote_data_source.dart';
 import '../models/login_model.dart';
@@ -15,6 +16,7 @@ class AuthRepositoryImpl implements AuthRepository {
     final response = await _remoteDataSource.login(username, password, fcmToken);
     if (response.status && response.data != null) {
       await _sharedPreferences.setString('token', response.data!.token);
+      await _sharedPreferences.setString('user_info', jsonEncode(response.data!.toJson()));
     }
     return response;
   }
@@ -24,6 +26,7 @@ class AuthRepositoryImpl implements AuthRepository {
     final response = await _remoteDataSource.loginWithMobile(mobile, password, fcmToken);
     if (response.status && response.data != null) {
       await _sharedPreferences.setString('token', response.data!.token);
+      await _sharedPreferences.setString('user_info', jsonEncode(response.data!.toJson()));
     }
     return response;
   }

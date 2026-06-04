@@ -596,6 +596,7 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
                     ),
                   ),
                 ),
+                SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
               ],
             ),
           ),
