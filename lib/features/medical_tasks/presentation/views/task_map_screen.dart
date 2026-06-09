@@ -206,35 +206,7 @@ class _TaskMapScreenViewState extends State<_TaskMapScreenView> {
                 myLocationButtonEnabled: false,
               ),
 
-              // Show OTP if exists at the top
-              if (_currentTask.otp != null && _currentTask.otp!.isNotEmpty)
-                Positioned(
-                  top: 20,
-                  left: 20,
-                  right: 20,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.security, color: AppColors.primary),
-                        const SizedBox(width: 8),
-                        AppText(
-                          isArabic 
-                            ? 'يرجى مشاركة رمز التحقق: ${_currentTask.otp}' 
-                            : 'Please share OTP: ${_currentTask.otp}',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.primary),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              
+
               // Bottom Details Card
               Positioned(
                 left: 16,
@@ -257,6 +229,30 @@ class _TaskMapScreenViewState extends State<_TaskMapScreenView> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (_currentTask.otp != null && _currentTask.otp!.isNotEmpty) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.security, color: AppColors.primary),
+                              const SizedBox(width: 8),
+                              AppText(
+                                isArabic 
+                                  ? 'رمز التحقق الخاص بالعميل: ${_currentTask.otp}' 
+                                  : 'Client OTP: ${_currentTask.otp}',
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.primary),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [

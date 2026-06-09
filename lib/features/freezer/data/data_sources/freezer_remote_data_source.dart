@@ -83,7 +83,7 @@ class FreezerRemoteDataSourceImpl implements FreezerRemoteDataSource {
 
     final json = response.data as Map<String, dynamic>;
     if (json['status'] == false) {
-      throw Exception(json['message'] ?? 'Failed to close freezer');
+      throw Exception(json['message'] ?? 'Failed to close containers');
     }
   }
 }

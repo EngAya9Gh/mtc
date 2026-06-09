@@ -21,7 +21,12 @@ class MainScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations(Localizations.localeOf(context).languageCode);
     final isArabic = l.isArabic;
-    final driverName = UserInfo().loginInfo != null ? 'Driver #${UserInfo().userId}' : 'Driver';
+    //final baseDriverWord = isArabic ? 'السائق' : 'Driver';
+    final nameOrId = UserInfo().loginInfo?.name ?? '#${UserInfo().userId ?? ''}';
+    final driverName = '$nameOrId';
+    final carInfo = UserInfo().loginInfo?.car != null 
+        ? ' ${UserInfo().loginInfo!.car!.plateNumber ?? ''}' 
+        : '';
 
     return MultiBlocListener(
       listeners: [
@@ -159,10 +164,27 @@ class MainScreen extends StatelessWidget {
                                   driverName,
                                   style: const TextStyle(
                                     color: Colors.white,
-                                    fontSize: 20,
+                                    fontSize: 18,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
+                                if (carInfo.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 4),
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.directions_car_rounded, size: 14, color: Colors.white70),
+                                        const SizedBox(width: 4),
+                                        AppText(
+                                          carInfo,
+                                          style: TextStyle(
+                                            color: Colors.white.withOpacity(0.9),
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                               ],
                             ),
                           ),
@@ -564,7 +586,10 @@ class _MainDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isArabic = l.isArabic;
-    final driverName = UserInfo().loginInfo != null ? 'Driver #${UserInfo().userId}' : 'Driver';
+    final driverName = UserInfo().loginInfo?.name ?? 'Driver #${UserInfo().userId ?? ''}';
+    final carInfo = UserInfo().loginInfo?.car != null 
+        ? '${UserInfo().loginInfo!.car!.model ?? ''} - ${UserInfo().loginInfo!.car!.plateNumber ?? ''}' 
+        : '';
     return Drawer(
       backgroundColor: const Color(0xFFF2F5FA),
       shape: const RoundedRectangleBorder(
@@ -643,7 +668,7 @@ class _MainDrawer extends StatelessWidget {
                   style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
                 ),
                 AppText(
-                  l.isArabic ? 'سائق نشط' : 'Active Driver',
+                  carInfo.isNotEmpty ? carInfo : (l.isArabic ? 'سائق نشط' : 'Active Driver'),
                   style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 12),
                 ),
               ],

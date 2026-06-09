@@ -127,6 +127,15 @@ class _DropOffScanBagsScreenViewState extends State<_DropOffScanBagsScreenView> 
                 SnackBar(content: AppText(msg), backgroundColor: Colors.red),
               );
             },
+            closeTasksSuccess: () {
+              context.go(AppRouter.taskStatus, extra: {
+                'isSuccess': true,
+                'message': isArabic 
+                    ? 'تم تسليم العينات بنجاح وإغلاق المهام.' 
+                    : 'Samples dropped off successfully and tasks closed.',
+                'taskId': null,
+              });
+            },
           );
         },
         builder: (context, state) {
@@ -365,13 +374,10 @@ class _DropOffScanBagsScreenViewState extends State<_DropOffScanBagsScreenView> 
                   ),
                   const SizedBox(height: 32),
                   AppElevatedButton(
-                    text: isArabic ? 'الانتقال للتوقيع' : 'PROCEED TO SIGNATURE',
+                    text: isArabic ? 'إنهاء التسليم' : 'FINISH DROP OFF',
                     onPressed: () {
                       context.read<DropOffCubit>().proceedToSignature();
-                      context.pushReplacement(
-                        AppRouter.dropOffSignature,
-                        extra: context.read<DropOffCubit>(),
-                      );
+                      context.read<DropOffCubit>().submitDropOffTasks(null);
                     },
                   ),
                 ],

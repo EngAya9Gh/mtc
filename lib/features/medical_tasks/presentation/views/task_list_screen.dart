@@ -170,14 +170,58 @@ class _TaskCard extends StatelessWidget {
                 color: Colors.red,
               ),
               const SizedBox(height: 16),
-              Row(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.access_time, size: 16, color: Colors.grey),
-                  const SizedBox(width: 4),
-                  AppText('${task.date} - ${task.time}',
-                      style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                  Row(
+                    children: [
+                      const Icon(Icons.calendar_today_outlined, size: 16, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      AppText(isArabic ? 'تاريخ المهمة: ' : 'Task Date: ', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                      Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: AppText('${task.date ?? ''}', style: const TextStyle(color: Colors.black87, fontSize: 12, fontWeight: FontWeight.w500)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      const Icon(Icons.access_time, size: 16, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      AppText(isArabic ? 'وقت الاستلام: ' : 'Pickup Time: ', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                      Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: AppText('${task.pickupTime ?? task.time ?? ''}', style: const TextStyle(color: Colors.black87, fontSize: 12, fontWeight: FontWeight.w500)),
+                      ),
+                    ],
+                  ),
                 ],
               ),
+              if (task.taskType != null && task.taskType.toString().isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.category_outlined, size: 16, color: Colors.grey),
+                    const SizedBox(width: 4),
+                    AppText(isArabic ? 'نوع المهمة: ${task.taskType}' : 'Task Type: ${task.taskType}',
+                        style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                  ],
+                ),
+              ],
+              if (task.boxCount != null || task.sampleCount != null) ...[
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.inventory_2_outlined, size: 16, color: Colors.grey),
+                    const SizedBox(width: 4),
+                    AppText(isArabic 
+                        ? 'الصناديق: ${task.boxCount ?? 0}  |  العينات: ${task.sampleCount ?? 0}' 
+                        : 'Boxes: ${task.boxCount ?? 0}  |  Samples: ${task.sampleCount ?? 0}',
+                        style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                  ],
+                ),
+              ],
             ],
           ),
         ),

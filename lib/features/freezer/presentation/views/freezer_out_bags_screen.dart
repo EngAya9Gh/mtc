@@ -304,7 +304,7 @@ class _FreezerOutBagsScreenViewState extends State<_FreezerOutBagsScreenView> {
                                       ),
                                       const SizedBox(height: 30),
                                       AppElevatedButton(
-                                        text: isArabic ? 'إغلاق الحاويات' : 'CLOSE FREEZERS',
+                                        text: isArabic ? 'إغلاق الحاويات' : 'CLOSE CONTAINERS',
                                         onPressed: () {
                                           _showCloseConfirmation(context, widget.task.id);
                                         },
@@ -503,19 +503,7 @@ class _FreezerOutBagsScreenViewState extends State<_FreezerOutBagsScreenView> {
         ),
         const SizedBox(height: 20),
 
-        // Manual text field
-        TextField(
-          controller: _containerController,
-          decoration: InputDecoration(
-            hintText: isArabic ? 'أو أدخل باركود الحاوية يدوياً' : 'Or type container barcode manually',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            suffixIcon: IconButton(
-              icon: const Icon(Icons.arrow_forward),
-              onPressed: _onManualContainerSubmit,
-            ),
-          ),
-        ),
-        const SizedBox(height: 20),
+
 
         // Validation banner
         if (scannedQr != null)
@@ -820,7 +808,7 @@ class _FreezerOutBagsScreenViewState extends State<_FreezerOutBagsScreenView> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: AppText(isArabic ? 'إغلاق الحاويات' : 'Close Freezers'),
+        title: AppText(isArabic ? 'إغلاق الحاويات' : 'Close Containers'),
         content: AppText(
           isArabic 
               ? 'هل أنت متأكد من إغلاق كافة حاويات المهمة وتأكيد تسكين العينات؟' 

@@ -78,7 +78,11 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
     });
   }
 
-  final List<String> _tempOptions = ['ROOM', 'REFRIGERATE', 'FROZEN'];
+  final List<Map<String, String>> _tempOptions = [
+    {'api': 'ROOM', 'ar': 'غرفة (+15°C to +25°C)', 'en': 'Room (+15°C to +25°C)'},
+    {'api': 'REFRIGERATE', 'ar': 'تبريد (+2°C to +8°C)', 'en': 'Refrigeration (+2°C to +8°C)'},
+    {'api': 'FROZEN', 'ar': 'تجميد (0°C to -18°C)', 'en': 'Freezing (0°C to -18°C)'},
+  ];
   final List<Map<String, String>> _sampleTypes = [
     {'api': 'Tubes', 'ar': 'أنابيب', 'en': 'Tubes'},
     {'api': 'Swabs', 'ar': 'مسحة', 'en': 'Swabs'},
@@ -345,38 +349,52 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
                               AppText('${_scannedBarcodes.length}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24, color: AppColors.primary)),
                             ],
                           ),
-                          // Temp Dropdown
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: _getTempColor(_selectedTemp).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: _getTempColor(_selectedTemp).withOpacity(0.3)),
-                            ),
-                            child: DropdownButtonHideUnderline(
-                              child: DropdownButton<String>(
-                                value: _selectedTemp,
-                                icon: Icon(Icons.thermostat, color: _getTempColor(_selectedTemp), size: 16),
-                                style: TextStyle(color: _getTempColor(_selectedTemp), fontWeight: FontWeight.bold, fontSize: 12),
-                                items: _tempOptions.map((String value) {
-                                  final itemColor = _getTempColor(value);
-                                  return DropdownMenuItem<String>(
-                                    value: value,
-                                    child: AppText(
-                                      value,
-                                      style: TextStyle(color: itemColor, fontWeight: FontWeight.bold),
+
+                        ],
+                      ),
+                      const Divider(height: 20),
+                      // Temperature Selector
+                      Row(
+                        children: [
+                          Icon(Icons.thermostat, color: Colors.grey.shade400, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: _tempOptions.map((tempObj) {
+                                  final isSelected = _selectedTemp == tempObj['api'];
+                                  final itemColor = _getTempColor(tempObj['api']!);
+                                  return Padding(
+                                    padding: const EdgeInsets.only(right: 8),
+                                    child: ChoiceChip(
+                                      label: AppText(
+                                        isArabic ? tempObj['ar']! : tempObj['en']!,
+                                        style: TextStyle(
+                                          color: isSelected ? Colors.white : itemColor,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      selected: isSelected,
+                                      selectedColor: itemColor,
+                                      backgroundColor: itemColor.withOpacity(0.1),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        side: BorderSide(color: isSelected ? Colors.transparent : itemColor.withOpacity(0.3)),
+                                      ),
+                                      onSelected: (selected) {
+                                        if (selected) setState(() => _selectedTemp = tempObj['api']!);
+                                      },
                                     ),
                                   );
                                 }).toList(),
-                                onChanged: (val) {
-                                  if (val != null) setState(() => _selectedTemp = val);
-                                },
                               ),
                             ),
                           ),
                         ],
                       ),
-                      const Divider(height: 20),
+                      const SizedBox(height: 12),
                       // Sample Type Selector
                       Row(
                         children: [
