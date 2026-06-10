@@ -161,33 +161,33 @@ class _CarInspectionScreenState extends State<CarInspectionScreen> {
                 ),
                 const SizedBox(height: 16),
                 
-                if (_existingImagesMap?.otherImages.isNotEmpty == true) ...[
-                  AppText(
-                    isArabic ? 'صور أخرى سابقة' : 'Other Previous Images',
-                    style: const TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    height: 100,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _existingImagesMap!.otherImages.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 8),
-                      itemBuilder: (context, index) {
-                        return ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.network(
-                            _existingImagesMap!.otherImages[index].url,
-                            width: 100,
-                            height: 100,
-                            fit: BoxFit.cover,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                // if (_existingImagesMap?.otherImages.isNotEmpty == true) ...[
+                //   AppText(
+                //     isArabic ? 'صور أخرى سابقة' : 'Other Previous Images',
+                //     style: const TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.bold),
+                //   ),
+                //   const SizedBox(height: 8),
+                //   SizedBox(
+                //     height: 100,
+                //     child: ListView.separated(
+                //       scrollDirection: Axis.horizontal,
+                //       itemCount: _existingImagesMap!.otherImages.length,
+                //       separatorBuilder: (_, __) => const SizedBox(width: 8),
+                //       itemBuilder: (context, index) {
+                //         return ClipRRect(
+                //           borderRadius: BorderRadius.circular(12),
+                //           child: Image.network(
+                //             _existingImagesMap!.otherImages[index].url,
+                //             width: 100,
+                //             height: 100,
+                //             fit: BoxFit.cover,
+                //           ),
+                //         );
+                //       },
+                //     ),
+                //   ),
+                //   const SizedBox(height: 16),
+                // ],
                 
                 GridView.count(
                   shrinkWrap: true,

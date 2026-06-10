@@ -111,7 +111,7 @@ class _PullOutScanContainerScreenViewState extends State<_PullOutScanContainerSc
                   : (selectedTask.englishName ?? selectedTask.name ?? 'Unknown Destination');
 
               return SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
+                padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(context).padding.bottom + 24),
                 child: Column(
                   children: [
                     // Task Info

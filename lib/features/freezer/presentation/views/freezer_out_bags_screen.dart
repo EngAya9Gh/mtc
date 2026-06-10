@@ -269,7 +269,7 @@ class _FreezerOutBagsScreenViewState extends State<_FreezerOutBagsScreenView> {
                       Expanded(
                         child: Center(
                           child: SingleChildScrollView(
-                            padding: const EdgeInsets.all(24),
+                            padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(context).padding.bottom + 24),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -356,7 +356,7 @@ class _FreezerOutBagsScreenViewState extends State<_FreezerOutBagsScreenView> {
                       // Main Section switcher (Container scan vs Bag scan)
                       Expanded(
                         child: SingleChildScrollView(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 24),
                           child: isContainerScanMode 
                               ? _buildContainerScanView(
                                   context: context, 

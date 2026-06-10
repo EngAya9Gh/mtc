@@ -146,7 +146,7 @@ class _DropOffScanBagsScreenViewState extends State<_DropOffScanBagsScreenView> 
               }
 
               return SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 24),
                 child: Column(
                   children: [
                     // Scanner Button
@@ -332,7 +332,7 @@ class _DropOffScanBagsScreenViewState extends State<_DropOffScanBagsScreenView> 
   Widget _buildAllBagsScannedView(BuildContext context, bool isArabic) {
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(context).padding.bottom + 24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
