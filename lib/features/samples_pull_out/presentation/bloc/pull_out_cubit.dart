@@ -139,8 +139,10 @@ class PullOutCubit extends Cubit<PullOutState> {
         );
       }
 
-      _currentContainerBags.removeWhere((b) => b.bagCode == bagCode);
-      _allDestinationBags.removeWhere((b) => b.bagCode == bagCode);
+      for (final processedBag in matchingBags) {
+        _currentContainerBags.removeWhere((b) => b.id == processedBag.id);
+        _allDestinationBags.removeWhere((b) => b.id == processedBag.id);
+      }
 
       emit(PullOutState.success('تمت إزالة الكيس $bagCode بنجاح'));
       _emitCurrentState();

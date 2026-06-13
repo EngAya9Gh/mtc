@@ -215,9 +215,10 @@ class _FreezerOutBagsScreenViewState extends State<_FreezerOutBagsScreenView> {
                 allFinished,
                 isSaving,
               ) {
-
-                return Column(
-                  children: [
+                return SafeArea(
+                  bottom: true,
+                  child: Column(
+                    children: [
                     // Header Card
                     Container(
                       width: double.infinity,
@@ -356,7 +357,7 @@ class _FreezerOutBagsScreenViewState extends State<_FreezerOutBagsScreenView> {
                       // Main Section switcher (Container scan vs Bag scan)
                       Expanded(
                         child: SingleChildScrollView(
-                          padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 24),
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                           child: isContainerScanMode 
                               ? _buildContainerScanView(
                                   context: context, 
@@ -381,7 +382,8 @@ class _FreezerOutBagsScreenViewState extends State<_FreezerOutBagsScreenView> {
                       ),
                     ],
                   ],
-                );
+                ),
+              );
               },
               orElse: () => Center(
                 child: AppText(isArabic ? 'لا توجد بيانات متاحة' : 'No data available'),

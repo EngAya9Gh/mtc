@@ -10,7 +10,7 @@ import '../../../../core/navigation/app_router.dart';
 import '../bloc/pull_out_cubit.dart';
 import '../bloc/pull_out_state.dart';
 import '../../data/models/client_task_model.dart';
-
+import 'package:url_launcher/url_launcher.dart';
 class PullOutTasksScreen extends StatelessWidget {
   const PullOutTasksScreen({super.key});
 
@@ -114,10 +114,13 @@ class _DestinationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    int totalBags = 0;
+    final uniqueBags = <String>{};
     for (var t in destination.tasks) {
-      totalBags += t.samplesSummary.length;
+      for (var s in t.samplesSummary) {
+        uniqueBags.add(s.bagCode);
+      }
     }
+    final int totalBags = uniqueBags.length;
     
     final destinationName = isArabic 
         ? (destination.arabicName ?? destination.name ?? 'وجهة غير معروفة')
@@ -177,16 +180,33 @@ class _DestinationCard extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Icon(Icons.outbox_rounded, color: Colors.orange, size: 18),
-                  const SizedBox(width: 8),
-                  AppText(
-                    '${isArabic ? "إجمالي الأكياس للسحب:" : "Total Bags to Pull Out:"} $totalBags',
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 13,
-                    ),
+                  Row(
+                    children: [
+                      const Icon(Icons.outbox_rounded, color: Colors.orange, size: 18),
+                      const SizedBox(width: 8),
+                      AppText(
+                        '${isArabic ? "إجمالي الأكياس للسحب:" : "Total Bags to Pull Out:"} $totalBags',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
                   ),
+                  if (destination.toLocationLat != null && destination.toLocationLng != null)
+                    IconButton(
+                      icon: const Icon(Icons.location_on, color: Colors.red),
+                      onPressed: () async {
+                        final url = 'https://www.google.com/maps/search/?api=1&query=${destination.toLocationLat},${destination.toLocationLng}';
+                        final uri = Uri.parse(url);
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        }
+                      },
+                      tooltip: isArabic ? 'فتح في الخرائط' : 'Open in Maps',
+                    ),
                 ],
               ),
             ],

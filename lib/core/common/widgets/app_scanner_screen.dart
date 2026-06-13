@@ -159,36 +159,63 @@ class _AppScannerScreenState extends State<AppScannerScreen> {
                     const SizedBox(height: 16),
                     if (_scannedItems.isNotEmpty)
                       Expanded(
-                        child: ListView.builder(
-                          itemCount: _scannedItems.length,
-                          itemBuilder: (context, index) {
-                            final item = _scannedItems[_scannedItems.length - 1 - index];
-                            return Container(
-                              margin: const EdgeInsets.only(bottom: 8),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                              decoration: BoxDecoration(
-                                color: Colors.white10,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.check_circle, color: Colors.greenAccent, size: 20),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: AppText(item, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+                        child: Builder(
+                          builder: (context) {
+                            final map = <String, int>{};
+                            for (var code in _scannedItems) {
+                              map[code] = (map[code] ?? 0) + 1;
+                            }
+                            final groupedList = map.entries.toList().reversed.toList();
+
+                            return ListView.builder(
+                              itemCount: groupedList.length,
+                              itemBuilder: (context, index) {
+                                final entry = groupedList[index];
+                                final item = entry.key;
+                                final count = entry.value;
+
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: 8),
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white10,
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
-                                  IconButton(
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(),
-                                    icon: const Icon(Icons.close, color: Colors.redAccent, size: 20),
-                                    onPressed: () {
-                                      setState(() {
-                                        _scannedItems.remove(item);
-                                      });
-                                    },
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.check_circle, color: Colors.greenAccent, size: 20),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: AppText(item, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+                                      ),
+                                      if (count > 1)
+                                        Container(
+                                          margin: const EdgeInsets.only(right: 8),
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.orange.shade700,
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: AppText(
+                                            'x$count',
+                                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                                          ),
+                                        ),
+                                      IconButton(
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                        icon: const Icon(Icons.close, color: Colors.redAccent, size: 20),
+                                        onPressed: () {
+                                          setState(() {
+                                            // Remove all instances of this item
+                                            _scannedItems.removeWhere((code) => code == item);
+                                          });
+                                        },
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                );
+                              },
                             );
                           },
                         ),

@@ -148,6 +148,10 @@ class _CarInspectionScreenState extends State<CarInspectionScreen> {
           }
         },
         builder: (context, state) {
+          if (state is CarImagesFetching) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
           final isLoading = state is CarInspectionLoading;
 
           return SingleChildScrollView(

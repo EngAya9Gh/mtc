@@ -134,7 +134,7 @@ class _PullOutScanContainerScreenViewState extends State<_PullOutScanContainerSc
                           ),
                           const SizedBox(height: 8),
                           AppText(
-                            '${isArabic ? "إجمالي الأكياس المتبقية للوجهة:" : "Total Bags Left for Destination:"} ${allDestinationBags.length}',
+                            '${isArabic ? "إجمالي الأكياس المتبقية للوجهة:" : "Total Bags Left for Destination:"} ${allDestinationBags.map((s) => s.bagCode).toSet().length}',
                             style: TextStyle(color: Colors.orange.shade700, fontWeight: FontWeight.bold),
                           ),
                         ],

@@ -164,10 +164,6 @@ class _TaskMapScreenViewState extends State<_TaskMapScreenView> {
       listener: (context, state) {
         state.whenOrNull(
           success: (msg) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(msg), backgroundColor: Colors.green),
-            );
-            
             // Update local task state to refresh UI
             setState(() {
               if (!isConfirmed) {
@@ -178,9 +174,7 @@ class _TaskMapScreenViewState extends State<_TaskMapScreenView> {
             });
           },
           error: (msg) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(msg), backgroundColor: Colors.red),
-            );
+            // Error is handled in builder now
           },
         );
       },
@@ -188,47 +182,42 @@ class _TaskMapScreenViewState extends State<_TaskMapScreenView> {
         final isLoading = state.maybeWhen(loading: () => true, orElse: () => false);
 
         return Scaffold(
+          extendBody: true,
           appBar: AppBar(
             title: AppText(isArabic ? 'خريطة المهمة' : 'Task Map'),
             centerTitle: true,
           ),
-          body: Stack(
-            children: [
-              GoogleMap(
-                mapType: MapType.normal,
-                initialCameraPosition: CameraPosition(
-                  target: LatLng(_currentTask.fromLocationLat ?? 24.671086, _currentTask.fromLocationLng ?? 46.749398),
-                  zoom: 12,
+          body: GoogleMap(
+            mapType: MapType.normal,
+            initialCameraPosition: CameraPosition(
+              target: LatLng(_currentTask.fromLocationLat ?? 24.671086, _currentTask.fromLocationLng ?? 46.749398),
+              zoom: 12,
+            ),
+            markers: _markers,
+            onMapCreated: _onMapCreated,
+            myLocationEnabled: true,
+            myLocationButtonEnabled: false,
+          ),
+          bottomNavigationBar: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 30),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
-                markers: _markers,
-                onMapCreated: _onMapCreated,
-                myLocationEnabled: true,
-                myLocationButtonEnabled: false,
-              ),
-
-
-              // Bottom Details Card
-              Positioned(
-                left: 16,
-                right: 16,
-                bottom: 30,
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                       if (_currentTask.otp != null && _currentTask.otp!.isNotEmpty) ...[
                         Container(
                           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
@@ -328,7 +317,7 @@ class _TaskMapScreenViewState extends State<_TaskMapScreenView> {
                         ],
                       ),
                       
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 8),
                       AppElevatedButton(
                         text: buttonText,
                         isLoading: isLoading,
@@ -351,12 +340,56 @@ class _TaskMapScreenViewState extends State<_TaskMapScreenView> {
                           }
                         },
                       ),
+                      state.maybeWhen(
+                        success: (msg) => Container(
+                          margin: const EdgeInsets.only(top: 12),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.green.shade200),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.check_circle_outline, color: Colors.green, size: 20),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: AppText(
+                                  msg,
+                                  style: const TextStyle(color: Colors.green, fontSize: 13, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        error: (msg) => Container(
+                          margin: const EdgeInsets.only(top: 12),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.red.shade200),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: AppText(
+                                  msg,
+                                  style: const TextStyle(color: Colors.red, fontSize: 13, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        orElse: () => const SizedBox.shrink(),
+                      ),
                     ],
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
         );
       },
     );

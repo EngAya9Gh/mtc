@@ -96,18 +96,18 @@ class _DropOffLocationCheckScreenState extends State<DropOffLocationCheckScreen>
                     style: const TextStyle(color: Colors.grey),
                   ),
                   const SizedBox(height: 32),
-                  TextField(
-                    controller: _barcodeController,
-                    decoration: InputDecoration(
-                      hintText: isArabic ? 'أدخل الباركود يدوياً...' : 'Enter barcode manually...',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      suffixIcon: IconButton(
-                        icon: const Icon(Icons.qr_code_scanner),
-                        onPressed: () {},
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
+                  // TextField(
+                  //   controller: _barcodeController,
+                  //   decoration: InputDecoration(
+                  //     hintText: isArabic ? 'أدخل الباركود يدوياً...' : 'Enter barcode manually...',
+                  //     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  //     suffixIcon: IconButton(
+                  //       icon: const Icon(Icons.qr_code_scanner),
+                  //       onPressed: () {},
+                  //     ),
+                  //   ),
+                  // ),
+                  // const SizedBox(height: 24),
                   if (isLoading)
                     const CircularProgressIndicator()
                   else

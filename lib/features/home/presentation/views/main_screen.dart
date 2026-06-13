@@ -50,13 +50,50 @@ class MainScreen extends StatelessWidget {
         BlocListener<ReleaseCarCubit, ReleaseCarState>(
           listener: (context, state) {
             if (state is ReleaseCarLoading) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(isArabic ? 'جاري إخلاء السيارة...' : 'Releasing car...')),
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (ctx) => AlertDialog(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  content: Row(
+                    children: [
+                      const CircularProgressIndicator(),
+                      const SizedBox(width: 20),
+                      Expanded(child: AppText(isArabic ? 'جاري إخلاء السيارة...' : 'Releasing car...')),
+                    ],
+                  ),
+                ),
               );
             } else if (state is ReleaseCarSuccess) {
-              UserInfo().logout(getIt<SharedPreferences>());
-              context.go(AppRouter.login);
+              Navigator.pop(context); // Close loading dialog
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (ctx) => AlertDialog(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  title: Row(
+                    children: [
+                      const Icon(Icons.check_circle, color: Colors.green),
+                      const SizedBox(width: 8),
+                      AppText(isArabic ? 'نجاح' : 'Success', style: const TextStyle(color: Colors.green)),
+                    ],
+                  ),
+                  content: AppText(isArabic 
+                      ? 'تم إخلاء السيارة بنجاح.\nسيتم توجيهك لصفحة تسجيل الدخول لتحديث بيانات جلستك.' 
+                      : 'Car released successfully.\nYou will be redirected to the login page to refresh your session.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        UserInfo().logout(getIt<SharedPreferences>());
+                        context.go(AppRouter.login);
+                      },
+                      child: AppText(isArabic ? 'موافق' : 'OK', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    )
+                  ],
+                ),
+              );
             } else if (state is ReleaseCarFailure) {
+              Navigator.pop(context); // Close loading dialog
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(state.error), backgroundColor: Colors.red),
               );

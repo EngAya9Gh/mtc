@@ -376,32 +376,32 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
           ),
           const SizedBox(height: 12),
           // Manual/Fake Scan Input
-          Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  controller: _bagController,
-                  decoration: InputDecoration(
-                    hintText: isArabic ? 'أو أدخل الباركود يدوياً' : 'Or enter barcode manually',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-                onPressed: _onManualBagSubmit,
-                child: AppText(isArabic ? 'إضافة' : 'ADD', style: const TextStyle(color: Colors.white)),
-              ),
-            ],
-          ),
+          // Row(
+          //   children: [
+          //     Expanded(
+          //       child: TextFormField(
+          //         controller: _bagController,
+          //         decoration: InputDecoration(
+          //           hintText: isArabic ? 'أو أدخل الباركود يدوياً' : 'Or enter barcode manually',
+          //           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          //           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          //         ),
+          //       ),
+          //     ),
+          //     const SizedBox(width: 8),
+          //     ElevatedButton(
+          //       style: ElevatedButton.styleFrom(
+          //         backgroundColor: AppColors.primary,
+          //         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          //         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          //       ),
+          //       onPressed: _onManualBagSubmit,
+          //       child: AppText(isArabic ? 'إضافة' : 'ADD', style: const TextStyle(color: Colors.white)),
+          //     ),
+          //   ],
+          // ),
             
-          const SizedBox(height: 24),
+          // const SizedBox(height: 24),
 
           // Remaining bags list
           Row(

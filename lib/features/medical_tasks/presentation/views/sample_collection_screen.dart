@@ -53,8 +53,8 @@ class _SampleCollectionScreenView extends StatefulWidget {
 }
 
 class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView> {
-  late String _selectedTemp;
-  late String _selectedSampleType;
+  String? _selectedTemp;
+  String? _selectedSampleType;
   final TextEditingController _manualScanController = TextEditingController();
   final List<Map<String, String>> _scannedBarcodes = [];
 
@@ -67,8 +67,8 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
   @override
   void initState() {
     super.initState();
-    _selectedTemp = widget.initialTemp ?? 'ROOM';
-    _selectedSampleType = widget.initialType ?? 'Tubes';
+    _selectedTemp = widget.initialTemp;
+    _selectedSampleType = widget.initialType;
     
     // Auto-scan the first barcode upon entry if we came from settings
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -94,16 +94,25 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
   ];
 
   void _onScanBarcode() async {
+    if (_selectedTemp == null || _selectedSampleType == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).isArabic ? 'يرجى اختيار درجة الحرارة ونوع العينة أولاً' : 'Please select temperature and sample type first'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
     final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const AppScannerScreen(multiScan: true, allowDuplicates: true, title: 'Scan Samples')),
     );
     if (result is List<String> && result.isNotEmpty) {
       for (final code in result) {
-        _addBarcode(_selectedSampleType, code);
+        _addBarcode(_selectedSampleType!, code);
       }
     } else if (result is String && result.isNotEmpty) {
-      _addBarcode(_selectedSampleType, result);
+      _addBarcode(_selectedSampleType!, result);
     }
   }
 
@@ -121,7 +130,7 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
     setState(() {
       _scannedBarcodes.add({
         'barcode': barcode,
-        'temp': _selectedTemp,
+        'temp': _selectedTemp ?? '',
         'type': sampleType,
       });
     });
@@ -378,10 +387,10 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
                                       ),
                                       selected: isSelected,
                                       selectedColor: itemColor,
-                                      backgroundColor: itemColor.withOpacity(0.1),
+                                      backgroundColor: Colors.white,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(8),
-                                        side: BorderSide(color: isSelected ? Colors.transparent : itemColor.withOpacity(0.3)),
+                                        side: BorderSide(color: isSelected ? Colors.transparent : itemColor.withOpacity(0.5)),
                                       ),
                                       onSelected: (selected) {
                                         if (selected) setState(() => _selectedTemp = tempObj['api']!);
@@ -418,6 +427,7 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
                                       ),
                                       selected: isSelected,
                                       selectedColor: AppColors.primary,
+                                      backgroundColor: Colors.white,
                                       onSelected: (selected) {
                                         if (selected) {
                                           setState(() => _selectedSampleType = type['api']!);
@@ -451,37 +461,74 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
                             ],
                           ),
                         )
-                      : ListView.builder(
-                          itemCount: _scannedBarcodes.length,
-                          itemBuilder: (context, index) {
-                            final bCode = _scannedBarcodes[index];
-                            final tempColor = _getTempColor(bCode['temp']!);
-                            
-                            return Container(
-                              margin: const EdgeInsets.only(bottom: 12),
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.grey.shade100),
-                                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 5)],
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: tempColor.withOpacity(0.1),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(Icons.qr_code, color: tempColor, size: 20),
+                      : Builder(
+                          builder: (context) {
+                            final groupedBarcodes = <String, Map<String, dynamic>>{};
+                            for (var b in _scannedBarcodes) {
+                              final key = '${b['barcode']}_${b['temp']}_${b['type']}';
+                              if (groupedBarcodes.containsKey(key)) {
+                                groupedBarcodes[key]!['count'] = (groupedBarcodes[key]!['count'] as int) + 1;
+                              } else {
+                                groupedBarcodes[key] = {
+                                  'barcode': b['barcode'],
+                                  'temp': b['temp'],
+                                  'type': b['type'],
+                                  'count': 1,
+                                };
+                              }
+                            }
+                            final groupedList = groupedBarcodes.values.toList();
+
+                            return ListView.builder(
+                              itemCount: groupedList.length,
+                              itemBuilder: (context, index) {
+                                final bCode = groupedList[index];
+                                final tempColor = _getTempColor(bCode['temp']!);
+                                final count = bCode['count'] as int;
+                                
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: Colors.grey.shade100),
+                                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 5)],
                                   ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        AppText(bCode['barcode'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: tempColor.withOpacity(0.1),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(Icons.qr_code, color: tempColor, size: 20),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                AppText(bCode['barcode'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                                                if (count > 1) ...[
+                                                  const SizedBox(width: 8),
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.black87,
+                                                      borderRadius: BorderRadius.circular(12),
+                                                    ),
+                                                    child: AppText(
+                                                      'x$count',
+                                                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ],
+                                            ),
                                         const SizedBox(height: 6),
                                         Wrap(
                                           spacing: 6,
@@ -522,14 +569,19 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
                                   IconButton(
                                     icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
                                     onPressed: () {
-                                      setState(() => _scannedBarcodes.removeAt(index));
+                                      setState(() {
+                                        final indexToRemove = _scannedBarcodes.indexWhere((e) => e['barcode'] == bCode['barcode'] && e['temp'] == bCode['temp'] && e['type'] == bCode['type']);
+                                        if (indexToRemove != -1) _scannedBarcodes.removeAt(indexToRemove);
+                                      });
                                     },
                                   ),
                                 ],
                               ),
                             );
                           },
-                        ),
+                        );
+                      },
+                    ),
                 ),
                 const SizedBox(height: 6),
 
@@ -555,8 +607,14 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
                       onPressed: () {
+                        if (_selectedTemp == null || _selectedSampleType == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(isArabic ? 'يرجى اختيار درجة الحرارة ونوع العينة أولاً' : 'Please select temperature and sample type first'), backgroundColor: Colors.orange),
+                          );
+                          return;
+                        }
                         if (_manualScanController.text.trim().isNotEmpty) {
-                          _addBarcode(_selectedSampleType, _manualScanController.text.trim());
+                          _addBarcode(_selectedSampleType!, _manualScanController.text.trim());
                           _manualScanController.clear();
                         }
                       },

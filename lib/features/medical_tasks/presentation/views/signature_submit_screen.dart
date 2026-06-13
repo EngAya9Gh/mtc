@@ -91,19 +91,24 @@ class _SignatureSubmitViewState extends State<_SignatureSubmitView> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 20),
-                    AppElevatedButton(
-                      text: isCollection
-                          ? (isArabic ? 'الذهاب لوضع الفريزر' : 'Go to Freezer Placement')
-                          : (isArabic ? 'العودة للرئيسية' : 'Back to Home'),
-                      onPressed: () {
-                        Navigator.pop(ctx);
-                        if (isCollection) {
-                          context.go(AppRouter.main);
-                          context.push(AppRouter.freezerOutBags, extra: widget.task);
-                        } else {
-                          context.go(AppRouter.main);
-                        }
-                      },
+                    Builder(
+                      builder: (ctxBtn) {
+                        final bool shouldGoToFreezer = isCollection && _samples.isNotEmpty;
+                        return AppElevatedButton(
+                          text: shouldGoToFreezer
+                              ? (isArabic ? 'الذهاب لوضع الفريزر' : 'Go to Freezer Placement')
+                              : (isArabic ? 'العودة للرئيسية' : 'Back to Home'),
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            if (shouldGoToFreezer) {
+                              context.go(AppRouter.main);
+                              context.push(AppRouter.freezerOutBags, extra: widget.task);
+                            } else {
+                              context.go(AppRouter.main);
+                            }
+                          },
+                        );
+                      }
                     ),
                   ],
                 ),

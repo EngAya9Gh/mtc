@@ -5,6 +5,7 @@ import '../../data/models/car_images_response_model.dart';
 abstract class CarInspectionState {}
 class CarInspectionInitial extends CarInspectionState {}
 class CarInspectionLoading extends CarInspectionState {}
+class CarImagesFetching extends CarInspectionState {}
 class CarInspectionSuccess extends CarInspectionState {}
 class CarInspectionFailure extends CarInspectionState {
   final String error;
@@ -45,7 +46,7 @@ class CarInspectionCubit extends Cubit<CarInspectionState> {
   }
 
   Future<void> fetchCarImages(int carId) async {
-    emit(CarInspectionLoading());
+    emit(CarImagesFetching());
     try {
       final response = await _repository.getCarImages(carId);
       emit(CarImagesLoaded(response));

@@ -2,6 +2,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/repositories/freezer_repository.dart';
 import '../../data/models/bag_item_model.dart';
 import 'freezer_placement_state.dart';
+import '../../../../data/providers/user_info_provider.dart';
+import '../../../auth/data/models/login_model.dart';
 
 class FreezerPlacementCubit extends Cubit<FreezerPlacementState> {
   final FreezerRepository _freezerRepository;
@@ -63,6 +65,38 @@ class FreezerPlacementCubit extends Cubit<FreezerPlacementState> {
     if (currentState is! PlacementState) return false;
 
     if (qrCode.trim().isEmpty) return false;
+
+    final targetTemp = currentState.selectedContainerType;
+    if (targetTemp == null) return false;
+
+    final containers = UserInfo().loginInfo?.car?.containers ?? [];
+    if (containers.isNotEmpty) {
+      ContainerData? matchedContainer;
+      for (var c in containers) {
+        if (c.imei?.trim() == qrCode.trim()) {
+          matchedContainer = c;
+          break;
+        }
+      }
+
+      if (matchedContainer == null) {
+        emit(FreezerPlacementState.error('الحاوية غير موجودة أو غير مسجلة في عهدتك'));
+        emit(currentState);
+        return false;
+      }
+
+      final cType = (matchedContainer.type ?? '').toUpperCase();
+      bool isValidTemp = false;
+      if (targetTemp == 'ROOM' && (cType.contains('ROOM') || cType == 'RT')) isValidTemp = true;
+      if (targetTemp == 'REF' && (cType.contains('REF') || cType.contains('REFRIG'))) isValidTemp = true;
+      if (targetTemp == 'FRZ' && (cType.contains('FRZ') || cType.contains('FREEZ') || cType.contains('FROZEN'))) isValidTemp = true;
+
+      if (!isValidTemp) {
+        emit(FreezerPlacementState.error('الحاوية الممسوحة ($cType) لا تتطابق مع نوع العينات المطلوبة ($targetTemp)'));
+        emit(currentState);
+        return false;
+      }
+    }
 
     emit(currentState.copyWith(
       selectedContainerQrCode: qrCode,
