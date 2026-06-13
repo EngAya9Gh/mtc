@@ -11,6 +11,7 @@ import '../../../../core/common/widgets/app_elevated_button.dart';
 import '../../../../core/config/theme/color_scheme.dart';
 import '../../../../core/utils/app_localizations.dart';
 import '../../../../core/services/di/di_container.dart';
+import '../../../../core/services/network/api_client.dart';
 import '../../data/models/task_model.dart';
 import '../bloc/task_map_cubit.dart';
 import '../bloc/task_map_state.dart';
@@ -328,14 +329,30 @@ class _TaskMapScreenViewState extends State<_TaskMapScreenView> {
                               locationId: _currentTask.fromLocation ?? 0,
                               lat: _driverLat ?? 24.671086, 
                               lng: _driverLng ?? 46.749398,
+                              fromLocationLat: _currentTask.fromLocationLat,
+                              fromLocationLng: _currentTask.fromLocationLng,
                             );
                           } else if (!isStarted) {
                             context.read<TaskMapCubit>().startTask(
                               taskId: _currentTask.id,
                               lat: _driverLat ?? 24.671086,
                               lng: _driverLng ?? 46.749398,
+                              fromLocationLat: _currentTask.fromLocationLat,
+                              fromLocationLng: _currentTask.fromLocationLng,
                             );
                           } else {
+                            final isDebugMode = getIt<ApiClient>().isDebugMode;
+                            if (!isDebugMode && (_distanceInMeters == null || _distanceInMeters! > 500)) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(isArabic 
+                                    ? 'يجب أن تكون المسافة أقل من 500 متر لجمع العينات' 
+                                    : 'Distance must be less than 500 meters to collect samples'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                              return;
+                            }
                             context.push(AppRouter.sampleCollection, extra: _currentTask);
                           }
                         },

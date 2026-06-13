@@ -8,6 +8,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ApiClient {
   final Dio _dio;
 
+  bool get isDebugMode => _dio.options.baseUrl == EndPoints.debugBaseUrl;
+
   ApiClient(this._dio, SharedPreferences sharedPreferences) {
     _dio.interceptors.add(ApiInterceptor(sharedPreferences));
     if (kDebugMode) {

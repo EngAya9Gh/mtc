@@ -14,18 +14,29 @@ class TaskMapCubit extends Cubit<TaskMapState> {
     required int locationId,
     required double lat,
     required double lng,
+    double? fromLocationLat,
+    double? fromLocationLng,
   }) async {
     emit(const TaskMapState.loading());
     try {
       final driverId = UserInfo().userId;
+      
+      double finalLat = lat;
+      double finalLng = lng;
+      if (_apiClient.isDebugMode && fromLocationLat != null && fromLocationLng != null) {
+        finalLat = fromLocationLat;
+        finalLng = fromLocationLng;
+        print('🔧 debugBaseUrl Mode: Overriding confirmLocation coordinates to target: ($finalLat, $finalLng)');
+      }
+
       final response = await _apiClient.post(
         'driver/task/fromlocation/confirm',
         data: {
           'task_id': taskId,
           'driver_id': driverId,
           'from_location': locationId,
-          'lat': lat,
-          'lng': lng,
+          'lat': finalLat,
+          'lng': finalLng,
         },
       );
 
@@ -48,17 +59,28 @@ class TaskMapCubit extends Cubit<TaskMapState> {
     required int taskId,
     required double lat,
     required double lng,
+    double? fromLocationLat,
+    double? fromLocationLng,
   }) async {
     emit(const TaskMapState.loading());
     try {
       final driverId = UserInfo().userId;
+
+      double finalLat = lat;
+      double finalLng = lng;
+      if (_apiClient.isDebugMode && fromLocationLat != null && fromLocationLng != null) {
+        finalLat = fromLocationLat;
+        finalLng = fromLocationLng;
+        print('🔧 debugBaseUrl Mode: Overriding startTask coordinates to target: ($finalLat, $finalLng)');
+      }
+
       final response = await _apiClient.post(
         'driver/task/start',
         data: {
           'task_id': taskId,
           'driver_id': driverId,
-          'lat': lat,
-          'lng': lng,
+          'lat': finalLat,
+          'lng': finalLng,
         },
       );
 
