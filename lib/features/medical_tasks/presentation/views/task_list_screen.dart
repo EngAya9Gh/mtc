@@ -121,6 +121,17 @@ class _TaskCard extends StatelessWidget {
       child: InkWell(
         onTap: () {
           if (task.status == 'NEW') {
+            if (task.confirmedByDriver == 0) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(isArabic 
+                      ? 'يرجى قبول المهام أولاً للتمكن من البدء بها.' 
+                      : 'Please accept tasks first to start them.'),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+              return;
+            }
             context.push(AppRouter.taskMap, extra: task);
           } else if (task.status == 'COLLECTED') {
             context.push(AppRouter.freezerOutBags, extra: task);
