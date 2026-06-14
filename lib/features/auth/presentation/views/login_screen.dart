@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/common/widgets/app_elevated_button.dart';
@@ -56,8 +57,9 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Scaffold(
           backgroundColor: AppColors.background,
           body: SingleChildScrollView(
-            child: Column(
-              children: [
+            child: AutofillGroup(
+              child: Column(
+                children: [
                 // Top Header with Gradient
                 Container(
                   height: MediaQuery.of(context).size.height * 0.35,
@@ -138,6 +140,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         labelText: 'Username',
                         hintText: 'Enter your username or mobile',
                         prefixIcon: const Icon(Icons.person_outline, color: AppColors.primary),
+                        autofillHints: const [AutofillHints.username],
                       ),
                       const SizedBox(height: 20),
                       AppTextField(
@@ -146,6 +149,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         hintText: 'Enter your password',
                         prefixIcon: const Icon(Icons.lock_outline, color: AppColors.primary),
                         obscureText: _obscurePassword,
+                        autofillHints: const [AutofillHints.password],
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
@@ -193,6 +197,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               orElse: () => false,
                             ),
                             onPressed: () {
+                              TextInput.finishAutofillContext();
                               final text = _usernameController.text.trim();
                               final password = _passwordController.text;
                               
@@ -225,6 +230,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
+      ),
       ),
     );
   }

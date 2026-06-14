@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dio/dio.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../../../core/services/network/api_client.dart';
 import 'signature_submit_state.dart';
 
@@ -40,13 +41,37 @@ class SignatureSubmitCubit extends Cubit<SignatureSubmitState> {
     int? boxCount,
     int? sampleCount,
     String? otp,
+    double? taskLat,
+    double? taskLng,
   }) async {
     print('🚀 [SignatureSubmitCubit] Submitting task: $taskId, isCollection: $isCollection');
     emit(const SignatureSubmitState.loading());
     try {
       final endpoint = isCollection ? 'task/collect' : 'task/close';
+
+      double finalLat = 0.0;
+      double finalLng = 0.0;
+
+      if (_apiClient.isDebugMode && taskLat != null && taskLng != null) {
+        finalLat = taskLat;
+        finalLng = taskLng;
+      } else {
+        try {
+          final position = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.high,
+          );
+          finalLat = position.latitude;
+          finalLng = position.longitude;
+        } catch (e) {
+          print('⚠️ [SignatureSubmitCubit] Could not get location: $e');
+        }
+      }
       
-      final Map<String, dynamic> body = {'task_id': taskId};
+      final Map<String, dynamic> body = {
+        'task_id': taskId,
+        'lat': finalLat,
+        'lng': finalLng,
+      };
       
       if (isCollection) {
         if (boxCount != null) body['box_count'] = boxCount;

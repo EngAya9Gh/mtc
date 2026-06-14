@@ -480,6 +480,7 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
                             final groupedList = groupedBarcodes.values.toList();
 
                             return ListView.builder(
+                              padding: const EdgeInsets.only(bottom: 200),
                               itemCount: groupedList.length,
                               itemBuilder: (context, index) {
                                 final bCode = groupedList[index];
@@ -583,97 +584,109 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
                       },
                     ),
                 ),
-                const SizedBox(height: 6),
-
-                // Action Buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _manualScanController,
-                        decoration: InputDecoration(
-                          hintText: isArabic ? 'إدخال يدوي للباركود' : 'Manual barcode',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          isDense: true,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                      onPressed: () {
-                        if (_selectedTemp == null || _selectedSampleType == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(isArabic ? 'يرجى اختيار درجة الحرارة ونوع العينة أولاً' : 'Please select temperature and sample type first'), backgroundColor: Colors.orange),
-                          );
-                          return;
-                        }
-                        if (_manualScanController.text.trim().isNotEmpty) {
-                          _addBarcode(_selectedSampleType!, _manualScanController.text.trim());
-                          _manualScanController.clear();
-                        }
-                      },
-                      child: AppText(isArabic ? 'إضافة' : 'ADD', style: const TextStyle(color: Colors.white, fontSize: 13)),
-                    ),
-                    const SizedBox(width: 8),
-                    InkWell(
-                      onTap: isLoading ? null : _onScanBarcode,
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.black87,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(Icons.qr_code_scanner, color: Colors.white),
-                      ),
-                    ),
-                  ],
-                ),
                 const SizedBox(height: 12),
-                Row(
+              ],
+            ),
+          ),
+          floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+          floatingActionButton: Container(
+            color: const Color(0xFFF7F9FC),
+            width: double.infinity,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Expanded(
-                      flex: 2,
-                      child: AppElevatedButton(
-                        text: isArabic ? 'حفظ العينات' : 'SAVE SAMPLES',
-                        isLoading: isLoading,
-                        onPressed: _onSaveSamples,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      flex: 1,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red.shade50,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _manualScanController,
+                            decoration: InputDecoration(
+                              hintText: isArabic ? 'إدخال يدوي للباركود' : 'Manual barcode',
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              isDense: true,
+                            ),
+                          ),
                         ),
-                        onPressed: isLoading ? null : _onNoSamples,
-                        child: AppText(isArabic ? 'لا توجد عينات' : 'NO SAMPLES', style: const TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold)),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          onPressed: () {
+                            if (_selectedTemp == null || _selectedSampleType == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(isArabic ? 'يرجى اختيار درجة الحرارة ونوع العينة أولاً' : 'Please select temperature and sample type first'), backgroundColor: Colors.orange),
+                              );
+                              return;
+                            }
+                            if (_manualScanController.text.trim().isNotEmpty) {
+                              _addBarcode(_selectedSampleType!, _manualScanController.text.trim());
+                              _manualScanController.clear();
+                            }
+                          },
+                          child: AppText(isArabic ? 'إضافة' : 'ADD', style: const TextStyle(color: Colors.white, fontSize: 13)),
+                        ),
+                        const SizedBox(width: 8),
+                        InkWell(
+                          onTap: isLoading ? null : _onScanBarcode,
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.black87,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(Icons.qr_code_scanner, color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: AppElevatedButton(
+                            text: isArabic ? 'حفظ العينات' : 'SAVE SAMPLES',
+                            isLoading: isLoading,
+                            onPressed: _onSaveSamples,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 1,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red.shade50,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            onPressed: isLoading ? null : _onNoSamples,
+                            child: AppText(isArabic ? 'لا توجد عينات' : 'NO SAMPLES', style: const TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextButton(
+                        onPressed: isLoading ? null : _onFinishCollecting,
+                        child: AppText(
+                          isArabic ? 'إنهاء الجمع' : 'FINISH COLLECTING',
+                          style: TextStyle(color: isLoading ? Colors.grey : AppColors.primary, fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
-                SizedBox(
-                  width: double.infinity,
-                  child: TextButton(
-                    onPressed: isLoading ? null : _onFinishCollecting,
-                    child: AppText(
-                      isArabic ? 'إنهاء الجمع' : 'FINISH COLLECTING',
-                      style: TextStyle(color: isLoading ? Colors.grey : AppColors.primary, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-                SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
-              ],
+              ),
             ),
           ),
         );

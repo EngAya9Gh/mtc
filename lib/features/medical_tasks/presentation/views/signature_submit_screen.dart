@@ -286,12 +286,17 @@ class _SignatureSubmitViewState extends State<_SignatureSubmitView> {
                   text: isArabic ? 'إرسال المهمة' : 'SUBMIT TASK',
                   isLoading: isLoading,
                   onPressed: () {
+                    final double? taskLat = isCollection ? widget.task.fromLocationLat : widget.task.toLocationLat;
+                    final double? taskLng = isCollection ? widget.task.fromLocationLng : widget.task.toLocationLng;
+
                     context.read<SignatureSubmitCubit>().submitTask(
                       taskId: widget.task.id,
                       isCollection: isCollection,
                       boxCount: int.tryParse(_boxCountController.text),
                       sampleCount: int.tryParse(_sampleCountController.text),
                       otp: _otpController.text,
+                      taskLat: taskLat,
+                      taskLng: taskLng,
                     );
                   },
                 ),

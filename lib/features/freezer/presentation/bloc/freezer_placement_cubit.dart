@@ -4,6 +4,8 @@ import '../../data/models/bag_item_model.dart';
 import 'freezer_placement_state.dart';
 import '../../../../data/providers/user_info_provider.dart';
 import '../../../auth/data/models/login_model.dart';
+import '../../../../core/services/di/di_container.dart';
+import '../../../../core/services/network/api_client.dart';
 
 class FreezerPlacementCubit extends Cubit<FreezerPlacementState> {
   final FreezerRepository _freezerRepository;
@@ -70,32 +72,34 @@ class FreezerPlacementCubit extends Cubit<FreezerPlacementState> {
     if (targetTemp == null) return false;
 
     final containers = UserInfo().loginInfo?.car?.containers ?? [];
+    ContainerData? matchedContainer;
+    
     if (containers.isNotEmpty) {
-      ContainerData? matchedContainer;
+      final scanned = qrCode.trim().toLowerCase();
       for (var c in containers) {
-        if (c.imei?.trim() == qrCode.trim()) {
+        if (c.imei?.trim().toLowerCase() == scanned || c.id.toString() == scanned) {
           matchedContainer = c;
           break;
         }
       }
+    }
 
-      if (matchedContainer == null) {
-        emit(FreezerPlacementState.error('الحاوية غير موجودة أو غير مسجلة في عهدتك'));
-        emit(currentState);
-        return false;
-      }
+    if (matchedContainer == null) {
+      emit(FreezerPlacementState.error('الحاوية غير موجودة أو غير مسجلة في عهدتك'));
+      emit(currentState);
+      return false;
+    }
 
-      final cType = (matchedContainer.type ?? '').toUpperCase();
-      bool isValidTemp = false;
-      if (targetTemp == 'ROOM' && (cType.contains('ROOM') || cType == 'RT')) isValidTemp = true;
-      if (targetTemp == 'REF' && (cType.contains('REF') || cType.contains('REFRIG'))) isValidTemp = true;
-      if (targetTemp == 'FRZ' && (cType.contains('FRZ') || cType.contains('FREEZ') || cType.contains('FROZEN'))) isValidTemp = true;
+    final cType = (matchedContainer.type ?? '').toUpperCase();
+    bool isValidTemp = false;
+    if (targetTemp == 'ROOM' && (cType.contains('ROOM') || cType == 'RT')) isValidTemp = true;
+    if (targetTemp == 'REF' && (cType.contains('REF') || cType.contains('REFRIG'))) isValidTemp = true;
+    if (targetTemp == 'FRZ' && (cType.contains('FRZ') || cType.contains('FREEZ') || cType.contains('FROZEN'))) isValidTemp = true;
 
-      if (!isValidTemp) {
-        emit(FreezerPlacementState.error('الحاوية الممسوحة ($cType) لا تتطابق مع نوع العينات المطلوبة ($targetTemp)'));
-        emit(currentState);
-        return false;
-      }
+    if (!isValidTemp) {
+      emit(FreezerPlacementState.error('الحاوية الممسوحة ($cType) لا تتطابق مع نوع العينات المطلوبة ($targetTemp)'));
+      emit(currentState);
+      return false;
     }
 
     emit(currentState.copyWith(

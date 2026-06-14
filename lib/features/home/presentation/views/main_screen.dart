@@ -121,8 +121,14 @@ class _MainScreenState extends State<MainScreen> {
       ],
       child: Scaffold(
         backgroundColor: const Color(0xFFF2F5FA),
-        body: CustomScrollView(
-          slivers: [
+        body: RefreshIndicator(
+          onRefresh: () async {
+            await UserInfo().refreshProfile(force: true);
+            if (mounted) setState(() {});
+          },
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
           // ─── Sliver App Bar ───────────────────────────────────────────
           SliverAppBar(
             expandedHeight: 190,
@@ -366,6 +372,7 @@ class _MainScreenState extends State<MainScreen> {
             ),
           ),
         ],
+      ),
       ),
       drawer: _MainDrawer(l: l),
       ),

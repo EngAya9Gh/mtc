@@ -9,6 +9,7 @@ class AppTextField extends StatelessWidget {
   final String? Function(String?)? validator;
   final Widget? prefixIcon;
   final Widget? suffixIcon;
+  final Iterable<String>? autofillHints;
 
   const AppTextField({
     super.key,
@@ -20,6 +21,7 @@ class AppTextField extends StatelessWidget {
     this.validator,
     this.prefixIcon,
     this.suffixIcon,
+    this.autofillHints,
   });
 
   @override
@@ -29,6 +31,7 @@ class AppTextField extends StatelessWidget {
       obscureText: obscureText,
       keyboardType: keyboardType,
       validator: validator,
+      autofillHints: autofillHints,
       decoration: InputDecoration(
         labelText: labelText,
         hintText: hintText,
