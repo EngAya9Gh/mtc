@@ -72,12 +72,25 @@ class FreezerPlacementCubit extends Cubit<FreezerPlacementState> {
     if (targetTemp == null) return false;
 
     final containers = UserInfo().loginInfo?.car?.containers ?? [];
+    print('DEBUG validateContainer: Scanned=$qrCode');
+    print('DEBUG validateContainer: Car is ${UserInfo().loginInfo?.car == null ? "NULL" : "NOT NULL"}');
+    print('DEBUG validateContainer: Containers count = ${containers.length}');
+    for (var c in containers) {
+      print('DEBUG validateContainer: Container ID=${c.id}, IMEI=${c.imei}, Type=${c.type}');
+    }
+
     ContainerData? matchedContainer;
     
     if (containers.isNotEmpty) {
       final scanned = qrCode.trim().toLowerCase();
+      final scannedNumber = scanned.replaceAll(RegExp(r'[^0-9]'), ''); // Extract only numbers
+
       for (var c in containers) {
-        if (c.imei?.trim().toLowerCase() == scanned || c.id.toString() == scanned) {
+        bool imeiMatch = c.imei?.trim().toLowerCase() == scanned;
+        bool exactIdMatch = c.id.toString() == scanned;
+        bool numericIdMatch = scannedNumber.isNotEmpty && c.id.toString() == scannedNumber;
+
+        if (imeiMatch || exactIdMatch || numericIdMatch) {
           matchedContainer = c;
           break;
         }
