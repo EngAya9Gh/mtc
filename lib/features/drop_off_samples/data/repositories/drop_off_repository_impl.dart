@@ -27,8 +27,8 @@ class DropOffRepositoryImpl implements DropOffRepository {
   }
 
   @override
-  Future<void> confirmToLocation(int driverId, int toLocationId, List<int> taskIds) async {
-    return await _remoteDataSource.confirmToLocation(driverId, toLocationId, taskIds);
+  Future<void> confirmToLocation(int driverId, int toLocationId, List<int> taskIds, double lat, double lng) async {
+    return await _remoteDataSource.confirmToLocation(driverId, toLocationId, taskIds, lat, lng);
   }
 
   @override

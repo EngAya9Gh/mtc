@@ -57,6 +57,7 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
   String? _selectedSampleType;
   final TextEditingController _manualScanController = TextEditingController();
   final List<Map<String, String>> _scannedBarcodes = [];
+  bool _hasSavedSamples = false;
 
   @override
   void dispose() {
@@ -205,6 +206,7 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
     if (savedBarcodes.isNotEmpty) {
       setState(() {
         _scannedBarcodes.removeWhere((item) => savedBarcodes.contains(item));
+        _hasSavedSamples = true;
       });
     }
 
@@ -223,6 +225,19 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
   void _onNoSamples() {
     final l = AppLocalizations.of(context);
     final isArabic = l.isArabic;
+    
+    if (_hasSavedSamples) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isArabic 
+              ? 'لا يمكن الإبلاغ عن عدم وجود عينات بعد حفظ عينات بالفعل.'
+              : 'Cannot report no samples after saving samples.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -245,6 +260,19 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
   void _onFinishCollecting() {
     final l = AppLocalizations.of(context);
     final isArabic = l.isArabic;
+    
+    if (!_hasSavedSamples && _scannedBarcodes.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isArabic 
+              ? 'يرجى جمع العينات وحفظها، أو الضغط على "لا يوجد عينات" للتمكن من إنهاء الجمع.'
+              : 'Please collect and save samples, or click "No Samples" to finish collection.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     if (_scannedBarcodes.isNotEmpty) {
       if (widget.task.taskType == 'BOX') {
         context.push('/first_task_count', extra: {

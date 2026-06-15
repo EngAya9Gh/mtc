@@ -126,14 +126,22 @@ class _DropOffDestinationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    int totalBags = 0;
+    int totalSamples = 0;
+    Set<String> uniqueBags = {};
+    
     if (destination.tasks != null) {
       for (var t in destination.tasks!) {
         if (t.samplesSummary != null) {
-          totalBags += t.samplesSummary!.length;
+          totalSamples += t.samplesSummary!.length;
+          for (var s in t.samplesSummary!) {
+            if (s.bagCode.isNotEmpty) {
+              uniqueBags.add(s.bagCode);
+            }
+          }
         }
       }
     }
+    int totalBags = uniqueBags.length;
     
     final destinationName = isArabic 
         ? (destination.arabicName ?? destination.name ?? 'وجهة غير معروفة')
@@ -206,10 +214,20 @@ class _DropOffDestinationCard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.outbox_rounded, color: Colors.orange, size: 18),
-                      const SizedBox(width: 8),
+                      const Icon(Icons.science, color: Colors.blue, size: 18),
+                      const SizedBox(width: 4),
                       AppText(
-                        '${isArabic ? "إجمالي الأكياس:" : "Total Bags:"} $totalBags',
+                        '$totalSamples ${isArabic ? "عينات" : "Samples"}',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Icon(Icons.outbox_rounded, color: Colors.orange, size: 18),
+                      const SizedBox(width: 4),
+                      AppText(
+                        '$totalBags ${isArabic ? "أكياس" : "Bags"}',
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontSize: 13,

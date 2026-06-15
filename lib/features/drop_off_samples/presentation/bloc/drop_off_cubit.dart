@@ -2,6 +2,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../data/providers/user_info_provider.dart';
 import '../../../samples_pull_out/data/models/client_task_model.dart';
 import '../../domain/repositories/drop_off_repository.dart';
+import 'package:get_it/get_it.dart';
+import 'package:geolocator/geolocator.dart';
+import '../../../../core/services/network/api_client.dart';
+import '../../../../core/services/background/background_location_service.dart';
 import 'drop_off_state.dart';
 
 class DropOffCubit extends Cubit<DropOffState> {
@@ -187,7 +191,26 @@ class DropOffCubit extends Cubit<DropOffState> {
       List<int> taskIds = selectedTask.tasks?.map((t) => t.id).toList() ?? [];
       if (taskIds.isEmpty) taskIds = selectedTask.taskIds ?? [];
 
-      await _repository.confirmToLocation(driverId, locationId, taskIds);
+      final apiClient = GetIt.instance<ApiClient>();
+      double currentLat = 0.0;
+      double currentLng = 0.0;
+
+      if (apiClient.isDebugMode) {
+        currentLat = selectedTask.toLocationLat ?? 0.0;
+        currentLng = selectedTask.toLocationLng ?? 0.0;
+      } else {
+        try {
+          final p = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.high,
+          );
+          currentLat = p.latitude;
+          currentLng = p.longitude;
+        } catch (e) {
+          print('Could not get GPS location: $e');
+        }
+      }
+
+      await _repository.confirmToLocation(driverId, locationId, taskIds, currentLat, currentLng);
       
       // Refresh the list to get updated status
       emit(const DropOffState.locationCheckSuccess());

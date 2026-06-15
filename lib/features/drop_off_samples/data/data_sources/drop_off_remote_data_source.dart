@@ -12,7 +12,7 @@ abstract class DropOffRemoteDataSource {
     required int toLocationId,
     String takasiNumber = '',
   });
-  Future<void> confirmToLocation(int driverId, int toLocationId, List<int> taskIds);
+  Future<void> confirmToLocation(int driverId, int toLocationId, List<int> taskIds, double lat, double lng);
   Future<void> closeDropOffTasks(List<int> taskIds, List<int>? signatureBytes);
 }
 
@@ -79,15 +79,15 @@ class DropOffRemoteDataSourceImpl implements DropOffRemoteDataSource {
   }
 
   @override
-  Future<void> confirmToLocation(int driverId, int toLocationId, List<int> taskIds) async {
+  Future<void> confirmToLocation(int driverId, int toLocationId, List<int> taskIds, double lat, double lng) async {
     final response = await _apiClient.post(
       EndPoints.confirmToLocation,
       data: jsonEncode({
         'driver_id': driverId,
         'to_location': toLocationId,
         'task_ids': taskIds,
-        'lat': 0.0,
-        'lng': 0.0,
+        'lat': lat,
+        'lng': lng,
       }),
       options: Options(
         headers: {'Content-Type': 'application/json'},

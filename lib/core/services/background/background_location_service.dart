@@ -104,7 +104,7 @@ void onStart(ServiceInstance service) async {
   // Init necessary background dependencies
   final prefs = await SharedPreferences.getInstance();
   final dio = Dio(BaseOptions(
-    baseUrl: EndPoints.debugBaseUrl, // Using debug base url as per project rules
+    baseUrl: EndPoints.baseUrl, // Using debug base url as per project rules
     connectTimeout: const Duration(seconds: 15),
     receiveTimeout: const Duration(seconds: 15),
   ));
