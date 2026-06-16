@@ -207,6 +207,8 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
       setState(() {
         _scannedBarcodes.removeWhere((item) => savedBarcodes.contains(item));
         _hasSavedSamples = true;
+        _selectedTemp = null;
+        _selectedSampleType = null;
       });
     }
 

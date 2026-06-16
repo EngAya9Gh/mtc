@@ -9,5 +9,5 @@ abstract class DropOffRepository {
     String takasiNumber = '',
   });
   Future<void> confirmToLocation(int driverId, int toLocationId, List<int> taskIds, double lat, double lng);
-  Future<void> closeDropOffTasks(List<int> taskIds, List<int>? signatureBytes);
+  Future<void> closeDropOffTasks(List<int> taskIds, List<int>? signatureBytes, double lat, double lng);
 }

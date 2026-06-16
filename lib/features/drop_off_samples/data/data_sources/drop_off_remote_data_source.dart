@@ -13,7 +13,7 @@ abstract class DropOffRemoteDataSource {
     String takasiNumber = '',
   });
   Future<void> confirmToLocation(int driverId, int toLocationId, List<int> taskIds, double lat, double lng);
-  Future<void> closeDropOffTasks(List<int> taskIds, List<int>? signatureBytes);
+  Future<void> closeDropOffTasks(List<int> taskIds, List<int>? signatureBytes, double lat, double lng);
 }
 
 class DropOffRemoteDataSourceImpl implements DropOffRemoteDataSource {
@@ -96,12 +96,12 @@ class DropOffRemoteDataSourceImpl implements DropOffRemoteDataSource {
 
     final json = response.data as Map<String, dynamic>;
     if (json['status'] == false) {
-      throw Exception(json['message'] ?? 'Failed to confirm location');
+      throw Exception(json['message'] ?? 'Failed to confirm drop off location');
     }
   }
 
   @override
-  Future<void> closeDropOffTasks(List<int> taskIds, List<int>? signatureBytes) async {
+  Future<void> closeDropOffTasks(List<int> taskIds, List<int>? signatureBytes, double lat, double lng) async {
     // Determine the path based on EndPoints, it was checked and it is 'tasks/close'
     
     // Create FormData for Multipart request
@@ -109,6 +109,8 @@ class DropOffRemoteDataSourceImpl implements DropOffRemoteDataSource {
     
     // The server expects 'tasks' to be a JSON string like "[301, 302]"
     formData.fields.add(MapEntry('tasks', jsonEncode(taskIds)));
+    formData.fields.add(MapEntry('lat', lat.toString()));
+    formData.fields.add(MapEntry('lng', lng.toString()));
     
     if (signatureBytes != null) {
       formData.files.add(

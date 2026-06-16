@@ -165,7 +165,26 @@ class DropOffCubit extends Cubit<DropOffState> {
         }
 
         try {
-          await _repository.closeDropOffTasks(taskIds, signatureBytes);
+          final apiClient = GetIt.instance<ApiClient>();
+          double currentLat = 0.0;
+          double currentLng = 0.0;
+
+          if (apiClient.isDebugMode) {
+            currentLat = selectedTask.toLocationLat ?? 0.0;
+            currentLng = selectedTask.toLocationLng ?? 0.0;
+          } else {
+            try {
+              final p = await Geolocator.getCurrentPosition(
+                desiredAccuracy: LocationAccuracy.high,
+              );
+              currentLat = p.latitude;
+              currentLng = p.longitude;
+            } catch (e) {
+              print('Could not get GPS location: $e');
+            }
+          }
+
+          await _repository.closeDropOffTasks(taskIds, signatureBytes, currentLat, currentLng);
           emit(const DropOffState.closeTasksSuccess());
         } catch (e) {
           emit(DropOffState.error(e.toString()));

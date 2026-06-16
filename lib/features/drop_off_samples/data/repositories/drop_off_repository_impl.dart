@@ -32,7 +32,7 @@ class DropOffRepositoryImpl implements DropOffRepository {
   }
 
   @override
-  Future<void> closeDropOffTasks(List<int> taskIds, List<int>? signatureBytes) async {
-    return await _remoteDataSource.closeDropOffTasks(taskIds, signatureBytes);
+  Future<void> closeDropOffTasks(List<int> taskIds, List<int>? signatureBytes, double lat, double lng) async {
+    return await _remoteDataSource.closeDropOffTasks(taskIds, signatureBytes, lat, lng);
   }
 }
