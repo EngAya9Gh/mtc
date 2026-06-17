@@ -15,14 +15,14 @@ class SamplesPullOutRepositoryImpl implements SamplesPullOutRepository {
   }
 
   @override
-  Future<void> removeBagFromContainer({
-    required int taskId,
-    required String bagCode,
+  Future<Map<String, dynamic>> removeBagsFromContainer({
+    required List<int> taskIds,
+    required List<String> bagCodes,
     required String containerId,
   }) {
-    return _remoteDataSource.removeBagFromContainer(
-      taskId: taskId,
-      bagCode: bagCode,
+    return _remoteDataSource.removeBagsFromContainer(
+      taskIds: taskIds,
+      bagCodes: bagCodes,
       containerId: containerId,
     );
   }

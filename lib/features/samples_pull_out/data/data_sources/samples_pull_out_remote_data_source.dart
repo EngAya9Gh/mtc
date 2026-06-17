@@ -5,9 +5,9 @@ import '../models/client_task_model.dart';
 
 abstract class SamplesPullOutRemoteDataSource {
   Future<List<ClientTaskModel>> getInFreezerTasks(int driverId);
-  Future<void> removeBagFromContainer({
-    required int taskId,
-    required String bagCode,
+  Future<Map<String, dynamic>> removeBagsFromContainer({
+    required List<int> taskIds,
+    required List<String> bagCodes,
     required String containerId,
   });
   Future<void> closeInFreezerTasks(List<int> taskIds);
@@ -52,16 +52,16 @@ class SamplesPullOutRemoteDataSourceImpl implements SamplesPullOutRemoteDataSour
   }
 
   @override
-  Future<void> removeBagFromContainer({
-    required int taskId,
-    required String bagCode,
+  Future<Map<String, dynamic>> removeBagsFromContainer({
+    required List<int> taskIds,
+    required List<String> bagCodes,
     required String containerId,
   }) async {
     final response = await _apiClient.post(
       EndPoints.removeBagFromContainer,
       data: {
-        'task_id': taskId,
-        'bag_code': bagCode,
+        'task_id': taskIds,
+        'bag_code': bagCodes,
         'container_id': containerId,
       },
       options: Options(
@@ -71,8 +71,10 @@ class SamplesPullOutRemoteDataSourceImpl implements SamplesPullOutRemoteDataSour
 
     final json = response.data as Map<String, dynamic>;
     if (json['status'] == false) {
-      throw Exception(json['message'] ?? 'Failed to remove bag');
+      throw Exception(json['message'] ?? 'Failed to remove bags');
     }
+    
+    return json['data'] as Map<String, dynamic>? ?? {};
   }
 
   @override

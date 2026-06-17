@@ -19,6 +19,7 @@ class PullOutState with _$PullOutState {
     required ClientTaskModel selectedTask,
     required List<SampleSummaryModel> allDestinationBags,
     required List<SampleSummaryModel> currentContainerBags,
+    @Default([]) List<SampleSummaryModel> scannedBagsToRemove,
     String? scannedContainerId,
     String? scannedContainerType,
     required bool isContainerValidated,

@@ -53,7 +53,11 @@ class _PullOutScanContainerScreenViewState extends State<_PullOutScanContainerSc
   void _onScanContainerBarcode() async {
     final String? scannedBarcode = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const AppScannerScreen()),
+      MaterialPageRoute(builder: (_) => AppScannerScreen(
+        title: AppLocalizations.of(context).isArabic ? 'مسح الحاوية' : 'Scan Container',
+        scannedItemsTitle: AppLocalizations.of(context).isArabic ? 'الحاوية الممسوحة' : 'Scanned Container',
+        emptyMessage: AppLocalizations.of(context).isArabic ? 'لم يتم مسح الحاوية بعد' : 'No container scanned yet',
+      )),
     );
     if (scannedBarcode != null && scannedBarcode.isNotEmpty) {
       setState(() {
@@ -98,6 +102,7 @@ class _PullOutScanContainerScreenViewState extends State<_PullOutScanContainerSc
               selectedTask,
               allDestinationBags,
               currentContainerBags,
+              scannedBagsToRemove,
               scannedContainerId,
               scannedContainerType,
               isContainerValidated,
@@ -134,9 +139,16 @@ class _PullOutScanContainerScreenViewState extends State<_PullOutScanContainerSc
                           ),
                           const SizedBox(height: 8),
                           AppText(
-                            '${isArabic ? "إجمالي الأكياس المتبقية للوجهة:" : "Total Bags Left for Destination:"} ${allDestinationBags.map((s) => s.bagCode).toSet().length}',
+                            '${isArabic ? "إجمالي الأكياس المتبقية للوجهة:" : "Total Bags Left for Destination:"} ${allDestinationBags.length}',
                             style: TextStyle(color: Colors.orange.shade700, fontWeight: FontWeight.bold),
                           ),
+                          const SizedBox(height: 16),
+                          AppText(
+                            isArabic ? 'الحاويات المطلوبة لهذه الوجهة:' : 'Required Containers:',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          ),
+                          const SizedBox(height: 8),
+                          ..._buildContainersList(allDestinationBags, isArabic),
                         ],
                       ),
                     ),
@@ -222,5 +234,76 @@ class _PullOutScanContainerScreenViewState extends State<_PullOutScanContainerSc
         },
       ),
     );
+  }
+
+  List<Widget> _buildContainersList(List<SampleSummaryModel> bags, bool isArabic) {
+    final Map<int, int> containerCounts = {};
+    int noContainerCount = 0;
+    
+    for (var bag in bags) {
+      if (bag.containerId != null) {
+        containerCounts[bag.containerId!] = (containerCounts[bag.containerId!] ?? 0) + 1;
+      } else {
+        noContainerCount++;
+      }
+    }
+
+    final List<Widget> widgets = [];
+    containerCounts.forEach((containerId, count) {
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Row(
+            children: [
+              const Icon(Icons.inventory_2_outlined, size: 16, color: Colors.grey),
+              const SizedBox(width: 8),
+              AppText(
+                isArabic ? 'حاوية #$containerId' : 'Container #$containerId',
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+              ),
+              const Spacer(),
+              AppText(
+                isArabic ? '$count أكياس' : '$count bags',
+                style: const TextStyle(fontSize: 13, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+
+    if (noContainerCount > 0) {
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, size: 16, color: Colors.red),
+              const SizedBox(width: 8),
+              AppText(
+                isArabic ? 'بدون حاوية محددة' : 'No specified container',
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.red),
+              ),
+              const Spacer(),
+              AppText(
+                isArabic ? '$noContainerCount أكياس' : '$noContainerCount bags',
+                style: const TextStyle(fontSize: 13, color: Colors.red),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (widgets.isEmpty) {
+      widgets.add(
+        AppText(
+          isArabic ? 'لا توجد أكياس' : 'No bags',
+          style: const TextStyle(fontSize: 13, color: Colors.grey),
+        ),
+      );
+    }
+
+    return widgets;
   }
 }

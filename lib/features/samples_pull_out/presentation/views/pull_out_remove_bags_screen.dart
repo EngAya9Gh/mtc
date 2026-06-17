@@ -53,7 +53,13 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
   void _onScanBagBarcode() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const AppScannerScreen(multiScan: true, allowDuplicates: true, title: 'Scan Bags to Remove')),
+      MaterialPageRoute(builder: (_) => AppScannerScreen(
+        multiScan: true, 
+        allowDuplicates: true, 
+        title: AppLocalizations.of(context).isArabic ? 'مسح الأكياس للتحميل' : 'Scan Bags to Remove',
+        scannedItemsTitle: AppLocalizations.of(context).isArabic ? 'الأكياس الممسوحة' : 'Scanned Bags',
+        emptyMessage: AppLocalizations.of(context).isArabic ? 'لم يتم مسح أي كيس بعد' : 'No bags scanned yet',
+      )),
     );
     if (result is List<String> && result.isNotEmpty) {
       for (final code in result) {
@@ -150,6 +156,7 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
               selectedTask,
               allDestinationBags,
               currentContainerBags,
+              scannedBagsToRemove,
               scannedContainerId,
               scannedContainerType,
               isContainerValidated,
@@ -203,7 +210,7 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
                   Expanded(
                     child: currentContainerBags.isEmpty
                         ? _buildContainerFinishedView(context, isArabic, allFinished, hasBagsInOtherContainers)
-                        : _buildBagRemovalView(context, isArabic, currentContainerBags, isRemoving),
+                        : _buildBagRemovalView(context, isArabic, currentContainerBags, scannedBagsToRemove, isRemoving),
                   ),
                 ],
               );
@@ -286,7 +293,7 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
                     ),
                     const SizedBox(height: 16),
                     AppElevatedButton(
-                      text: isArabic ? 'مسح ثلاجة أخرى' : 'SCAN ANOTHER FREEZER',
+                      text: isArabic ? 'مسح حاوية أخرى' : 'SCAN ANOTHER CONTAINER',
                       onPressed: () {
                         context.read<PullOutCubit>().resetContainerScan();
                         context.pop(); // Go back to the scanner screen
@@ -352,15 +359,19 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
     BuildContext context, 
     bool isArabic, 
     List<SampleSummaryModel> currentContainerBags,
+    List<SampleSummaryModel> scannedBagsToRemove,
     bool isRemoving,
   ) {
-    final uniqueBags = <String, SampleSummaryModel>{};
+    // Unique remaining bags count
+    final uniqueRemainingBags = <String, SampleSummaryModel>{};
     for (var bag in currentContainerBags) {
-      if (!uniqueBags.containsKey(bag.bagCode)) {
-        uniqueBags[bag.bagCode] = bag;
+      if (!uniqueRemainingBags.containsKey(bag.bagCode)) {
+        uniqueRemainingBags[bag.bagCode!] = bag;
       }
     }
-    final displayBags = uniqueBags.values.toList();
+    
+    // Unique scanned bags to display
+    final displayScannedBags = scannedBagsToRemove.toSet().toList();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -418,7 +429,7 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: AppText(
-                  '${displayBags.length}',
+                  '${uniqueRemainingBags.length}',
                   style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
                 ),
               ),
@@ -435,113 +446,143 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: displayBags.length,
+            itemCount: uniqueRemainingBags.length,
             itemBuilder: (context, index) {
-              final bag = displayBags[index];
-              return Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade100),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Styled Header for Task ID
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.06),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(12),
-                          topRight: Radius.circular(12),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.assignment_outlined,
-                            size: 16,
-                            color: AppColors.primary,
-                          ),
-                          const SizedBox(width: 6),
-                          AppText(
-                            isArabic 
-                                ? 'رقم المهمة: #${bag.taskId}' 
-                                : 'Task ID: #${bag.taskId}',
-                            style: const TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
-                          ),
-                          const Spacer(),
-                          _buildTemperatureBadge(bag.temperatureType),
-                        ],
-                      ),
-                    ),
-                    
-                    // Card Body containing Bag Code
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.08),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.shopping_bag_outlined,
-                              color: AppColors.primary,
-                              size: 22,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                AppText(
-                                  isArabic ? 'كود الكيس' : 'Bag Code',
-                                  style: TextStyle(
-                                    color: Colors.grey.shade500,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                AppText(
-                                  bag.bagCode,
-                                  style: const TextStyle(
-                                    fontFamily: 'monospace',
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: AppColors.textPrimary,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
+              final bag = uniqueRemainingBags.values.toList()[index];
+              final isScanned = scannedBagsToRemove.any((b) => b.bagCode == bag.bagCode);
+              return _buildBagCard(isArabic, bag, isScanned);
             },
           ),
+
+          if (scannedBagsToRemove.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: () => context.read<PullOutCubit>().confirmRemoveBags(),
+                child: AppText(
+                  isArabic ? 'تأكيد إزالة الأكياس الممسوحة (${scannedBagsToRemove.length})' : 'CONFIRM REMOVE SCANNED BAGS (${scannedBagsToRemove.length})',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ),
+            ),
+          ],
+          
           SizedBox(height: MediaQuery.of(context).padding.bottom),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBagCard(bool isArabic, SampleSummaryModel bag, bool isScanned) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: isScanned ? Colors.green.shade50 : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: isScanned ? Colors.green : Colors.grey.shade100, width: isScanned ? 2 : 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Styled Header for Task ID
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.06),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.assignment_outlined,
+                  size: 16,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(width: 6),
+                AppText(
+                  isArabic 
+                      ? 'رقم المهمة: #${bag.taskId}' 
+                      : 'Task ID: #${bag.taskId}',
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+                const Spacer(),
+                if (isScanned)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Icon(Icons.check_circle, color: Colors.green, size: 20),
+                  ),
+                _buildTemperatureBadge(bag.temperatureType ?? ''),
+              ],
+            ),
+          ),
+          
+          // Card Body containing Bag Code
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.08),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.shopping_bag_outlined,
+                    color: AppColors.primary,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppText(
+                        isArabic ? 'كود الكيس' : 'Bag Code',
+                        style: TextStyle(
+                          color: Colors.grey.shade500,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      AppText(
+                        bag.bagCode ?? '',
+                        style: const TextStyle(
+                          fontFamily: 'monospace',
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: AppColors.textPrimary,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

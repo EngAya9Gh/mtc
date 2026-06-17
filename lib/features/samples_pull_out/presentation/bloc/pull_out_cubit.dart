@@ -12,6 +12,7 @@ class PullOutCubit extends Cubit<PullOutState> {
   ClientTaskModel? _selectedTask;
   List<SampleSummaryModel> _allDestinationBags = [];
   List<SampleSummaryModel> _currentContainerBags = [];
+  List<SampleSummaryModel> _scannedBagsToRemove = [];
   String? _scannedContainerId;
   String? _scannedContainerType;
   bool _isContainerValidated = false;
@@ -43,10 +44,17 @@ class PullOutCubit extends Cubit<PullOutState> {
     _isContainerScanMode = true;
     _allDestinationBags = [];
     _currentContainerBags = [];
+    _scannedBagsToRemove = [];
 
-    // Extract all bags directly from the grouped task
+    // Extract all bags directly from the grouped task and deduplicate by bagCode
+    final Set<String> seenBagCodes = {};
     for (var groupedTask in task.tasks) {
-      _allDestinationBags.addAll(groupedTask.samplesSummary);
+      for (var bag in groupedTask.samplesSummary) {
+        if (!seenBagCodes.contains(bag.bagCode)) {
+          seenBagCodes.add(bag.bagCode);
+          _allDestinationBags.add(bag);
+        }
+      }
     }
 
     _emitCurrentState();
@@ -72,11 +80,15 @@ class PullOutCubit extends Cubit<PullOutState> {
       return;
     }
 
-    // Local validation: Check if container has bags for this destination
-    // Bags with null containerId are considered unassigned and can be pulled from any container
-    final matchedBags = _allDestinationBags.where((b) => b.containerId == extractedId || b.containerId == null).toList();
+    final matchedBags = _allDestinationBags.where((b) => b.containerId == extractedId).toList();
     if (matchedBags.isEmpty) {
-      emit(const PullOutState.error('هذه الحاوية لا تحتوي على أكياس لهذه الوجهة!'));
+      final containers = UserInfo().carInfo?.containers;
+      final matchedContainer = containers?.where((c) => c.id == extractedId).toList();
+      String containerName = extractedIdStr;
+      if (matchedContainer != null && matchedContainer.isNotEmpty) {
+        containerName = '${matchedContainer.first.type ?? "ROOM"} #$extractedIdStr';
+      }
+      emit(PullOutState.error('الحاوية ($containerName) لا تحتوي على أكياس لهذه الوجهة!'));
       _emitCurrentState();
       return;
     }
@@ -111,43 +123,69 @@ class PullOutCubit extends Cubit<PullOutState> {
     _isContainerScanMode = false;
     
     final int containerId = int.parse(_scannedContainerId!);
-    _currentContainerBags = _allDestinationBags.where((b) => b.containerId == containerId || b.containerId == null).toList();
+    _currentContainerBags = _allDestinationBags.where((b) => b.containerId == containerId).toList();
     
     _emitCurrentState();
   }
 
-  void scanBagToRemove(String bagCode) async {
+  void scanBagToRemove(String bagCode) {
     if (_selectedTask == null || _scannedContainerId == null) return;
 
     final matchingBags = _currentContainerBags.where((b) => b.bagCode == bagCode).toList();
     if (matchingBags.isEmpty) {
-      emit(const PullOutState.error('هذا الكيس غير موجود في هذه الحاوية أو تم مسحه مسبقاً!'));
+      emit(const PullOutState.error('هذا الكيس غير موجود في هذه الحاوية!'));
+      _emitCurrentState();
+      return;
+    }
+    
+    // Check if already scanned
+    if (_scannedBagsToRemove.any((b) => b.bagCode == bagCode)) {
+      emit(const PullOutState.error('تم مسح هذا الكيس مسبقاً!'));
       _emitCurrentState();
       return;
     }
 
+    _scannedBagsToRemove.add(matchingBags.first);
+    emit(PullOutState.success('تمت إضافة الكيس $bagCode للقائمة!'));
+    _emitCurrentState();
+  }
+
+  void confirmRemoveBags() async {
+    if (_selectedTask == null || _scannedContainerId == null || _scannedBagsToRemove.isEmpty) return;
+
     _emitCurrentState(isRemoving: true);
 
     try {
-      final uniqueTaskIds = matchingBags.map((b) => b.taskId ?? 0).toSet();
+      final uniqueTaskIds = _scannedBagsToRemove.map((b) => b.taskId ?? 0).where((id) => id != 0).toSet().toList();
+      final bagCodes = _scannedBagsToRemove.map((b) => b.bagCode ?? '').where((c) => c.isNotEmpty).toList();
 
-      for (final taskId in uniqueTaskIds) {
-        await _repository.removeBagFromContainer(
-          taskId: taskId,
-          bagCode: bagCode,
-          containerId: _scannedContainerId!,
-        );
+      final response = await _repository.removeBagsFromContainer(
+        taskIds: uniqueTaskIds,
+        bagCodes: bagCodes,
+        containerId: _scannedContainerId!,
+      );
+
+      final removedBagsRaw = response['removed_bags'] as List<dynamic>? ?? [];
+      final removedBags = removedBagsRaw.map((e) => e.toString()).toList();
+      final failedBagsRaw = response['failed_bags'] as List<dynamic>? ?? [];
+      final failedBags = failedBagsRaw.map((e) => e.toString()).toList();
+
+      for (final code in removedBags) {
+        _currentContainerBags.removeWhere((b) => b.bagCode == code);
+        _allDestinationBags.removeWhere((b) => b.bagCode == code);
+      }
+      
+      _scannedBagsToRemove.clear();
+
+      String msg = 'تم الإرسال والتأكيد بنجاح!';
+      if (failedBags.isNotEmpty) {
+        msg += '\nفشل إزالة بعض الأكياس: ${failedBags.join(", ")}';
       }
 
-      for (final processedBag in matchingBags) {
-        _currentContainerBags.removeWhere((b) => b.id == processedBag.id);
-        _allDestinationBags.removeWhere((b) => b.id == processedBag.id);
-      }
-
-      emit(PullOutState.success('تمت إزالة الكيس $bagCode بنجاح'));
+      emit(PullOutState.success(msg));
       _emitCurrentState();
     } catch (e, stackTrace) {
-      print('=== ERROR IN scanBagToRemove ===');
+      print('=== ERROR IN confirmRemoveBags ===');
       print(e.toString());
       print(stackTrace.toString());
       emit(PullOutState.error(e.toString()));
@@ -161,6 +199,7 @@ class PullOutCubit extends Cubit<PullOutState> {
     _isContainerValidated = false;
     _isContainerScanMode = true;
     _currentContainerBags = [];
+    _scannedBagsToRemove = [];
     _emitCurrentState();
   }
 
@@ -197,6 +236,7 @@ class PullOutCubit extends Cubit<PullOutState> {
       selectedTask: _selectedTask!,
       allDestinationBags: _allDestinationBags,
       currentContainerBags: _currentContainerBags,
+      scannedBagsToRemove: _scannedBagsToRemove,
       scannedContainerId: _scannedContainerId,
       scannedContainerType: _scannedContainerType,
       isContainerValidated: _isContainerValidated,
