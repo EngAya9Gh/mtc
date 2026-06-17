@@ -59,6 +59,22 @@ class SampleCollectionCubit extends Cubit<SampleCollectionState> {
     emit(const SampleCollectionState.success('All samples uploaded successfully!'));
   }
 
+  Future<bool> checkIfHasSamples(int taskId) async {
+    try {
+      final response = await _apiClient.post(
+        'samples/list',
+        data: {'task_id': taskId},
+      );
+      if (response.data['status'] == true) {
+        final List samples = response.data['data'] ?? [];
+        return samples.isNotEmpty;
+      }
+    } catch (e) {
+      // Ignore errors and return false
+    }
+    return false;
+  }
+
   Future<void> reportNoSamples(int taskId) async {
     emit(const SampleCollectionState.loading('Reporting no samples...'));
     try {

@@ -271,8 +271,15 @@ class _TaskMapScreenViewState extends State<_TaskMapScreenView> {
                       _LocationRow(
                         icon: Icons.circle,
                         color: Colors.green,
-                        title: isArabic ? 'موقع العميل:' : 'Client Location:',
+                        title: isArabic ? 'من موقع:' : 'From Location:',
                         value: _currentTask.fromLocationName,
+                      ),
+                      const SizedBox(height: 8),
+                      _LocationRow(
+                        icon: Icons.location_on,
+                        color: Colors.red,
+                        title: isArabic ? 'إلى موقع:' : 'To Location:',
+                        value: _currentTask.toLocationName,
                       ),
                       
                       const SizedBox(height: 12),

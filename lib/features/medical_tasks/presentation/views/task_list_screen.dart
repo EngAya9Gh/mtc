@@ -160,6 +160,27 @@ class _TaskCard extends StatelessWidget {
                           task.clientName,
                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                         ),
+                        const SizedBox(height: 6),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.circle, size: 8, color: Colors.green),
+                                const SizedBox(width: 6),
+                                Expanded(child: AppText(task.fromLocationName, style: const TextStyle(fontSize: 12, color: Colors.black87), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                const Icon(Icons.location_on, size: 10, color: Colors.red),
+                                const SizedBox(width: 4),
+                                Expanded(child: AppText(task.toLocationName, style: const TextStyle(fontSize: 12, color: Colors.black87), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                              ],
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -167,19 +188,6 @@ class _TaskCard extends StatelessWidget {
                 ],
               ),
               const Divider(height: 24),
-              _LocationRow(
-                icon: Icons.location_on_outlined,
-                label: isArabic ? 'من' : 'From',
-                value: task.fromLocationName,
-                color: Colors.green,
-              ),
-              const SizedBox(height: 12),
-              _LocationRow(
-                icon: Icons.location_on,
-                label: isArabic ? 'إلى' : 'To',
-                value: task.toLocationName,
-                color: Colors.red,
-              ),
               const SizedBox(height: 16),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

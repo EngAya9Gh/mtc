@@ -286,14 +286,14 @@ class _FirstTaskCountViewState extends State<_FirstTaskCountView> {
                                 onPressed: () => _onSaveBox(context),
                               ),
                             ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: AppElevatedButton(
-                                text: isArabic ? 'إنهاء الجمع' : 'FINISH COLLECTING',
-                                backgroundColor: AppColors.secondary,
-                                onPressed: _onFinishCollecting,
-                              ),
-                            ),
+                            // const SizedBox(width: 16),
+                            // Expanded(
+                            //   child: AppElevatedButton(
+                            //     text: isArabic ? 'إنهاء الجمع' : 'FINISH COLLECTING',
+                            //     backgroundColor: AppColors.secondary,
+                            //     onPressed: _onFinishCollecting,
+                            //   ),
+                            // ),
                           ],
                         ),
                       ],

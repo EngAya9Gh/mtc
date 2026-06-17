@@ -68,13 +68,33 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
   @override
   void initState() {
     super.initState();
-    _selectedTemp = widget.initialTemp;
-    _selectedSampleType = widget.initialType;
+    final isBox = widget.task.taskType?.toUpperCase() == 'BOX';
+    
+    final int savedSamples = widget.task.sampleCount ?? 0;
+    final int savedBoxes = widget.task.boxCount ?? 0;
+    if (savedSamples > 0 || savedBoxes > 0) {
+      _hasSavedSamples = true;
+    }
+    
+    if (!isBox) {
+      _selectedTemp = widget.initialTemp;
+      _selectedSampleType = widget.initialType;
+    }
     
     // Auto-scan the first barcode upon entry if we came from settings
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.initialTemp != null) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (widget.initialTemp != null && !isBox) {
         _onScanBarcode();
+      }
+      
+      // Double check with server if we don't have local knowledge of saved samples
+      if (!_hasSavedSamples) {
+        final hasSamples = await context.read<SampleCollectionCubit>().checkIfHasSamples(widget.task.id);
+        if (hasSamples && mounted) {
+          setState(() {
+            _hasSavedSamples = true;
+          });
+        }
       }
     });
   }
@@ -104,9 +124,16 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
       );
       return;
     }
+    final isBox = widget.task.taskType?.toUpperCase() == 'BOX';
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const AppScannerScreen(multiScan: true, allowDuplicates: true, title: 'Scan Samples')),
+      MaterialPageRoute(builder: (_) => AppScannerScreen(
+        multiScan: true, 
+        allowDuplicates: true, 
+        title: AppLocalizations.of(context).isArabic ? (isBox ? 'مسح الأكياس' : 'مسح العينات') : (isBox ? 'Scan Bags' : 'Scan Samples'),
+        scannedItemsTitle: AppLocalizations.of(context).isArabic ? (isBox ? 'الأكياس الممسوحة' : 'العينات الممسوحة') : (isBox ? 'Scanned Bags' : 'Scanned Samples'),
+        emptyMessage: AppLocalizations.of(context).isArabic ? (isBox ? 'لم يتم مسح أي كيس بعد' : 'لم يتم مسح أي عينة بعد') : (isBox ? 'No bags scanned yet' : 'No samples scanned yet'),
+      )),
     );
     if (result is List<String> && result.isNotEmpty) {
       for (final code in result) {
@@ -138,20 +165,24 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
   }
 
   void _onSaveSamples() async {
+    final isBox = widget.task.taskType?.toUpperCase() == 'BOX';
     if (_scannedBarcodes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).isArabic ? 'يرجى مسح عينة واحدة على الأقل.' : 'Please scan at least one sample.')),
+        SnackBar(content: Text(AppLocalizations.of(context).isArabic ? (isBox ? 'يرجى مسح كيس واحد على الأقل.' : 'يرجى مسح عينة واحدة على الأقل.') : (isBox ? 'Please scan at least one bag.' : 'Please scan at least one sample.'))),
       );
       return;
     }
 
-    if (widget.task.taskType == 'BOX') {
+    if (isBox) {
       context.push('/first_task_count', extra: {
         'task': widget.task,
         'scannedSamples': _scannedBarcodes,
         'onBoxSaved': () {
           setState(() {
             _scannedBarcodes.clear();
+            _hasSavedSamples = true;
+            _selectedTemp = null;
+            _selectedSampleType = null;
           });
         },
       });
@@ -262,13 +293,14 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
   void _onFinishCollecting() {
     final l = AppLocalizations.of(context);
     final isArabic = l.isArabic;
+    final isBox = widget.task.taskType?.toUpperCase() == 'BOX';
     
     if (!_hasSavedSamples && _scannedBarcodes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(isArabic 
-              ? 'يرجى جمع العينات وحفظها، أو الضغط على "لا يوجد عينات" للتمكن من إنهاء الجمع.'
-              : 'Please collect and save samples, or click "No Samples" to finish collection.'),
+              ? (isBox ? 'يرجى جمع الأكياس وحفظها للتمكن من إنهاء الجمع.' : 'يرجى جمع العينات وحفظها، أو الضغط على "لا يوجد عينات" للتمكن من إنهاء الجمع.')
+              : (isBox ? 'Please collect and save bags to finish collection.' : 'Please collect and save samples, or click "No Samples" to finish collection.')),
           backgroundColor: Colors.orange,
         ),
       );
@@ -276,13 +308,14 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
     }
 
     if (_scannedBarcodes.isNotEmpty) {
-      if (widget.task.taskType == 'BOX') {
+      if (isBox) {
         context.push('/first_task_count', extra: {
           'task': widget.task,
           'scannedSamples': _scannedBarcodes,
           'onBoxSaved': () {
             setState(() {
               _scannedBarcodes.clear();
+              _hasSavedSamples = true;
             });
           },
         });
@@ -308,11 +341,15 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
       return;
     }
     
-    if (widget.task.taskType == 'BOX') {
+    if (isBox && !_hasSavedSamples) {
       context.push('/first_task_count', extra: {
         'task': widget.task,
         'scannedSamples': <Map<String, String>>[],
-        'onBoxSaved': () {},
+        'onBoxSaved': () {
+          setState(() {
+            _hasSavedSamples = true;
+          });
+        },
       });
     } else {
       context.push('/signature', extra: widget.task);
@@ -332,6 +369,7 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final isArabic = l.isArabic;
+    final isBox = widget.task.taskType?.toUpperCase() == 'BOX';
 
     return BlocConsumer<SampleCollectionCubit, SampleCollectionState>(
       listener: (context, state) {
@@ -358,7 +396,7 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
         return Scaffold(
           backgroundColor: const Color(0xFFF7F9FC),
           appBar: AppBar(
-            title: AppText(isArabic ? 'جمع العينات' : 'Sample Collection'),
+            title: AppText(isArabic ? (isBox ? 'جمع الأكياس' : 'جمع العينات') : (isBox ? 'Bag Collection' : 'Sample Collection')),
             centerTitle: true,
           ),
           body: Padding(
@@ -485,7 +523,7 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
                               Icon(Icons.qr_code_scanner, size: 60, color: Colors.grey.shade300),
                               const SizedBox(height: 16),
                               AppText(
-                                isArabic ? 'لم يتم مسح أي عينة بعد' : 'No samples scanned yet',
+                                isArabic ? (isBox ? 'لم يتم مسح أي كيس بعد' : 'لم يتم مسح أي عينة بعد') : (isBox ? 'No bags scanned yet' : 'No samples scanned yet'),
                                 style: TextStyle(color: Colors.grey.shade500, fontSize: 16),
                               ),
                             ],
@@ -630,48 +668,53 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
                   children: [
                     Row(
                       children: [
+                        if (!isBox) ...[
+                          Expanded(
+                            child: TextFormField(
+                              controller: _manualScanController,
+                              decoration: InputDecoration(
+                                hintText: isArabic ? 'إدخال يدوي للباركود' : 'Manual barcode',
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                isDense: true,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                            onPressed: () {
+                              if (_selectedTemp == null || _selectedSampleType == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(isArabic ? 'يرجى اختيار درجة الحرارة ونوع العينة أولاً' : 'Please select temperature and sample type first'), backgroundColor: Colors.orange),
+                                );
+                                return;
+                              }
+                              if (_manualScanController.text.trim().isNotEmpty) {
+                                _addBarcode(_selectedSampleType!, _manualScanController.text.trim());
+                                _manualScanController.clear();
+                              }
+                            },
+                            child: AppText(isArabic ? 'إضافة' : 'ADD', style: const TextStyle(color: Colors.white, fontSize: 13)),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
                         Expanded(
-                          child: TextFormField(
-                            controller: _manualScanController,
-                            decoration: InputDecoration(
-                              hintText: isArabic ? 'إدخال يدوي للباركود' : 'Manual barcode',
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              isDense: true,
+                          flex: isBox ? 1 : 0,
+                          child: InkWell(
+                            onTap: isLoading ? null : _onScanBarcode,
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.black87,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(Icons.qr_code_scanner, color: Colors.white),
                             ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          ),
-                          onPressed: () {
-                            if (_selectedTemp == null || _selectedSampleType == null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(isArabic ? 'يرجى اختيار درجة الحرارة ونوع العينة أولاً' : 'Please select temperature and sample type first'), backgroundColor: Colors.orange),
-                              );
-                              return;
-                            }
-                            if (_manualScanController.text.trim().isNotEmpty) {
-                              _addBarcode(_selectedSampleType!, _manualScanController.text.trim());
-                              _manualScanController.clear();
-                            }
-                          },
-                          child: AppText(isArabic ? 'إضافة' : 'ADD', style: const TextStyle(color: Colors.white, fontSize: 13)),
-                        ),
-                        const SizedBox(width: 8),
-                        InkWell(
-                          onTap: isLoading ? null : _onScanBarcode,
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.black87,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(Icons.qr_code_scanner, color: Colors.white),
                           ),
                         ),
                       ],
@@ -682,7 +725,7 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
                         Expanded(
                           flex: 2,
                           child: AppElevatedButton(
-                            text: isArabic ? 'حفظ العينات' : 'SAVE SAMPLES',
+                            text: isArabic ? (isBox ? 'حفظ الأكياس' : 'حفظ العينات') : (isBox ? 'SAVE BAGS' : 'SAVE SAMPLES'),
                             isLoading: isLoading,
                             onPressed: _onSaveSamples,
                           ),

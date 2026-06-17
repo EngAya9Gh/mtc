@@ -96,7 +96,7 @@ class _SignatureSubmitViewState extends State<_SignatureSubmitView> {
                         final bool shouldGoToFreezer = isCollection && _samples.isNotEmpty;
                         return AppElevatedButton(
                           text: shouldGoToFreezer
-                              ? (isArabic ? 'الذهاب لوضع الفريزر' : 'Go to Freezer Placement')
+                              ? (isArabic ? 'الذهاب لإضافة للحاوية' : 'Go to Container Placement')
                               : (isArabic ? 'العودة للرئيسية' : 'Back to Home'),
                           onPressed: () {
                             Navigator.pop(ctx);
@@ -158,6 +158,28 @@ class _SignatureSubmitViewState extends State<_SignatureSubmitView> {
                       AppText(
                         '#${widget.task.id} | ${widget.task.status}',
                         style: const TextStyle(color: Colors.grey, fontSize: 12),
+                      ),
+                      const SizedBox(height: 8),
+                      Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.circle, size: 10, color: Colors.green),
+                              const SizedBox(width: 6),
+                              Flexible(child: AppText(widget.task.fromLocationName, style: const TextStyle(fontSize: 12, color: Colors.black87))),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.location_on, size: 12, color: Colors.red),
+                              const SizedBox(width: 4),
+                              Flexible(child: AppText(widget.task.toLocationName, style: const TextStyle(fontSize: 12, color: Colors.black87))),
+                            ],
+                          ),
+                        ],
                       ),
                     ],
                   ),

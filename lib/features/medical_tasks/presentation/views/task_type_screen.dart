@@ -68,7 +68,7 @@ class TaskTypeScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 _TaskTypeCard(
                   title: l.samplesPlacement,
-                  subtitle: isArabic ? 'مهام جاهزة لوضعها في الفريزر' : 'Tasks ready for freezer placement',
+                  subtitle: isArabic ? 'مهام جاهزة لوضعها في الحاوية' : 'Tasks ready for container placement',
                   icon: Icons.ac_unit_rounded,
                   iconColor: const Color(0xFF9C64A6),
                   iconBgColor: const Color(0xFFF5EBF7),
@@ -90,7 +90,7 @@ class TaskTypeScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 _TaskTypeCard(
                   title: l.dropOffSamples,
-                  subtitle: isArabic ? 'مهام خارج الفريزر للتسليم' : 'Tasks out of freezer',
+                  subtitle: isArabic ? 'مهام خارج الحاوية للتسليم' : 'Tasks out of container',
                   icon: Icons.local_shipping_outlined,
                   iconColor: const Color(0xFF4CAF50),
                   iconBgColor: const Color(0xFFE8F5E9),
