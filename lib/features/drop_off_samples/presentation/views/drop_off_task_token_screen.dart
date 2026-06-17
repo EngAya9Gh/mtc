@@ -59,6 +59,15 @@ class _DropOffTaskTokenScreenState extends State<DropOffTaskTokenScreen> {
     final l = AppLocalizations.of(context);
     final isArabic = l.isArabic;
 
+    int totalSamples = 0;
+    if (widget.destination.tasks != null) {
+      for (var t in widget.destination.tasks!) {
+        if (t.samplesSummary != null) {
+          totalSamples += t.samplesSummary!.length;
+        }
+      }
+    }
+
     return BlocProvider.value(
       value: widget.cubit,
       child: Scaffold(
@@ -97,7 +106,12 @@ class _DropOffTaskTokenScreenState extends State<DropOffTaskTokenScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.qr_code, size: 80, color: AppColors.primary.withValues(alpha: 0.5)),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 12),
+                  AppText(
+                    isArabic ? 'عدد العينات: $totalSamples' : 'Total Samples: $totalSamples',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary),
+                  ),
+                  const SizedBox(height: 12),
                   AppText(
                     isArabic ? 'الرجاء مسح باركود التوكن (Takasi Number)' : 'Please scan the Task Token barcode',
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),

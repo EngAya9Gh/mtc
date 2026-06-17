@@ -98,7 +98,11 @@ class _DropOffTasksScreenView extends StatelessWidget {
                         context.push(
                           AppRouter.dropOffScanBags,
                           extra: context.read<DropOffCubit>(), // Pass cubit to maintain state
-                        );
+                        ).then((_) {
+                           if (context.mounted) {
+                             context.read<DropOffCubit>().getDropOffTasks();
+                           }
+                        });
                       },
                     );
                   },
@@ -187,6 +191,21 @@ class _DropOffDestinationCard extends StatelessWidget {
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            const Icon(Icons.location_on, size: 12, color: Colors.red),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: AppText(
+                                isArabic ? 'إلى موقع التسليم: $destinationName' : 'To Delivery Location: $destinationName',
+                                style: const TextStyle(fontSize: 12, color: Colors.black87),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),

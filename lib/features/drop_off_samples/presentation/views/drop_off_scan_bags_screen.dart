@@ -19,7 +19,15 @@ class DropOffScanBagsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider.value(
       value: cubit,
-      child: const _DropOffScanBagsScreenView(),
+      child: PopScope(
+        canPop: false,
+        onPopInvoked: (didPop) {
+          if (didPop) return;
+          cubit.getDropOffTasks();
+          context.pop();
+        },
+        child: const _DropOffScanBagsScreenView(),
+      ),
     );
   }
 }
@@ -51,7 +59,13 @@ class _DropOffScanBagsScreenViewState extends State<_DropOffScanBagsScreenView> 
   void _onScanBagBarcode() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const AppScannerScreen(multiScan: true, allowDuplicates: true, title: 'Scan Drop Off Bags')),
+      MaterialPageRoute(builder: (_) => AppScannerScreen(
+        multiScan: true, 
+        allowDuplicates: true, 
+        title: AppLocalizations.of(context).isArabic ? 'مسح الأكياس' : 'Scan Drop Off Bags',
+        scannedItemsTitle: AppLocalizations.of(context).isArabic ? 'الأكياس الممسوحة' : 'Scanned Bags',
+        emptyMessage: AppLocalizations.of(context).isArabic ? 'لم يتم مسح أي كيس بعد' : 'No bags scanned yet',
+      )),
     );
     if (result is List<String> && result.isNotEmpty) {
       for (final code in result) {
@@ -113,7 +127,14 @@ class _DropOffScanBagsScreenViewState extends State<_DropOffScanBagsScreenView> 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
       appBar: AppBar(
-        title: AppText(isArabic ? 'مسح أكياس التسليم' : 'Scan Drop Off Bags'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            context.read<DropOffCubit>().getDropOffTasks();
+            context.pop();
+          },
+        ),
+        title: AppText(isArabic ? 'مسح أكياس التسليم' : 'Scan Drop Off Bags', style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.white,
@@ -143,6 +164,19 @@ class _DropOffScanBagsScreenViewState extends State<_DropOffScanBagsScreenView> 
             scanningBags: (selectedTask, remainingBags, scannedBags, allBagsScanned) {
               if (allBagsScanned) {
                 return _buildAllBagsScannedView(context, isArabic);
+              }
+
+              int totalRemainingSamples = 0;
+              if (selectedTask.tasks != null) {
+                 for (var t in selectedTask.tasks!) {
+                    if (t.samplesSummary != null) {
+                       for (var s in t.samplesSummary!) {
+                          if (remainingBags.any((b) => b.bagCode == s.bagCode)) {
+                             totalRemainingSamples++;
+                          }
+                       }
+                    }
+                 }
               }
 
               return SingleChildScrollView(
@@ -208,6 +242,33 @@ class _DropOffScanBagsScreenViewState extends State<_DropOffScanBagsScreenView> 
                       ],
                     ),
                     const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.science, size: 16, color: Colors.blue),
+                            const SizedBox(width: 6),
+                            AppText(
+                              isArabic ? 'إجمالي العينات المتبقية' : 'Total samples left',
+                              style: const TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: AppText(
+                            '$totalRemainingSamples',
+                            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
 
                     ListView.builder(
                       shrinkWrap: true,
@@ -215,6 +276,16 @@ class _DropOffScanBagsScreenViewState extends State<_DropOffScanBagsScreenView> 
                       itemCount: remainingBags.length,
                       itemBuilder: (context, index) {
                         final bag = remainingBags[index];
+                        
+                        int sampleCount = 0;
+                        if (selectedTask.tasks != null) {
+                           for (var t in selectedTask.tasks!) {
+                              if (t.samplesSummary != null) {
+                                 sampleCount += t.samplesSummary!.where((s) => s.bagCode == bag.bagCode).length;
+                              }
+                           }
+                        }
+                        
                         return Container(
                           margin: const EdgeInsets.only(bottom: 12),
                           decoration: BoxDecoration(
@@ -306,6 +377,20 @@ class _DropOffScanBagsScreenViewState extends State<_DropOffScanBagsScreenView> 
                                               color: AppColors.textPrimary,
                                               letterSpacing: 0.5,
                                             ),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Row(
+                                            children: [
+                                              const Icon(Icons.science, size: 14, color: Colors.blue),
+                                              const SizedBox(width: 4),
+                                              AppText(
+                                                '$sampleCount ${isArabic ? "عينات" : "Samples"}',
+                                                style: TextStyle(
+                                                  color: Colors.grey.shade600,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ],
                                       ),
