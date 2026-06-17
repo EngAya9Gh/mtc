@@ -188,7 +188,7 @@ class _SwapTasksListScreenState extends State<SwapTasksListScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             AppText(
-                              isArabic ? 'مهمة تبادل #${task.id}' : 'Swap Task #${task.id}',
+                              isArabic ? 'مهمة تبادل #${task.taskId > 0 ? task.taskId : task.id}' : 'Swap Task #${task.taskId > 0 ? task.taskId : task.id}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
@@ -213,16 +213,45 @@ class _SwapTasksListScreenState extends State<SwapTasksListScreen> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: AppText(
-                        isArabic ? 'قيد الانتظار' : 'Pending',
+                        _getTaskStatusLabel(task.taskStatus, isArabic),
                         style: const TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
                 const Divider(height: 1, color: Color(0xFFEEEEEE)),
                 const SizedBox(height: 12),
+
+                Row(
+                  children: [
+                    const Icon(Icons.my_location, color: Colors.grey, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: AppText(
+                        task.fromLocationName?.isNotEmpty == true ? task.fromLocationName! : (isArabic ? 'غير محدد' : 'Not specified'),
+                        style: const TextStyle(color: Colors.black87, fontSize: 13),
+                        maxLines: 1,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Icon(isArabic ? Icons.arrow_back : Icons.arrow_forward, color: Colors.grey, size: 16),
+                    ),
+                    const Icon(Icons.location_on, color: AppColors.primary, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: AppText(
+                        task.toLocationName?.isNotEmpty == true ? task.toLocationName! : (isArabic ? 'غير محدد' : 'Not specified'),
+                        style: const TextStyle(color: Colors.black87, fontSize: 13),
+                        maxLines: 1,
+                      ),
+                    ),
+                  ],
+                ),
                 
+                const SizedBox(height: 12),
+                const Divider(height: 1, color: Color(0xFFEEEEEE)),
+                const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
@@ -262,5 +291,10 @@ class _SwapTasksListScreenState extends State<SwapTasksListScreen> {
         ),
       ),
     );
+  }
+
+  String _getTaskStatusLabel(String? status, bool isArabic) {
+    if (status == null || status.isEmpty) return 'Pending';
+    return status.toUpperCase();
   }
 }

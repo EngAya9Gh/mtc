@@ -68,25 +68,35 @@ class _SwapTaskScanBagsScreenState extends State<SwapTaskScanBagsScreen> {
       builder: (context, state) {
         return state.maybeWhen(
           scanningBags: (selectedTask, remainingBags, scannedBags, allBagsScanned) {
-            return Scaffold(
-              backgroundColor: const Color(0xFFF7F9FC),
-              appBar: AppBar(
-                elevation: 0,
-                backgroundColor: AppColors.primary,
-                centerTitle: true,
-                title: AppText(
-                  isArabic ? 'مسح أكياس المهمة #${selectedTask.id}' : 'Scan Bags #${selectedTask.id}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
+            return PopScope(
+              canPop: false,
+              onPopInvoked: (didPop) {
+                if (didPop) return;
+                context.read<SwapTasksCubit>().getSwapTasks();
+                context.pop();
+              },
+              child: Scaffold(
+                backgroundColor: const Color(0xFFF7F9FC),
+                appBar: AppBar(
+                  elevation: 0,
+                  backgroundColor: AppColors.primary,
+                  centerTitle: true,
+                  title: AppText(
+                    isArabic ? 'مسح أكياس المهمة #${selectedTask.taskId > 0 ? selectedTask.taskId : selectedTask.id}' : 'Scan Bags #${selectedTask.taskId > 0 ? selectedTask.taskId : selectedTask.id}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                  leading: IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+                    onPressed: () {
+                      context.read<SwapTasksCubit>().getSwapTasks();
+                      context.pop();
+                    },
                   ),
                 ),
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
-                  onPressed: () => context.pop(),
-                ),
-              ),
               body: Column(
                 children: [
                   // Scanner view
@@ -247,38 +257,65 @@ class _SwapTaskScanBagsScreenState extends State<SwapTaskScanBagsScreen> {
                           ),
                           
                           // Confirm Button
-                          if (allBagsScanned)
-                            Padding(
-                              padding: const EdgeInsets.all(20),
-                              child: ElevatedButton(
-                                onPressed: () {
+                          Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: ElevatedButton(
+                              onPressed: () {
+                                if (!allBagsScanned) {
+                                  showDialog(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      title: AppText(isArabic ? 'تنبيه نقص الأكياس' : 'Bags Shortage Warning'),
+                                      content: AppText(
+                                        isArabic
+                                            ? 'يوجد نقص عدد ${remainingBags.length} أكياس لم يتم مسحها. هل أنت متأكد من استلام المهمة بالرغم من النقص؟'
+                                            : 'There is a shortage of ${remainingBags.length} unscanned bags. Are you sure you want to receive the task despite the shortage?',
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(ctx),
+                                          child: AppText(isArabic ? 'إلغاء' : 'Cancel'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.pop(ctx);
+                                            context.read<SwapTasksCubit>().submitSwapAcceptance();
+                                          },
+                                          child: AppText(isArabic ? 'تأكيد' : 'Confirm', style: const TextStyle(color: Colors.red)),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                } else {
                                   context.read<SwapTasksCubit>().submitSwapAcceptance();
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primary,
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: AppText(
-                                  isArabic ? 'تأكيد استلام المهمة' : 'Confirm Task Receipt',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                              ),
+                              child: AppText(
+                                isArabic ? 'تأكيد استلام المهمة' : 'Confirm Task Receipt',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
+                          ),
                         ],
                       ),
                     ),
                   ),
                 ],
               ),
-            );
-          },
+            ),
+          );
+        },
           orElse: () => const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           ),

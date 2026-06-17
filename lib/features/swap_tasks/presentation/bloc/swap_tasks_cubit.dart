@@ -105,7 +105,6 @@ class SwapTasksCubit extends Cubit<SwapTasksState> {
   Future<void> submitSwapAcceptance() async {
     await state.maybeWhen(
       scanningBags: (selectedTask, remainingBags, scannedBags, allBagsScanned) async {
-        if (!allBagsScanned) return;
 
         emit(const SwapTasksState.loading('جاري تأكيد استلام المهمة...'));
 

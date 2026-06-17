@@ -11,10 +11,20 @@ abstract class SwapTaskModel with _$SwapTaskModel {
   const factory SwapTaskModel({
     @JsonKey(name: 'swaps') @Default([]) List<int> swaps,
     @JsonKey(name: 'driver_name') String? swapUserName,
+    @JsonKey(name: 'from_location_name') String? fromLocationName,
+    @JsonKey(name: 'to_location_name') String? toLocationName,
+    @JsonKey(name: 'task_status') String? taskStatus,
     @JsonKey(name: 'bags') @Default([]) List<SampleSummaryModel> bags,
   }) = _SwapTaskModel;
 
   int get id => swaps.isNotEmpty ? swaps.first : 0;
+  
+  int get taskId {
+    if (bags.isNotEmpty && bags.first.taskId != null) {
+      return bags.first.taskId!;
+    }
+    return 0;
+  }
 
   factory SwapTaskModel.fromJson(Map<String, dynamic> json) =>
       _$SwapTaskModelFromJson(json);

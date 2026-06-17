@@ -87,7 +87,7 @@ class SwapTasksRemoteDataSourceImpl implements SwapTasksRemoteDataSource {
         EndPoints.acceptSwap,
         data: jsonEncode({
           'driver_id': driverId,
-          'swap_ids': swapIds,
+          'swap_id': swapIds.first,
         }),
         options: Options(headers: {'Content-Type': 'application/json'}),
       );
