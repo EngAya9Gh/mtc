@@ -52,7 +52,11 @@ class _FreezerOutBagsScreenViewState extends State<_FreezerOutBagsScreenView> {
   void _onSimulateContainerScan(String currentTemp) async {
     final String? scannedBarcode = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const AppScannerScreen()),
+      MaterialPageRoute(builder: (_) => AppScannerScreen(
+        title: AppLocalizations.of(context).isArabic ? 'مسح الحاوية' : 'Scan Container',
+        scannedItemsTitle: AppLocalizations.of(context).isArabic ? 'الحاوية الممسوحة' : 'Scanned Container',
+        emptyMessage: AppLocalizations.of(context).isArabic ? 'لم يتم مسح الحاوية بعد' : 'No container scanned yet',
+      )),
     );
     if (scannedBarcode != null && scannedBarcode.isNotEmpty) {
       setState(() {
@@ -67,7 +71,13 @@ class _FreezerOutBagsScreenViewState extends State<_FreezerOutBagsScreenView> {
   void _onSimulateBagScan(List<BagItemModel> remainingBags) async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const AppScannerScreen(multiScan: true, allowDuplicates: true, title: 'Scan Bags to Freezer')),
+      MaterialPageRoute(builder: (_) => AppScannerScreen(
+        multiScan: true, 
+        allowDuplicates: true, 
+        title: AppLocalizations.of(context).isArabic ? 'مسح الأكياس ' : 'Scan Bags ',
+        scannedItemsTitle: AppLocalizations.of(context).isArabic ? 'الأكياس الممسوحة' : 'Scanned Bags',
+        emptyMessage: AppLocalizations.of(context).isArabic ? 'لم يتم مسح أي كيس بعد' : 'No bags scanned yet',
+      )),
     );
     if (result is List<String> && result.isNotEmpty) {
       for (final code in result) {
@@ -661,18 +671,18 @@ class _FreezerOutBagsScreenViewState extends State<_FreezerOutBagsScreenView> {
         const SizedBox(height: 16),
 
         // Manual text field for bags
-        TextField(
-          controller: _bagController,
-          decoration: InputDecoration(
-            hintText: isArabic ? 'أدخل باركود الكيس يدوياً' : 'Or type bag barcode manually',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            suffixIcon: IconButton(
-              icon: const Icon(Icons.arrow_forward),
-              onPressed: _onManualBagSubmit,
-            ),
-          ),
-        ),
-        const SizedBox(height: 24),
+        // TextField(
+        //   controller: _bagController,
+        //   decoration: InputDecoration(
+        //     hintText: isArabic ? 'أدخل باركود الكيس يدوياً' : 'Or type bag barcode manually',
+        //     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        //     suffixIcon: IconButton(
+        //       icon: const Icon(Icons.arrow_forward),
+        //       onPressed: _onManualBagSubmit,
+        //     ),
+        //   ),
+        // ),
+        // const SizedBox(height: 24),
 
         // Remaining bags list header
         Row(
