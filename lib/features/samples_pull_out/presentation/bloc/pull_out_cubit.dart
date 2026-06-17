@@ -46,16 +46,16 @@ class PullOutCubit extends Cubit<PullOutState> {
     _currentContainerBags = [];
     _scannedBagsToRemove = [];
 
-    // Extract all bags directly from the grouped task and deduplicate by bagCode
-    final Set<String> seenBagCodes = {};
+    // Build bag list using bag ID for deduplication to avoid losing bags in containers
+    // A bag with the same bagCode can appear with containerId=null AND with a real containerId
+    // We must keep ALL entries by their unique ID so we don't miss bags still in containers
+    final Map<int, SampleSummaryModel> seenBagIds = {};
     for (var groupedTask in task.tasks) {
       for (var bag in groupedTask.samplesSummary) {
-        if (!seenBagCodes.contains(bag.bagCode)) {
-          seenBagCodes.add(bag.bagCode);
-          _allDestinationBags.add(bag);
-        }
+        seenBagIds[bag.id] = bag;
       }
     }
+    _allDestinationBags = seenBagIds.values.toList();
 
     _emitCurrentState();
   }
@@ -146,7 +146,6 @@ class PullOutCubit extends Cubit<PullOutState> {
     }
 
     _scannedBagsToRemove.add(matchingBags.first);
-    emit(PullOutState.success('تمت إضافة الكيس $bagCode للقائمة!'));
     _emitCurrentState();
   }
 
@@ -171,8 +170,9 @@ class PullOutCubit extends Cubit<PullOutState> {
       final failedBags = failedBagsRaw.map((e) => e.toString()).toList();
 
       for (final code in removedBags) {
+        final containerId = int.tryParse(_scannedContainerId ?? '');
         _currentContainerBags.removeWhere((b) => b.bagCode == code);
-        _allDestinationBags.removeWhere((b) => b.bagCode == code);
+        _allDestinationBags.removeWhere((b) => b.bagCode == code && b.containerId == containerId);
       }
       
       _scannedBagsToRemove.clear();
@@ -206,7 +206,8 @@ class PullOutCubit extends Cubit<PullOutState> {
   void closeTasks() async {
     if (_selectedTask == null) return;
 
-    if (_allDestinationBags.isNotEmpty) {
+    final bagsInContainers = _allDestinationBags.where((b) => b.containerId != null).toList();
+    if (bagsInContainers.isNotEmpty) {
       emit(const PullOutState.error('يرجى سحب جميع الأكياس من كافة الحاويات قبل إغلاق المهام.'));
       _emitCurrentState();
       return;
@@ -229,14 +230,14 @@ class PullOutCubit extends Cubit<PullOutState> {
   void _emitCurrentState({bool isRemoving = false}) {
     if (_selectedTask == null) return;
     
-    final allFinished = _allDestinationBags.isEmpty;
+    final allFinished = _allDestinationBags.where((b) => b.containerId != null).isEmpty;
     final hasBagsInOtherContainers = !allFinished && _currentContainerBags.isEmpty;
 
     emit(PullOutState.pullOutState(
       selectedTask: _selectedTask!,
-      allDestinationBags: _allDestinationBags,
-      currentContainerBags: _currentContainerBags,
-      scannedBagsToRemove: _scannedBagsToRemove,
+      allDestinationBags: List.from(_allDestinationBags),
+      currentContainerBags: List.from(_currentContainerBags),
+      scannedBagsToRemove: List.from(_scannedBagsToRemove),
       scannedContainerId: _scannedContainerId,
       scannedContainerType: _scannedContainerType,
       isContainerValidated: _isContainerValidated,

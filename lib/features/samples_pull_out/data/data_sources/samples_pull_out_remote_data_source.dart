@@ -65,7 +65,7 @@ class SamplesPullOutRemoteDataSourceImpl implements SamplesPullOutRemoteDataSour
         'container_id': containerId,
       },
       options: Options(
-        contentType: Headers.formUrlEncodedContentType,
+        contentType: Headers.jsonContentType,
       ),
     );
 
@@ -81,10 +81,9 @@ class SamplesPullOutRemoteDataSourceImpl implements SamplesPullOutRemoteDataSour
   Future<void> closeInFreezerTasks(List<int> taskIds) async {
     final response = await _apiClient.post(
       EndPoints.freezerOut,
-      data: {'task_id': taskIds},
-      options: Options(
-        contentType: Headers.formUrlEncodedContentType,
-      ),
+      data: FormData.fromMap({
+        'task_id': taskIds.map((id) => id.toString()).toList(),
+      }),
     );
 
     final json = response.data as Map<String, dynamic>;

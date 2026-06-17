@@ -94,6 +94,15 @@ class _PullOutScanContainerScreenViewState extends State<_PullOutScanContainerSc
                 SnackBar(content: AppText(msg), backgroundColor: Colors.green),
               );
             },
+            closeTasksSuccess: () {
+              context.go(AppRouter.taskStatus, extra: {
+                'isSuccess': true,
+                'message': isArabic 
+                    ? 'تم سحب العينات بنجاح وإغلاق المهام.' 
+                    : 'Samples pulled out successfully and tasks closed.',
+                'taskId': null,
+              });
+            },
           );
         },
         builder: (context, state) {
@@ -154,19 +163,31 @@ class _PullOutScanContainerScreenViewState extends State<_PullOutScanContainerSc
                     ),
                     const SizedBox(height: 32),
 
-                    // Scanner Button
-                    SizedBox(
-                      width: double.infinity,
-                      child: AppElevatedButton(
-                        text: isArabic ? 'مسح الحاوية بالماسح' : 'SCAN CONTAINER',
-                        onPressed: _onScanContainerBarcode,
+                    if (allFinished) ...[
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: AppElevatedButton(
+                          text: isArabic ? 'إكمال وإغلاق المهام' : 'COMPLETE & CLOSE TASKS',
+                          onPressed: () {
+                            context.read<PullOutCubit>().closeTasks();
+                          },
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 32),
-
-                    if (!isContainerValidated) ...[
-
                     ] else ...[
+                      // Scanner Button
+                      SizedBox(
+                        width: double.infinity,
+                        child: AppElevatedButton(
+                          text: isArabic ? 'مسح الحاوية بالماسح' : 'SCAN CONTAINER',
+                          onPressed: _onScanContainerBarcode,
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+
+                      if (!isContainerValidated) ...[
+
+                      ] else ...[
                       // Success Info Banner
                       Container(
                         padding: const EdgeInsets.all(16),
@@ -225,6 +246,7 @@ class _PullOutScanContainerScreenViewState extends State<_PullOutScanContainerSc
                         ),
                       ),
                     ],
+                    ],
                   ],
                 ),
               );
@@ -279,9 +301,8 @@ class _PullOutScanContainerScreenViewState extends State<_PullOutScanContainerSc
           child: Row(
             children: [
               const Icon(Icons.warning_amber_rounded, size: 16, color: Colors.red),
-              const SizedBox(width: 8),
               AppText(
-                isArabic ? 'بدون حاوية محددة' : 'No specified container',
+                isArabic ? ' عدد الأكياس التي تم ازالتها ' : ' num of removed bags',
                 style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.red),
               ),
               const Spacer(),
