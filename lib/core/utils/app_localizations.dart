@@ -31,7 +31,7 @@ class AppLocalizations {
   String get medicalTasksSubtitle => isArabic ? 'راجع مهامك لهذا اليوم' : "Check your today tasks";
   String get pharmaTask => isArabic ? 'مهمة صيدلية' : 'PHARMA TASK';
   String get moneyTask => isArabic ? 'مهمة مالية' : 'MONEY TASK';
-  String get freezer => isArabic ? 'الفريزر' : 'Freezer'; // Kept as extra if needed
+  String get freezer => isArabic ? 'الحاوية' : 'Container';
   String get freezerSubtitle => isArabic ? 'وضع وإخراج' : 'Placement & Out'; // Kept as extra
   String get delivery => isArabic ? 'التوصيل' : 'Delivery'; // Kept as extra
   String get deliverySubtitle => isArabic ? 'المهام المغلقة' : 'Closed tasks'; // Kept as extra

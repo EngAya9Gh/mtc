@@ -4,6 +4,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'app_scanner.dart';
 import 'app_text.dart';
+import '../../utils/app_localizations.dart';
 
 class AppScannerScreen extends StatefulWidget {
   final bool multiScan;
@@ -11,11 +12,16 @@ class AppScannerScreen extends StatefulWidget {
   /// When true, the same barcode can be scanned multiple times (each scan adds one count)
   final bool allowDuplicates;
 
+  final String? scannedItemsTitle;
+  final String? emptyMessage;
+
   const AppScannerScreen({
     super.key,
     this.multiScan = false,
     this.title = 'Scan Barcode',
     this.allowDuplicates = false,
+    this.scannedItemsTitle,
+    this.emptyMessage,
   });
 
   @override
@@ -142,7 +148,7 @@ class _AppScannerScreenState extends State<AppScannerScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         AppText(
-                          'العينات الممسوحة (${_scannedItems.length})',
+                          '${widget.scannedItemsTitle ?? (AppLocalizations.of(context).isArabic ? 'العينات الممسوحة' : 'Scanned Samples')} (${_scannedItems.length})',
                           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
                         ),
                         if (_scannedItems.isNotEmpty)
@@ -152,7 +158,7 @@ class _AppScannerScreenState extends State<AppScannerScreen> {
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
                             onPressed: () => Navigator.pop(context, _scannedItems),
-                            child: const AppText('تأكيد', style: TextStyle(color: Colors.white)),
+                            child: AppText(AppLocalizations.of(context).isArabic ? 'تأكيد' : 'Confirm', style: const TextStyle(color: Colors.white)),
                           ),
                       ],
                     ),
@@ -221,9 +227,9 @@ class _AppScannerScreenState extends State<AppScannerScreen> {
                         ),
                       )
                     else
-                      const Expanded(
+                      Expanded(
                         child: Center(
-                          child: AppText('لم يتم مسح أي عينة بعد', style: TextStyle(color: Colors.white54, fontSize: 16)),
+                          child: AppText(widget.emptyMessage ?? (AppLocalizations.of(context).isArabic ? 'لم يتم مسح أي عينة بعد' : 'No items scanned yet'), style: const TextStyle(color: Colors.white54, fontSize: 16)),
                         ),
                       ),
                   ],

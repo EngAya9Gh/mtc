@@ -9,9 +9,9 @@ class AppStrings {
   
   // Home
   static const String medicalTasks = 'المهام الطبية';
-  static const String freezerPlacement = 'وضع في الفريزر';
-  static const String delivery = 'التوصيل';
-  static const String swap = 'التبادل';
+  static const String freezerPlacement = 'إضافة للحاوية (Container)';
+  static const String samplesPullOut = 'سحب من الحاوية (Container)';
+  static const String dropOffSamples = 'تسليم العينات';
   
   // Common
   static const String loading = 'جاري التحميل...';
