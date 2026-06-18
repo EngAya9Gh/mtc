@@ -169,33 +169,50 @@ class DropOffCubit extends Cubit<DropOffState> {
           double currentLat = 0.0;
           double currentLng = 0.0;
 
-          if (apiClient.isDebugMode) {
-            currentLat = selectedTask.toLocationLat ?? 0.0;
-            currentLng = selectedTask.toLocationLng ?? 0.0;
-          } else {
-            try {
-              final p = await Geolocator.getCurrentPosition(
-                desiredAccuracy: LocationAccuracy.high,
-              );
-              currentLat = p.latitude;
-              currentLng = p.longitude;
-            } catch (e) {
-              print('Could not get GPS location: $e');
-            }
-          }
+            if (apiClient.isDebugMode) {
+              currentLat = selectedTask.toLocationLat ?? 0.0;
+              currentLng = selectedTask.toLocationLng ?? 0.0;
+            } else {
+              bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+              if (!serviceEnabled) throw Exception('يرجى تشغيل خدمة تحديد الموقع (GPS)');
+              
+              LocationPermission permission = await Geolocator.checkPermission();
+              if (permission == LocationPermission.denied) {
+                permission = await Geolocator.requestPermission();
+                if (permission == LocationPermission.denied) throw Exception('يرجى منح صلاحية الوصول للموقع');
+              }
+              if (permission == LocationPermission.deniedForever) {
+                throw Exception('صلاحية الموقع مرفوضة دائماً، يرجى تفعيلها من إعدادات الجهاز');
+              }
 
-          await _repository.closeDropOffTasks(taskIds, signatureBytes, currentLat, currentLng);
-          emit(const DropOffState.closeTasksSuccess());
-        } catch (e) {
-          emit(DropOffState.error(e.toString()));
-          emit(DropOffState.signatureReady(
-            selectedTask: selectedTask,
-            scannedBags: scannedBags,
-            isSubmitting: false,
-          ));
-        }
-      },
-      orElse: () async {},
+              try {
+                final p = await Geolocator.getCurrentPosition(
+                  desiredAccuracy: LocationAccuracy.high,
+                  timeLimit: const Duration(seconds: 10),
+                );
+                currentLat = p.latitude;
+                currentLng = p.longitude;
+              } catch (e) {
+                throw Exception('فشل في الحصول على الموقع الحالي، تأكد من جودة الإشارة والمحاولة مجدداً.');
+              }
+            }
+
+            await _repository.closeDropOffTasks(taskIds, signatureBytes, currentLat, currentLng);
+            emit(const DropOffState.closeTasksSuccess());
+          } catch (e) {
+            String errorMessage = e.toString();
+            if (errorMessage.startsWith('Exception: ')) {
+              errorMessage = errorMessage.substring(11);
+            }
+            emit(DropOffState.error(errorMessage));
+            emit(DropOffState.signatureReady(
+              selectedTask: selectedTask,
+              scannedBags: scannedBags,
+              isSubmitting: false,
+            ));
+          }
+        },
+        orElse: () async {},
     );
   }
 
@@ -218,14 +235,27 @@ class DropOffCubit extends Cubit<DropOffState> {
         currentLat = selectedTask.toLocationLat ?? 0.0;
         currentLng = selectedTask.toLocationLng ?? 0.0;
       } else {
+        bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+        if (!serviceEnabled) throw Exception('يرجى تشغيل خدمة تحديد الموقع (GPS)');
+        
+        LocationPermission permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.denied) {
+          permission = await Geolocator.requestPermission();
+          if (permission == LocationPermission.denied) throw Exception('يرجى منح صلاحية الوصول للموقع');
+        }
+        if (permission == LocationPermission.deniedForever) {
+          throw Exception('صلاحية الموقع مرفوضة دائماً، يرجى تفعيلها من إعدادات الجهاز');
+        }
+
         try {
           final p = await Geolocator.getCurrentPosition(
             desiredAccuracy: LocationAccuracy.high,
+            timeLimit: const Duration(seconds: 10),
           );
           currentLat = p.latitude;
           currentLng = p.longitude;
         } catch (e) {
-          print('Could not get GPS location: $e');
+          throw Exception('فشل في الحصول على الموقع الحالي، تأكد من جودة الإشارة والمحاولة مجدداً.');
         }
       }
 
@@ -235,7 +265,11 @@ class DropOffCubit extends Cubit<DropOffState> {
       emit(const DropOffState.locationCheckSuccess());
       getDropOffTasks(); 
     } catch (e) {
-      emit(DropOffState.error(e.toString()));
+      String errorMessage = e.toString();
+      if (errorMessage.startsWith('Exception: ')) {
+        errorMessage = errorMessage.substring(11);
+      }
+      emit(DropOffState.error(errorMessage));
       getDropOffTasks(); 
     }
   }
