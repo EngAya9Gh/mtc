@@ -47,11 +47,6 @@ class _SignatureSubmitViewState extends State<_SignatureSubmitView> {
   @override
   void initState() {
     super.initState();
-    final userInfo = UserInfo();
-    if (widget.task.taskType == 'BOX') {
-      _boxCountController.text = userInfo.boxCount?.toString() ?? '';
-      _sampleCountController.text = userInfo.sampleCount?.toString() ?? '';
-    }
   }
 
   @override
@@ -73,7 +68,21 @@ class _SignatureSubmitViewState extends State<_SignatureSubmitView> {
     return BlocConsumer<SignatureSubmitCubit, SignatureSubmitState>(
       listener: (context, state) {
         state.whenOrNull(
-          samplesLoaded: (samples) => setState(() => _samples = samples),
+          samplesLoaded: (samples) {
+            setState(() {
+              _samples = samples;
+              if (isBoxTask) {
+                int totalBoxes = 0;
+                int totalSamples = 0;
+                for (var s in samples) {
+                  totalBoxes += (s['box_count'] as int?) ?? 0;
+                  totalSamples += (s['sample_count'] as int?) ?? 0;
+                }
+                _boxCountController.text = totalBoxes > 0 ? totalBoxes.toString() : '';
+                _sampleCountController.text = totalSamples > 0 ? totalSamples.toString() : '';
+              }
+            });
+          },
           success: () {
             showDialog(
               context: context,
@@ -243,9 +252,12 @@ class _SignatureSubmitViewState extends State<_SignatureSubmitView> {
                       Expanded(
                         child: TextField(
                           controller: _boxCountController,
+                          readOnly: true,
                           decoration: InputDecoration(
                             labelText: isArabic ? 'عدد الصناديق' : 'Box Count',
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            filled: true,
+                            fillColor: Colors.grey.shade50,
                           ),
                           keyboardType: TextInputType.number,
                         ),
@@ -254,9 +266,12 @@ class _SignatureSubmitViewState extends State<_SignatureSubmitView> {
                       Expanded(
                         child: TextField(
                           controller: _sampleCountController,
+                          readOnly: true,
                           decoration: InputDecoration(
                             labelText: isArabic ? 'عدد العينات' : 'Sample Count',
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            filled: true,
+                            fillColor: Colors.grey.shade50,
                           ),
                           keyboardType: TextInputType.number,
                         ),

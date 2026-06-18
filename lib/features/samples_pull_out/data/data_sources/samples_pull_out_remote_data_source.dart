@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'dart:convert';
 import '../../../../core/services/network/api_client.dart';
 import '../../../../core/utils/end_points.dart';
 import '../models/client_task_model.dart';
@@ -82,7 +83,7 @@ class SamplesPullOutRemoteDataSourceImpl implements SamplesPullOutRemoteDataSour
     final response = await _apiClient.post(
       EndPoints.freezerOut,
       data: FormData.fromMap({
-        'task_id': taskIds.map((id) => id.toString()).toList(),
+        'tasks': jsonEncode(taskIds),
       }),
     );
 

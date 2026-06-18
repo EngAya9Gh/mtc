@@ -30,7 +30,7 @@ class EndPoints {
   static const String collectTask = 'task/collect';
   static const String closeTask = 'task/close';
   static const String closeFreezer = 'task/freezer';
-  static const String freezerOut = 'task/freezer/out';
+  static const String freezerOut = 'tasks/freezer/out';
   static const String closeDeliveryTasks = 'tasks/close';
   static const String freezerToOutFreezer = 'tasks/freezer/out';
 

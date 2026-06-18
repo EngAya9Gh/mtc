@@ -46,16 +46,17 @@ class PullOutCubit extends Cubit<PullOutState> {
     _currentContainerBags = [];
     _scannedBagsToRemove = [];
 
-    // Build bag list using bag ID for deduplication to avoid losing bags in containers
-    // A bag with the same bagCode can appear with containerId=null AND with a real containerId
-    // We must keep ALL entries by their unique ID so we don't miss bags still in containers
-    final Map<int, SampleSummaryModel> seenBagIds = {};
+    // Deduplicate by (bag_code + container_id): one physical bag per container
+    // samples_summary has one row per SAMPLE, not per BAG. A bag can have multiple samples.
+    // We only need one entry per (bag_code, container_id) pair for the scanning flow.
+    final Map<String, SampleSummaryModel> uniqueBagsMap = {};
     for (var groupedTask in task.tasks) {
       for (var bag in groupedTask.samplesSummary) {
-        seenBagIds[bag.id] = bag;
+        final key = '${bag.bagCode}_${bag.containerId ?? 'null'}';
+        uniqueBagsMap[key] = bag;
       }
     }
-    _allDestinationBags = seenBagIds.values.toList();
+    _allDestinationBags = uniqueBagsMap.values.toList();
 
     _emitCurrentState();
   }
@@ -215,7 +216,6 @@ class PullOutCubit extends Cubit<PullOutState> {
 
     emit(const PullOutState.loading('جاري إغلاق المهام...'));
     try {
-      // The destination card has multiple taskIds associated with it
       await _repository.closeInFreezerTasks(_selectedTask!.taskIds);
       emit(const PullOutState.closeTasksSuccess());
     } catch (e, stackTrace) {

@@ -70,6 +70,13 @@ class _FirstTaskCountViewState extends State<_FirstTaskCountView> {
     if (userInfo.sampleCount != null) {
       _sampleCountController.text = userInfo.sampleCount.toString();
     }
+
+    if (widget.scannedSamples.isNotEmpty) {
+      final firstTemp = widget.scannedSamples.first['temp']?.toUpperCase();
+      if (firstTemp != null && ['ROOM', 'REFRIGERATE', 'FROZEN'].contains(firstTemp)) {
+        _selectedTemp = firstTemp;
+      }
+    }
   }
 
   @override
@@ -98,6 +105,10 @@ class _FirstTaskCountViewState extends State<_FirstTaskCountView> {
     if (_formKey.currentState?.validate() ?? false) {
       final boxCount = int.parse(_boxCountController.text.trim());
       final sampleCount = int.parse(_sampleCountController.text.trim());
+
+      final userInfo = UserInfo();
+      userInfo.boxCount = boxCount;
+      userInfo.sampleCount = sampleCount;
 
       context.read<SampleCollectionCubit>().saveBoxTask(
         taskId: widget.task.id,
