@@ -12,6 +12,7 @@ import '../../../../core/services/di/di_container.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../widgets/latest_task_card.dart';
 
 class MainScreen extends StatefulWidget {
@@ -809,7 +810,24 @@ class _MainDrawer extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 10),
+          FutureBuilder<PackageInfo>(
+            future: PackageInfo.fromPlatform(),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                final String version = snapshot.data!.version;
+                final String buildNumber = snapshot.data!.buildNumber;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 24),
+                  child: AppText(
+                    isArabic ? 'الإصدار $version ' : 'Version $version ',
+                    style: const TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                );
+              }
+              return const SizedBox(height: 24);
+            },
+          ),
         ],
       ),
     );

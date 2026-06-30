@@ -17,10 +17,40 @@ class ApiInterceptor extends Interceptor {
   }
 
   @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
     // Handle global errors like 401 Unauthorized
     if (err.response?.statusCode == 401) {
-      // Handle logout or token refresh
+      final token = sharedPreferences.getString('token');
+      if (token != null) {
+        try {
+          final dio = Dio();
+          final baseUrl = err.requestOptions.baseUrl;
+          final response = await dio.post(
+            '${baseUrl}driver/refresh',
+            options: Options(
+              headers: {
+                'Authorization': 'Bearer $token',
+                'Accept': 'application/json',
+              },
+            ),
+          );
+
+          if (response.statusCode == 200 && response.data['status'] == true) {
+            final newToken = response.data['data']['token'];
+            await sharedPreferences.setString('token', newToken);
+
+            // Retry the original request
+            err.requestOptions.headers['Authorization'] = 'Bearer $newToken';
+            final retryResponse = await dio.fetch(err.requestOptions);
+            return handler.resolve(retryResponse);
+          } else {
+             await sharedPreferences.remove('token');
+          }
+        } catch (e) {
+          // Refresh failed, proceed to logout (clear token)
+          await sharedPreferences.remove('token');
+        }
+      }
     }
     super.onError(err, handler);
   }
