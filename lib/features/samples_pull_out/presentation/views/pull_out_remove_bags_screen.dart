@@ -54,6 +54,15 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
   }
 
   void _onScanBagBarcode() async {
+    final state = context.read<PullOutCubit>().state;
+    List<String> expectedItems = [];
+    state.maybeWhen(
+      pullOutState: (_, __, currentContainerBags, ___, ____, _____, ______, _______, ________, _________, __________) {
+        expectedItems = currentContainerBags.map((b) => b.bagCode).toList();
+      },
+      orElse: () {},
+    );
+
     final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => AppScannerScreen(
@@ -62,6 +71,7 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
         title: AppLocalizations.of(context).isArabic ? 'مسح الأكياس للتحميل' : 'Scan Bags to Remove',
         scannedItemsTitle: AppLocalizations.of(context).isArabic ? 'الأكياس الممسوحة' : 'Scanned Bags',
         emptyMessage: AppLocalizations.of(context).isArabic ? 'لم يتم مسح أي كيس بعد' : 'No bags scanned yet',
+        expectedItems: expectedItems.isNotEmpty ? expectedItems : null,
       )),
     );
     if (result is List<String> && result.isNotEmpty) {

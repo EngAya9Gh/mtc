@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:vibration/vibration.dart';
 import '../../../features/settings/presentation/bloc/scanner_settings_cubit.dart';
 import '../../services/di/di_container.dart';
+import '../../services/network/api_client.dart';
 
 /// Professional barcode scanner with:
 ///  • Strict scan-window post-detection filter (handles Android camera rotation)
@@ -280,12 +281,72 @@ class _AppScannerState extends State<AppScanner>
                   ),
                 ),
 
+                // ── Debug Manual Entry Button ─────────────────────────────
+                if (getIt<ApiClient>().isDebugMode)
+                  Positioned(
+                    top: 16,
+                    left: 16,
+                    child: IconButton(
+                      icon: const Icon(Icons.keyboard, color: Colors.blueAccent, size: 32),
+                      onPressed: () => _showManualEntryDialog(context),
+                    ),
+                  ),
+
                 if (widget.overlay != null) widget.overlay!,
               ],
             );
           },
         );
       },
+    );
+  }
+  void _showManualEntryDialog(BuildContext context) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        title: const Text('Manual Entry (Debug)', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        content: TextField(
+          controller: controller,
+          style: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
+          textDirection: TextDirection.ltr,
+          decoration: InputDecoration(
+            hintText: 'Enter barcode...',
+            hintStyle: const TextStyle(color: Colors.black54),
+            filled: true,
+            fillColor: Colors.grey.shade200,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blueAccent,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () {
+              final code = controller.text.trim();
+              if (code.isNotEmpty) {
+                Navigator.pop(ctx);
+                final barcode = Barcode(rawValue: code, format: BarcodeFormat.unknown);
+                final capture = BarcodeCapture(barcodes: [barcode]);
+                _handleDetection(capture);
+              }
+            },
+            child: const Text('Simulate Scan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
     );
   }
 }

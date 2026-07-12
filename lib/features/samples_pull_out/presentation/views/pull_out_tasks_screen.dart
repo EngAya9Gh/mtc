@@ -154,25 +154,27 @@ class _DestinationCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         AppText(
-                          destinationName,
-                          style: const TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                          isArabic ? 'موقع التسليم:' : 'To Delivery Location:',
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 12,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 4),
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(Icons.location_on, size: 12, color: Colors.red),
-                            const SizedBox(width: 4),
+                            const Icon(Icons.location_on, size: 16, color: Colors.red),
+                            const SizedBox(width: 6),
                             Expanded(
                               child: AppText(
-                                isArabic ? 'إلى موقع التسليم: $destinationName' : 'To Delivery Location: $destinationName',
-                                style: const TextStyle(fontSize: 12, color: Colors.black87),
-                                maxLines: 1,
+                                destinationName,
+                                style: const TextStyle(
+                                  color: AppColors.primary,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),

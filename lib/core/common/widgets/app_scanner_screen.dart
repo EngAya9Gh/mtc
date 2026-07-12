@@ -14,6 +14,7 @@ class AppScannerScreen extends StatefulWidget {
 
   final String? scannedItemsTitle;
   final String? emptyMessage;
+  final List<String>? expectedItems;
 
   const AppScannerScreen({
     super.key,
@@ -22,6 +23,7 @@ class AppScannerScreen extends StatefulWidget {
     this.allowDuplicates = false,
     this.scannedItemsTitle,
     this.emptyMessage,
+    this.expectedItems,
   });
 
   @override
@@ -30,7 +32,14 @@ class AppScannerScreen extends StatefulWidget {
 
 class _AppScannerScreenState extends State<AppScannerScreen> {
   final List<String> _scannedItems = [];
+  late final List<String> _pendingItems;
   final AudioPlayer _audioPlayer = AudioPlayer();
+
+  @override
+  void initState() {
+    super.initState();
+    _pendingItems = widget.expectedItems != null ? List.from(widget.expectedItems!) : [];
+  }
 
   @override
   void dispose() {
@@ -51,6 +60,9 @@ class _AppScannerScreenState extends State<AppScannerScreen> {
       if (widget.allowDuplicates || !_scannedItems.contains(code)) {
         setState(() {
           _scannedItems.add(code);
+          if (widget.expectedItems != null) {
+            _pendingItems.removeWhere((item) => item.toLowerCase() == code.toLowerCase());
+          }
         });
         _playBeep();
       }
@@ -148,7 +160,9 @@ class _AppScannerScreenState extends State<AppScannerScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         AppText(
-                          '${widget.scannedItemsTitle ?? (AppLocalizations.of(context).isArabic ? 'العينات الممسوحة' : 'Scanned Samples')} (${_scannedItems.length})',
+                          widget.expectedItems != null
+                              ? (AppLocalizations.of(context).isArabic ? 'الأكياس المطلوبة (${_pendingItems.length})' : 'Required Bags (${_pendingItems.length})')
+                              : '${widget.scannedItemsTitle ?? (AppLocalizations.of(context).isArabic ? 'العينات الممسوحة' : 'Scanned Samples')} (${_scannedItems.length})',
                           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
                         ),
                         if (_scannedItems.isNotEmpty)
@@ -163,7 +177,48 @@ class _AppScannerScreenState extends State<AppScannerScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    if (_scannedItems.isNotEmpty)
+                    if (widget.expectedItems != null) ...[
+                      if (_pendingItems.isNotEmpty)
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: _pendingItems.length,
+                            itemBuilder: (context, index) {
+                              final item = _pendingItems[index];
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white10,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.qr_code_scanner, color: Colors.orangeAccent, size: 20),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: AppText(item, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        )
+                      else
+                        Expanded(
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.check_circle, color: Colors.greenAccent, size: 60),
+                                const SizedBox(height: 16),
+                                AppText(AppLocalizations.of(context).isArabic ? 'تم مسح جميع الأكياس بنجاح!' : 'All bags scanned successfully!', style: const TextStyle(color: Colors.greenAccent, fontSize: 16, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ] else ...[
+                      if (_scannedItems.isNotEmpty)
                       Expanded(
                         child: Builder(
                           builder: (context) {
@@ -232,6 +287,7 @@ class _AppScannerScreenState extends State<AppScannerScreen> {
                           child: AppText(widget.emptyMessage ?? (AppLocalizations.of(context).isArabic ? 'لم يتم مسح أي عينة بعد' : 'No items scanned yet'), style: const TextStyle(color: Colors.white54, fontSize: 16)),
                         ),
                       ),
+                    ],
                   ],
                 ),
               ),

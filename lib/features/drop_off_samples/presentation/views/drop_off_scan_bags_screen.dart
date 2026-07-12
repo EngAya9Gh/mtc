@@ -57,6 +57,15 @@ class _DropOffScanBagsScreenViewState extends State<_DropOffScanBagsScreenView> 
   }
 
   void _onScanBagBarcode() async {
+    final state = context.read<DropOffCubit>().state;
+    List<String> expectedItems = [];
+    state.maybeWhen(
+      scanningBags: (selectedTask, remainingBags, scannedBags, allBagsScanned) {
+        expectedItems = remainingBags.map((b) => b.bagCode).toList();
+      },
+      orElse: () {},
+    );
+
     final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => AppScannerScreen(
@@ -65,6 +74,7 @@ class _DropOffScanBagsScreenViewState extends State<_DropOffScanBagsScreenView> 
         title: AppLocalizations.of(context).isArabic ? 'مسح الأكياس' : 'Scan Drop Off Bags',
         scannedItemsTitle: AppLocalizations.of(context).isArabic ? 'الأكياس الممسوحة' : 'Scanned Bags',
         emptyMessage: AppLocalizations.of(context).isArabic ? 'لم يتم مسح أي كيس بعد' : 'No bags scanned yet',
+        expectedItems: expectedItems.isNotEmpty ? expectedItems : null,
       )),
     );
     if (result is List<String> && result.isNotEmpty) {

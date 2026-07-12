@@ -69,6 +69,7 @@ class _FreezerOutBagsScreenViewState extends State<_FreezerOutBagsScreenView> {
   }
 
   void _onSimulateBagScan(List<BagItemModel> remainingBags) async {
+    final expectedItems = remainingBags.map((b) => b.bagCode).toList();
     final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => AppScannerScreen(
@@ -77,6 +78,7 @@ class _FreezerOutBagsScreenViewState extends State<_FreezerOutBagsScreenView> {
         title: AppLocalizations.of(context).isArabic ? 'مسح الأكياس ' : 'Scan Bags ',
         scannedItemsTitle: AppLocalizations.of(context).isArabic ? 'الأكياس الممسوحة' : 'Scanned Bags',
         emptyMessage: AppLocalizations.of(context).isArabic ? 'لم يتم مسح أي كيس بعد' : 'No bags scanned yet',
+        expectedItems: expectedItems.isNotEmpty ? expectedItems : null,
       )),
     );
     if (result is List<String> && result.isNotEmpty) {
