@@ -13,6 +13,8 @@ class ApiInterceptor extends Interceptor {
       options.headers['Authorization'] = 'Bearer $token';
     }
     options.headers['Accept'] = 'application/json';
+    final lang = sharedPreferences.getString('app_language') ?? 'ar';
+    options.headers['Accept-Language'] = lang;
     super.onRequest(options, handler);
   }
 
