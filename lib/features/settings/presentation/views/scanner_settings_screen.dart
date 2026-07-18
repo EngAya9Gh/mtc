@@ -58,8 +58,8 @@ class _ScannerSettingsScreenView extends StatelessWidget {
                       Expanded(
                         child: AppText(
                           isArabic 
-                              ? 'معظم الإعدادات مقفلة وتدار من قبل الإدارة لضمان أفضل أداء.' 
-                              : 'Most settings are locked and managed by admin for optimal performance.',
+                              ? 'إعدادات أنواع الباركود مقفلة وتدار من قبل الإدارة.' 
+                              : 'Barcode symbology settings are locked and managed by admin.',
                           style: TextStyle(color: Colors.blue.shade700, fontSize: 12),
                         ),
                       ),
@@ -75,7 +75,6 @@ class _ScannerSettingsScreenView extends StatelessWidget {
                     isArabic ? 'إصدار صوت عند نجاح المسح' : 'Plays a sound on successful scan',
                     state.beep,
                     (val) => context.read<ScannerSettingsCubit>().toggleBeep(val),
-                    enabled: isAdmin,
                   ),
                   _buildSwitchTile(
                     Icons.vibration,
@@ -83,7 +82,6 @@ class _ScannerSettingsScreenView extends StatelessWidget {
                     isArabic ? 'اهتزاز عند نجاح المسح' : 'Vibrates on successful scan',
                     state.vibrate,
                     (val) => context.read<ScannerSettingsCubit>().toggleVibrate(val),
-                    enabled: isAdmin,
                   ),
                 ],
               ),
@@ -97,7 +95,6 @@ class _ScannerSettingsScreenView extends StatelessWidget {
                     isArabic ? 'تفعيل الفلاش عند المسح' : 'Turn on flash while scanning',
                     state.flash,
                     (val) => context.read<ScannerSettingsCubit>().toggleFlash(val),
-                    enabled: isAdmin,
                   ),
                   _buildSwitchTile(
                     Icons.autorenew,
@@ -105,7 +102,6 @@ class _ScannerSettingsScreenView extends StatelessWidget {
                     isArabic ? 'استئناف المسح تلقائياً بعد القراءة' : 'Resume scanning automatically after reading',
                     state.autoResume,
                     (val) => context.read<ScannerSettingsCubit>().toggleAutoResume(val),
-                    enabled: isAdmin,
                   ),
                   _buildSliderTile(
                     Icons.timer_outlined,
@@ -114,7 +110,6 @@ class _ScannerSettingsScreenView extends StatelessWidget {
                     state.holdTime,
                     (val) => context.read<ScannerSettingsCubit>().setHoldTime(val),
                     isArabic,
-                    enabled: isAdmin,
                   ),
                   _buildDropdownTile(
                     Icons.hd_outlined,
