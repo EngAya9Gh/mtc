@@ -11,6 +11,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/services/di/di_container.dart';
 import '../bloc/sample_collection_cubit.dart';
 import '../bloc/sample_collection_state.dart';
+import '../../../../core/navigation/app_router.dart';
 
 class SampleCollectionScreen extends StatelessWidget {
   final MedicalTask task;
@@ -380,7 +381,7 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(msg), backgroundColor: Colors.green),
               );
-              context.push('/signature', extra: widget.task);
+              context.go(AppRouter.main);
             }
           },
           error: (msg) {
