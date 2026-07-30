@@ -59,6 +59,7 @@ class _BagScanScreenState extends State<BagScanScreen> {
                 children: [
                   AppScanner(
                     onDetect: _onScanBarcode,
+                    formats: const [BarcodeFormat.code128],
                   ),
                   // Red laser line — aligned to center
                   Center(

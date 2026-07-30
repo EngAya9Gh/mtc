@@ -15,6 +15,7 @@ class AppScannerScreen extends StatefulWidget {
   final String? scannedItemsTitle;
   final String? emptyMessage;
   final List<String>? expectedItems;
+  final List<BarcodeFormat>? formats;
 
   const AppScannerScreen({
     super.key,
@@ -24,6 +25,7 @@ class AppScannerScreen extends StatefulWidget {
     this.scannedItemsTitle,
     this.emptyMessage,
     this.expectedItems,
+    this.formats,
   });
 
   @override
@@ -116,7 +118,7 @@ class _AppScannerScreenState extends State<AppScannerScreen> {
                       constraints.maxWidth,
                       centerY + 60,
                     );
-                    return AppScanner(onDetect: _onDetect, scanWindow: scanWindow);
+                    return AppScanner(onDetect: _onDetect, scanWindow: scanWindow, formats: widget.formats);
                   },
                 ),
                 // Red laser line — aligned to center

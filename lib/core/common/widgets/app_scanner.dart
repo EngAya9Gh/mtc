@@ -16,12 +16,14 @@ class AppScanner extends StatefulWidget {
   final Widget? overlay;
   // scanWindow in LOGICAL pixels, widget coordinate space (portrait)
   final Rect? scanWindow;
+  final List<BarcodeFormat>? formats;
 
   const AppScanner({
     super.key,
     required this.onDetect,
     this.overlay,
     this.scanWindow,
+    this.formats,
   });
 
   @override
@@ -60,14 +62,16 @@ class _AppScannerState extends State<AppScanner>
   }
 
   void _initController(ScannerSettingsState settings) {
-    List<BarcodeFormat> formats = [];
-    if (settings.symbologies['Code 128'] == true) formats.add(BarcodeFormat.code128);
-    if (settings.symbologies['Code 39'] == true) formats.add(BarcodeFormat.code39);
-    if (settings.symbologies['EAN-13'] == true) formats.add(BarcodeFormat.ean13);
-    if (settings.symbologies['EAN-8'] == true) formats.add(BarcodeFormat.ean8);
-    if (settings.symbologies['UPC-E'] == true) formats.add(BarcodeFormat.upcE);
-    if (settings.symbologies['QR Code'] == true) formats.add(BarcodeFormat.qrCode);
-    if (formats.isEmpty) formats = [BarcodeFormat.all];
+    List<BarcodeFormat> formats = widget.formats ?? [];
+    if (formats.isEmpty) {
+      if (settings.symbologies['Code 128'] == true) formats.add(BarcodeFormat.code128);
+      if (settings.symbologies['Code 39'] == true) formats.add(BarcodeFormat.code39);
+      if (settings.symbologies['EAN-13'] == true) formats.add(BarcodeFormat.ean13);
+      if (settings.symbologies['EAN-8'] == true) formats.add(BarcodeFormat.ean8);
+      if (settings.symbologies['UPC-E'] == true) formats.add(BarcodeFormat.upcE);
+      if (settings.symbologies['QR Code'] == true) formats.add(BarcodeFormat.qrCode);
+      if (formats.isEmpty) formats = [BarcodeFormat.all];
+    }
 
     Size resolution;
     switch (settings.cameraResolution) {

@@ -14,6 +14,7 @@ import '../bloc/freezer_placement_state.dart';
 import '../../../../data/providers/user_info_provider.dart';
 import '../../data/models/bag_item_model.dart';
 import '../../../../core/common/widgets/app_scanner_screen.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 class FreezerOutBagsScreen extends StatelessWidget {
   final MedicalTask task;
@@ -56,6 +57,7 @@ class _FreezerOutBagsScreenViewState extends State<_FreezerOutBagsScreenView> {
         title: AppLocalizations.of(context).isArabic ? 'مسح الحاوية' : 'Scan Container',
         scannedItemsTitle: AppLocalizations.of(context).isArabic ? 'الحاوية الممسوحة' : 'Scanned Container',
         emptyMessage: AppLocalizations.of(context).isArabic ? 'لم يتم مسح الحاوية بعد' : 'No container scanned yet',
+        formats: const [BarcodeFormat.code128, BarcodeFormat.ean13],
       )),
     );
     if (scannedBarcode != null && scannedBarcode.isNotEmpty) {
@@ -69,16 +71,18 @@ class _FreezerOutBagsScreenViewState extends State<_FreezerOutBagsScreenView> {
   }
 
   void _onSimulateBagScan(List<BagItemModel> remainingBags) async {
+    final isArabic = AppLocalizations.of(context).isArabic;
     final expectedItems = remainingBags.map((b) => b.bagCode).toList();
     final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => AppScannerScreen(
         multiScan: true, 
         allowDuplicates: true, 
-        title: AppLocalizations.of(context).isArabic ? 'مسح الأكياس ' : 'Scan Bags ',
-        scannedItemsTitle: AppLocalizations.of(context).isArabic ? 'الأكياس الممسوحة' : 'Scanned Bags',
-        emptyMessage: AppLocalizations.of(context).isArabic ? 'لم يتم مسح أي كيس بعد' : 'No bags scanned yet',
+        title: isArabic ? 'مسح أكياس الحاوية' : 'Scan Container Bags',
+        scannedItemsTitle: isArabic ? 'الأكياس الممسوحة' : 'Scanned Bags',
+        emptyMessage: isArabic ? 'لم يتم مسح أي كيس بعد' : 'No bags scanned yet',
         expectedItems: expectedItems.isNotEmpty ? expectedItems : null,
+        formats: const [BarcodeFormat.code128],
       )),
     );
     if (result is List<String> && result.isNotEmpty) {

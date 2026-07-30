@@ -6,6 +6,7 @@ import '../../../../core/common/widgets/app_elevated_button.dart';
 import '../../../../core/config/theme/color_scheme.dart';
 import '../../../../core/utils/app_localizations.dart';
 import '../../../../core/navigation/app_router.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import '../bloc/drop_off_cubit.dart';
 import '../bloc/drop_off_state.dart';
 import '../../../../core/common/widgets/app_scanner_screen.dart';
@@ -58,23 +59,20 @@ class _DropOffScanBagsScreenViewState extends State<_DropOffScanBagsScreenView> 
 
   void _onScanBagBarcode() async {
     final state = context.read<DropOffCubit>().state;
-    List<String> expectedItems = [];
-    state.maybeWhen(
-      scanningBags: (selectedTask, remainingBags, scannedBags, allBagsScanned) {
-        expectedItems = remainingBags.map((b) => b.bagCode).toList();
-      },
-      orElse: () {},
-    );
+    final isArabic = AppLocalizations.of(context).isArabic;
 
     final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => AppScannerScreen(
         multiScan: true, 
         allowDuplicates: true, 
-        title: AppLocalizations.of(context).isArabic ? 'مسح الأكياس' : 'Scan Drop Off Bags',
-        scannedItemsTitle: AppLocalizations.of(context).isArabic ? 'الأكياس الممسوحة' : 'Scanned Bags',
-        emptyMessage: AppLocalizations.of(context).isArabic ? 'لم يتم مسح أي كيس بعد' : 'No bags scanned yet',
-        expectedItems: expectedItems.isNotEmpty ? expectedItems : null,
+        title: isArabic ? 'مسح الأكياس' : 'Scan Drop Off Bags',
+        scannedItemsTitle: isArabic ? 'الأكياس الممسوحة' : 'Scanned Bags',
+        emptyMessage: isArabic ? 'لم يتم مسح أي كيس بعد' : 'No bags scanned yet',
+        expectedItems: (state is DropOffScannedBags) 
+            ? (state as DropOffScannedBags).expectedBags
+            : null,
+        formats: const [BarcodeFormat.code128],
       )),
     );
     if (result is List<String> && result.isNotEmpty) {

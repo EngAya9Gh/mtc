@@ -19,11 +19,11 @@ class ScannerSettingsState {
     this.cameraResolution = 'HD',
     this.symbologies = const {
       'Code 128': true,
-      'Code 39': true,
-      'EAN-13': true,
-      'EAN-8': true,
-      'UPC-E': true,
-      'QR Code': true,
+      'Code 39': false,
+      'EAN-13': false,
+      'EAN-8': false,
+      'UPC-E': false,
+      'QR Code': false,
     },
   });
 
@@ -65,11 +65,11 @@ class ScannerSettingsCubit extends Cubit<ScannerSettingsState> {
     
     final Map<String, bool> symbologies = {
       'Code 128': _prefs.getBool('sym_code128') ?? true,
-      'Code 39': _prefs.getBool('sym_code39') ?? true,
-      'EAN-13': _prefs.getBool('sym_ean13') ?? true,
-      'EAN-8': _prefs.getBool('sym_ean8') ?? true,
-      'UPC-E': _prefs.getBool('sym_upce') ?? true,
-      'QR Code': _prefs.getBool('sym_qrcode') ?? true,
+      'Code 39': _prefs.getBool('sym_code39') ?? false,
+      'EAN-13': _prefs.getBool('sym_ean13') ?? false,
+      'EAN-8': _prefs.getBool('sym_ean8') ?? false,
+      'UPC-E': _prefs.getBool('sym_upce') ?? false,
+      'QR Code': _prefs.getBool('sym_qrcode') ?? false,
     };
 
     emit(ScannerSettingsState(
@@ -141,11 +141,11 @@ class ScannerSettingsCubit extends Cubit<ScannerSettingsState> {
     await _prefs.setDouble('scanner_hold_time', 1.5);
     await _prefs.setString('scanner_camera_resolution', 'HD');
     await _prefs.setBool('sym_code128', true);
-    await _prefs.setBool('sym_code39', true);
-    await _prefs.setBool('sym_ean13', true);
-    await _prefs.setBool('sym_ean8', true);
-    await _prefs.setBool('sym_upce', true);
-    await _prefs.setBool('sym_qrcode', true);
+    await _prefs.setBool('sym_code39', false);
+    await _prefs.setBool('sym_ean13', false);
+    await _prefs.setBool('sym_ean8', false);
+    await _prefs.setBool('sym_upce', false);
+    await _prefs.setBool('sym_qrcode', false);
     
     _loadSettings();
   }

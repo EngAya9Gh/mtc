@@ -12,6 +12,7 @@ import '../../../../core/utils/end_points.dart';
 import '../bloc/pull_out_cubit.dart';
 import '../bloc/pull_out_state.dart';
 import '../../../../core/common/widgets/app_scanner_screen.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../data/models/client_task_model.dart';
 
 class PullOutScanContainerScreen extends StatelessWidget {
@@ -58,6 +59,7 @@ class _PullOutScanContainerScreenViewState extends State<_PullOutScanContainerSc
         title: AppLocalizations.of(context).isArabic ? 'مسح الحاوية' : 'Scan Container',
         scannedItemsTitle: AppLocalizations.of(context).isArabic ? 'الحاوية الممسوحة' : 'Scanned Container',
         emptyMessage: AppLocalizations.of(context).isArabic ? 'لم يتم مسح الحاوية بعد' : 'No container scanned yet',
+        formats: const [BarcodeFormat.code128, BarcodeFormat.ean13],
       )),
     );
     if (scannedBarcode != null && scannedBarcode.isNotEmpty) {
@@ -91,8 +93,12 @@ class _PullOutScanContainerScreenViewState extends State<_PullOutScanContainerSc
               );
             },
             success: (msg) {
+              String displayMsg = msg;
+              if (!isArabic) {
+                if (msg == 'تم التحقق من الحاوية بنجاح!') displayMsg = 'Container verified successfully!';
+              }
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: AppText(msg), backgroundColor: Colors.green),
+                SnackBar(content: AppText(displayMsg), backgroundColor: Colors.green),
               );
             },
             closeTasksSuccess: () {

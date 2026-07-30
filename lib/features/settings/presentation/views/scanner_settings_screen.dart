@@ -130,7 +130,7 @@ class _ScannerSettingsScreenView extends StatelessWidget {
                       isArabic ? 'تفعيل ${entry.key}' : 'Enable ${entry.key}',
                       entry.value,
                       (val) => context.read<ScannerSettingsCubit>().toggleSymbology(entry.key, val),
-                      enabled: isAdmin,
+                      //enabled: isAdmin,
                     ),
                 ],
               ),

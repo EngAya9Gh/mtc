@@ -6,7 +6,7 @@ import '../../../../core/config/theme/color_scheme.dart';
 import '../../../../core/utils/app_localizations.dart';
 import '../../data/models/task_model.dart';
 import '../../../../core/common/widgets/app_scanner_screen.dart';
-
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/services/di/di_container.dart';
 import '../bloc/sample_collection_cubit.dart';
@@ -134,6 +134,7 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
         title: AppLocalizations.of(context).isArabic ? (isBox ? 'مسح الأكياس' : 'مسح العينات') : (isBox ? 'Scan Bags' : 'Scan Samples'),
         scannedItemsTitle: AppLocalizations.of(context).isArabic ? (isBox ? 'الأكياس الممسوحة' : 'العينات الممسوحة') : (isBox ? 'Scanned Bags' : 'Scanned Samples'),
         emptyMessage: AppLocalizations.of(context).isArabic ? (isBox ? 'لم يتم مسح أي كيس بعد' : 'لم يتم مسح أي عينة بعد') : (isBox ? 'No bags scanned yet' : 'No samples scanned yet'),
+        formats: isBox ? const [BarcodeFormat.code128] : const [BarcodeFormat.code128, BarcodeFormat.ean13],
       )),
     );
     if (result is List<String> && result.isNotEmpty) {

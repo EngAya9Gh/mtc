@@ -13,6 +13,7 @@ import '../../../../core/services/di/di_container.dart';
 import '../../../../core/utils/end_points.dart';
 import '../bloc/pull_out_state.dart';
 import '../../../../core/common/widgets/app_scanner_screen.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../data/models/client_task_model.dart';
 
 class PullOutRemoveBagsScreen extends StatelessWidget {
@@ -72,6 +73,7 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
         scannedItemsTitle: AppLocalizations.of(context).isArabic ? 'الأكياس الممسوحة' : 'Scanned Bags',
         emptyMessage: AppLocalizations.of(context).isArabic ? 'لم يتم مسح أي كيس بعد' : 'No bags scanned yet',
         expectedItems: expectedItems.isNotEmpty ? expectedItems : null,
+        formats: const [BarcodeFormat.code128],
       )),
     );
     if (result is List<String> && result.isNotEmpty) {
@@ -138,8 +140,17 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
               );
             },
             success: (msg) {
+              String displayMsg = msg;
+              if (!isArabic) {
+                if (msg == 'تم الإرسال والتأكيد بنجاح!') {
+                  displayMsg = 'Sent and confirmed successfully!';
+                } else if (msg.contains('تم الإرسال والتأكيد بنجاح!')) {
+                  displayMsg = msg.replaceFirst('تم الإرسال والتأكيد بنجاح!', 'Sent and confirmed successfully!')
+                                  .replaceFirst('فشل إزالة بعض الأكياس:', 'Failed to remove some bags:');
+                }
+              }
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: AppText(msg), backgroundColor: Colors.green),
+                SnackBar(content: AppText(displayMsg), backgroundColor: Colors.green),
               );
             },
             closeTasksSuccess: () {
