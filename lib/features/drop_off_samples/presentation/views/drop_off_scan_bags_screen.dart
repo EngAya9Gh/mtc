@@ -61,6 +61,14 @@ class _DropOffScanBagsScreenViewState extends State<_DropOffScanBagsScreenView> 
     final state = context.read<DropOffCubit>().state;
     final isArabic = AppLocalizations.of(context).isArabic;
 
+    List<String>? expectedItems;
+    state.maybeWhen(
+      scanningBags: (selectedTask, remainingBags, scannedBags, allBagsScanned) {
+        expectedItems = remainingBags.map((b) => b.bagCode!).toList();
+      },
+      orElse: () {},
+    );
+
     final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => AppScannerScreen(
@@ -69,9 +77,7 @@ class _DropOffScanBagsScreenViewState extends State<_DropOffScanBagsScreenView> 
         title: isArabic ? 'مسح الأكياس' : 'Scan Drop Off Bags',
         scannedItemsTitle: isArabic ? 'الأكياس الممسوحة' : 'Scanned Bags',
         emptyMessage: isArabic ? 'لم يتم مسح أي كيس بعد' : 'No bags scanned yet',
-        expectedItems: (state is DropOffScannedBags) 
-            ? (state as DropOffScannedBags).expectedBags
-            : null,
+        expectedItems: expectedItems,
         formats: const [BarcodeFormat.code128],
       )),
     );

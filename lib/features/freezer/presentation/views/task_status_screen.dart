@@ -4,6 +4,7 @@ import '../../../../core/common/widgets/app_text.dart';
 import '../../../../core/common/widgets/app_elevated_button.dart';
 import '../../../../core/config/theme/color_scheme.dart';
 import '../../../../core/utils/app_localizations.dart';
+import '../../../../core/navigation/app_router.dart';
 
 class TaskStatusScreen extends StatelessWidget {
   final bool isSuccess;
@@ -83,12 +84,11 @@ class TaskStatusScreen extends StatelessWidget {
               const Spacer(),
               // Action Button
               AppElevatedButton(
-                text: isArabic ? 'العودة لقائمة المهام' : 'BACK TO TASK LIST',
+                text: isArabic ? 'العودة للرئيسية' : 'BACK TO MAIN',
                 backgroundColor: isSuccess ? AppColors.primary : Colors.red,
                 foregroundColor: Colors.white,
                 onPressed: () {
-                  // Navigate to task_type screen
-                  context.go('/task_type');
+                  context.go(AppRouter.main);
                 },
               ),
             ],
