@@ -135,22 +135,21 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
         listener: (context, state) {
           state.whenOrNull(
             error: (msg) {
-              String displayMsg = msg;
-              if (!isArabic) {
-                if (msg.contains('تم مسح هذا الكيس مسبقاً')) displayMsg = 'This bag has already been scanned!';
-              }
+              String displayMsg = AppLocalizations.of(context).translate(msg);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: AppText(displayMsg), backgroundColor: Colors.red),
               );
             },
             success: (msg) {
               String displayMsg = msg;
-              if (!isArabic) {
-                if (msg.contains('تم الإرسال والتأكيد بنجاح')) {
-                  displayMsg = msg.replaceFirst('تم الإرسال والتأكيد بنجاح!', 'Sent and confirmed successfully!')
-                                  .replaceFirst('تم الإرسال والتأكيد بنجاح', 'Sent and confirmed successfully')
-                                  .replaceFirst('فشل إزالة بعض الأكياس:', 'Failed to remove some bags:');
+              if (msg.startsWith('sent_and_confirmed')) {
+                final parts = msg.split('|');
+                displayMsg = AppLocalizations.of(context).translate(parts[0]);
+                if (parts.length > 1) {
+                  displayMsg += '\n' + (AppLocalizations.of(context).isArabic ? 'فشل إزالة بعض الأكياس: ' : 'Failed to remove some bags: ') + parts[1];
                 }
+              } else {
+                displayMsg = AppLocalizations.of(context).translate(msg);
               }
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: AppText(displayMsg), backgroundColor: Colors.green),

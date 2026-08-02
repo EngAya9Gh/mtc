@@ -43,7 +43,7 @@ class EmergencyCubit extends Cubit<EmergencyState> {
       if (json['status'] == false) {
         emit(EmergencyFailure(json['message'] ?? 'فشل إرسال طلب الطوارئ'));
       } else {
-        emit(EmergencySuccess(json['message'] ?? 'تم إرسال طلب الطوارئ بنجاح'));
+        emit(EmergencySuccess('emergency_request_sent'));
       }
     } catch (e) {
       emit(EmergencyFailure(e.toString()));

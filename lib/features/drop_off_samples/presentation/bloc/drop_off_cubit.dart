@@ -120,7 +120,7 @@ class DropOffCubit extends Cubit<DropOffState> {
           ));
         } else {
           // If the bag code is not in remaining bags, it might have been already scanned or it's invalid
-          emit(const DropOffState.error('عذراً، هذا الكيس غير مطلوب لهذه الوجهة أو تم مسحه بالفعل.'));
+          emit(const DropOffState.error('bag_not_required'));
           // Restore the scanning state
           emit(DropOffState.scanningBags(
             selectedTask: selectedTask,

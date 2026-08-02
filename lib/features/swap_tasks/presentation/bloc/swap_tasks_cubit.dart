@@ -33,7 +33,7 @@ class SwapTasksCubit extends Cubit<SwapTasksState> {
       await _repository.acceptAllSwapTasks(taskIds);
       
       // Refresh the list after success
-      emit(const SwapTasksState.actionSuccess('تم قبول جميع المهام بنجاح'));
+      emit(const SwapTasksState.actionSuccess('all_tasks_accepted'));
       getSwapTasks();
     } catch (e) {
       emit(SwapTasksState.error(e.toString()));
@@ -45,7 +45,7 @@ class SwapTasksCubit extends Cubit<SwapTasksState> {
     emit(const SwapTasksState.loading('جاري رفض المهمة...'));
     try {
       await _repository.rejectSwapTask(swapId);
-      emit(const SwapTasksState.actionSuccess('تم رفض المهمة بنجاح'));
+      emit(const SwapTasksState.actionSuccess('task_rejected'));
       getSwapTasks();
     } catch (e) {
       emit(SwapTasksState.error(e.toString()));
@@ -88,7 +88,7 @@ class SwapTasksCubit extends Cubit<SwapTasksState> {
           ));
         } else {
           // Bag not found or already scanned
-          emit(const SwapTasksState.error('عذراً، هذا الكيس غير مطلوب لهذه المهمة أو تم مسحه بالفعل.'));
+          emit(const SwapTasksState.error('bag_not_required_swap'));
           // Restore the scanning state
           emit(SwapTasksState.scanningBags(
             selectedTask: selectedTask,
@@ -111,7 +111,7 @@ class SwapTasksCubit extends Cubit<SwapTasksState> {
         try {
           // The API expects swap_ids. Since a selectedTask is a SwapTaskModel, its id is the swapId.
           await _repository.acceptSwapTask([selectedTask.id]);
-          emit(const SwapTasksState.actionSuccess('تم تأكيد استلام المهمة بنجاح!'));
+          emit(const SwapTasksState.actionSuccess('task_receipt_confirmed'));
         } catch (e) {
           emit(SwapTasksState.error(e.toString()));
           // Restore scanning bags state so they can try again

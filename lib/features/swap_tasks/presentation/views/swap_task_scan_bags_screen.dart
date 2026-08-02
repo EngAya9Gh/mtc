@@ -157,12 +157,9 @@ class _SwapTaskScanBagsScreenState extends State<SwapTaskScanBagsScreen> {
                 listener: (context, state) {
                   state.maybeWhen(
                     error: (message) {
-                      String displayMsg = message;
-                      if (!isArabic && message.contains('عذراً، هذا الكيس غير مطلوب لهذه المهمة أو تم مسحه بالفعل.')) {
-                        displayMsg = 'Sorry, this bag is not required for this task or has already been scanned.';
-                      }
+                      String displayMsg = AppLocalizations.of(context).translate(message);
 
-                      if (displayMsg.contains('عذراً') || displayMsg.contains('الكيس') || displayMsg.contains('not required')) {
+                      if (displayMsg.contains('عذراً') || displayMsg.contains('الكيس') || displayMsg.contains('not required') || message == 'bag_not_required_swap') {
                         _scanErrorNotifier.value = displayMsg;
                         Future.delayed(const Duration(seconds: 2), () {
                           if (_scanErrorNotifier.value == displayMsg) {
@@ -177,12 +174,7 @@ class _SwapTaskScanBagsScreenState extends State<SwapTaskScanBagsScreen> {
                       }
                     },
                     actionSuccess: (message) {
-                      String displayMsg = message;
-                      if (!isArabic) {
-                         if (message.contains('تم تأكيد استلام المهمة بنجاح')) {
-                            displayMsg = 'Task receipt confirmed successfully!';
-                         }
-                      }
+                      String displayMsg = AppLocalizations.of(context).translate(message);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: AppText(displayMsg), backgroundColor: Colors.green),
                       );

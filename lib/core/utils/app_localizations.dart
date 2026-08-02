@@ -78,5 +78,63 @@ class AppLocalizations {
   String get error => isArabic ? 'حدث خطأ ما' : 'Something went wrong';
   String get noTasksFound => isArabic ? 'لا توجد مهام' : 'No tasks found';
   String get acceptAll => isArabic ? 'قبول الكل' : 'Accept All';
+
+  // Dynamic Translations (Errors & Success Messages)
+  String translate(String key, [List<String>? args]) {
+    String translated = _dynamicTranslations[key]?[isArabic ? 'ar' : 'en'] ?? key;
+    if (args != null && args.isNotEmpty) {
+      for (int i = 0; i < args.length; i++) {
+        translated = translated.replaceFirst('{$i}', args[i]);
+      }
+    }
+    return translated;
+  }
+
+  static const Map<String, Map<String, String>> _dynamicTranslations = {
+    'bag_not_required': {
+      'ar': 'عذراً، هذا الكيس غير مطلوب لهذه الوجهة أو تم مسحه بالفعل.',
+      'en': 'Sorry, this bag is not required for this destination or has already been scanned.',
+    },
+    'bag_not_required_swap': {
+      'ar': 'عذراً، هذا الكيس غير مطلوب لهذه المهمة أو تم مسحه بالفعل.',
+      'en': 'Sorry, this bag is not required for this task or has already been scanned.',
+    },
+    'container_verified': {
+      'ar': 'تم التحقق من الحاوية بنجاح!',
+      'en': 'Container verified successfully!',
+    },
+    'bag_already_scanned': {
+      'ar': 'تم مسح هذا الكيس مسبقاً!',
+      'en': 'This bag has already been scanned!',
+    },
+    'sent_and_confirmed': {
+      'ar': 'تم الإرسال والتأكيد بنجاح!',
+      'en': 'Sent and confirmed successfully!',
+    },
+    'container_no_bags': {
+      'ar': 'الحاوية ({0}) لا تحتوي على أكياس لهذه الوجهة!',
+      'en': 'Container ({0}) does not contain bags for this destination!',
+    },
+    'all_tasks_accepted': {
+      'ar': 'تم قبول جميع المهام بنجاح',
+      'en': 'All tasks accepted successfully',
+    },
+    'task_rejected': {
+      'ar': 'تم رفض المهمة بنجاح',
+      'en': 'Task rejected successfully',
+    },
+    'task_receipt_confirmed': {
+      'ar': 'تم تأكيد استلام المهمة بنجاح!',
+      'en': 'Task receipt confirmed successfully!',
+    },
+    'emergency_request_sent': {
+      'ar': 'تم إرسال طلب الطوارئ بنجاح',
+      'en': 'Emergency request sent successfully',
+    },
+    'no_tasks_found': {
+      'ar': 'لا توجد مهام',
+      'en': 'No tasks found',
+    },
+  };
 }
 

@@ -52,20 +52,13 @@ class _SwapTasksListScreenState extends State<SwapTasksListScreen> {
         listener: (context, state) {
           state.maybeWhen(
             error: (message) {
-              String displayMsg = message;
-              if (!AppLocalizations.of(context).isArabic) {
-                if (message.contains('لا توجد مهام')) displayMsg = 'No tasks found';
-              }
+              String displayMsg = AppLocalizations.of(context).translate(message);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: AppText(displayMsg), backgroundColor: Colors.red),
               );
             },
             actionSuccess: (message) {
-              String displayMsg = message;
-              if (!AppLocalizations.of(context).isArabic) {
-                if (message.contains('تم قبول جميع المهام بنجاح')) displayMsg = 'All tasks accepted successfully';
-                if (message.contains('تم رفض المهمة بنجاح')) displayMsg = 'Task rejected successfully';
-              }
+              String displayMsg = AppLocalizations.of(context).translate(message);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: AppText(displayMsg), backgroundColor: Colors.green),
               );

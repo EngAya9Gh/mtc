@@ -89,7 +89,7 @@ class PullOutCubit extends Cubit<PullOutState> {
       if (matchedContainer != null && matchedContainer.isNotEmpty) {
         containerName = '${matchedContainer.first.type ?? "ROOM"} #$extractedIdStr';
       }
-      emit(PullOutState.error('الحاوية ($containerName) لا تحتوي على أكياس لهذه الوجهة!'));
+      emit(PullOutState.error('container_no_bags|$containerName'));
       _emitCurrentState();
       return;
     }
@@ -113,7 +113,7 @@ class PullOutCubit extends Cubit<PullOutState> {
         : (matchedBags.isNotEmpty ? matchedBags.first.temperatureType : 'ROOM');
     _isContainerValidated = true;
 
-    emit(const PullOutState.success('تم التحقق من الحاوية بنجاح!'));
+    emit(const PullOutState.success('container_verified'));
     _emitCurrentState();
   }
 
@@ -141,7 +141,7 @@ class PullOutCubit extends Cubit<PullOutState> {
     
     // Check if already scanned
     if (_scannedBagsToRemove.any((b) => b.bagCode == bagCode)) {
-      emit(const PullOutState.error('تم مسح هذا الكيس مسبقاً!'));
+      emit(const PullOutState.error('bag_already_scanned'));
       _emitCurrentState();
       return;
     }
@@ -178,9 +178,9 @@ class PullOutCubit extends Cubit<PullOutState> {
       
       _scannedBagsToRemove.clear();
 
-      String msg = 'تم الإرسال والتأكيد بنجاح!';
+      String msg = 'sent_and_confirmed';
       if (failedBags.isNotEmpty) {
-        msg += '\nفشل إزالة بعض الأكياس: ${failedBags.join(", ")}';
+        msg += '|${failedBags.join(", ")}';
       }
 
       emit(PullOutState.success(msg));
