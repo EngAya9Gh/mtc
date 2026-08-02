@@ -56,8 +56,12 @@ class _MainScreenState extends State<MainScreen> {
                 SnackBar(content: Text(isArabic ? 'جاري الإرسال...' : 'Sending...')),
               );
             } else if (state is EmergencySuccess) {
+              String displayMsg = state.message;
+              if (!isArabic && state.message.contains('تم إرسال طلب الطوارئ بنجاح')) {
+                displayMsg = 'Emergency request sent successfully';
+              }
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message), backgroundColor: Colors.green),
+                SnackBar(content: Text(displayMsg), backgroundColor: Colors.green),
               );
             } else if (state is EmergencyFailure) {
               ScaffoldMessenger.of(context).showSnackBar(

@@ -158,8 +158,12 @@ class _DropOffScanBagsScreenViewState extends State<_DropOffScanBagsScreenView> 
         listener: (context, state) {
           state.whenOrNull(
             error: (msg) {
+              String displayMsg = msg;
+              if (!isArabic && msg.contains('عذراً، هذا الكيس غير مطلوب لهذه الوجهة أو تم مسحه بالفعل.')) {
+                displayMsg = msg.replaceFirst('عذراً، هذا الكيس غير مطلوب لهذه الوجهة أو تم مسحه بالفعل.', 'Sorry, this bag is not required for this destination or has already been scanned.');
+              }
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: AppText(msg), backgroundColor: Colors.red),
+                SnackBar(content: AppText(displayMsg), backgroundColor: Colors.red),
               );
             },
             closeTasksSuccess: () {

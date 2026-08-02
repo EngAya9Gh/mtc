@@ -157,23 +157,34 @@ class _SwapTaskScanBagsScreenState extends State<SwapTaskScanBagsScreen> {
                 listener: (context, state) {
                   state.maybeWhen(
                     error: (message) {
-                      if (message.contains('عذراً') || message.contains('الكيس') || message.contains('not required')) {
-                        _scanErrorNotifier.value = message;
+                      String displayMsg = message;
+                      if (!isArabic && message.contains('عذراً، هذا الكيس غير مطلوب لهذه المهمة أو تم مسحه بالفعل.')) {
+                        displayMsg = 'Sorry, this bag is not required for this task or has already been scanned.';
+                      }
+
+                      if (displayMsg.contains('عذراً') || displayMsg.contains('الكيس') || displayMsg.contains('not required')) {
+                        _scanErrorNotifier.value = displayMsg;
                         Future.delayed(const Duration(seconds: 2), () {
-                          if (_scanErrorNotifier.value == message) {
+                          if (_scanErrorNotifier.value == displayMsg) {
                             _scanErrorNotifier.value = null;
                           }
                         });
                       } else {
                         ScaffoldMessenger.of(context).clearSnackBars();
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: AppText(message), backgroundColor: Colors.red),
+                          SnackBar(content: AppText(displayMsg), backgroundColor: Colors.red),
                         );
                       }
                     },
                     actionSuccess: (message) {
+                      String displayMsg = message;
+                      if (!isArabic) {
+                         if (message.contains('تم تأكيد استلام المهمة بنجاح')) {
+                            displayMsg = 'Task receipt confirmed successfully!';
+                         }
+                      }
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: AppText(message), backgroundColor: Colors.green),
+                        SnackBar(content: AppText(displayMsg), backgroundColor: Colors.green),
                       );
                       // Go back to the Swap Tasks list
                       context.pop();

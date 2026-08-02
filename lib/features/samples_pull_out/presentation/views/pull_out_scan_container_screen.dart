@@ -88,8 +88,13 @@ class _PullOutScanContainerScreenViewState extends State<_PullOutScanContainerSc
         listener: (context, state) {
           state.whenOrNull(
             error: (msg) {
+              String displayMsg = msg;
+              if (!isArabic && msg.contains('لا تحتوي على أكياس لهذه الوجهة!')) {
+                displayMsg = msg.replaceFirst('لا تحتوي على أكياس لهذه الوجهة!', 'does not contain bags for this destination!');
+                displayMsg = displayMsg.replaceFirst('الحاوية', 'Container');
+              }
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: AppText(msg), backgroundColor: Colors.red),
+                SnackBar(content: AppText(displayMsg), backgroundColor: Colors.red),
               );
             },
             success: (msg) {

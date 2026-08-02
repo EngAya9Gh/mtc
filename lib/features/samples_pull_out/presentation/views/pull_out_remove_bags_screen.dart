@@ -135,17 +135,20 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
         listener: (context, state) {
           state.whenOrNull(
             error: (msg) {
+              String displayMsg = msg;
+              if (!isArabic) {
+                if (msg.contains('تم مسح هذا الكيس مسبقاً')) displayMsg = 'This bag has already been scanned!';
+              }
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: AppText(msg), backgroundColor: Colors.red),
+                SnackBar(content: AppText(displayMsg), backgroundColor: Colors.red),
               );
             },
             success: (msg) {
               String displayMsg = msg;
               if (!isArabic) {
-                if (msg == 'تم الإرسال والتأكيد بنجاح!') {
-                  displayMsg = 'Sent and confirmed successfully!';
-                } else if (msg.contains('تم الإرسال والتأكيد بنجاح!')) {
+                if (msg.contains('تم الإرسال والتأكيد بنجاح')) {
                   displayMsg = msg.replaceFirst('تم الإرسال والتأكيد بنجاح!', 'Sent and confirmed successfully!')
+                                  .replaceFirst('تم الإرسال والتأكيد بنجاح', 'Sent and confirmed successfully')
                                   .replaceFirst('فشل إزالة بعض الأكياس:', 'Failed to remove some bags:');
                 }
               }
