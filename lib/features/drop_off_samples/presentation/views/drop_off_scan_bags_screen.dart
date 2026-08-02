@@ -164,12 +164,13 @@ class _DropOffScanBagsScreenViewState extends State<_DropOffScanBagsScreenView> 
               );
             },
             closeTasksSuccess: () {
-              context.go(AppRouter.taskStatus, extra: {
+              context.pushReplacement(AppRouter.taskStatus, extra: {
                 'isSuccess': true,
                 'message': isArabic 
                     ? 'تم تسليم العينات بنجاح وإغلاق المهام.' 
                     : 'Samples dropped off successfully and tasks closed.',
                 'taskId': null,
+                'popCount': 2,
               });
             },
           );

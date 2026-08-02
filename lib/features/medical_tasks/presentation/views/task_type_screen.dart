@@ -28,7 +28,13 @@ class TaskTypeScreen extends StatelessWidget {
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/main'); // Fallback if stack is empty
+            }
+          },
         ),
       ),
       body: Column(

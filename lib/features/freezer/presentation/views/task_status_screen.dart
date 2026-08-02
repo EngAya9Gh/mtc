@@ -10,12 +10,14 @@ class TaskStatusScreen extends StatelessWidget {
   final bool isSuccess;
   final String message;
   final int? taskId;
+  final int? popCount;
 
   const TaskStatusScreen({
     super.key,
     required this.isSuccess,
     required this.message,
     this.taskId,
+    this.popCount,
   });
 
   @override
@@ -84,11 +86,17 @@ class TaskStatusScreen extends StatelessWidget {
               const Spacer(),
               // Action Button
               AppElevatedButton(
-                text: isArabic ? 'العودة للرئيسية' : 'BACK TO MAIN',
+                text: popCount != null 
+                    ? (isArabic ? 'العودة للمهام' : 'BACK TO TASKS')
+                    : (isArabic ? 'العودة للرئيسية' : 'BACK TO MAIN'),
                 backgroundColor: isSuccess ? AppColors.primary : Colors.red,
                 foregroundColor: Colors.white,
                 onPressed: () {
-                  context.go(AppRouter.main);
+                  if (popCount != null && popCount! > 0) {
+                    context.go(AppRouter.taskType);
+                  } else {
+                    context.go(AppRouter.main);
+                  }
                 },
               ),
             ],

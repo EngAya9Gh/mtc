@@ -178,12 +178,13 @@ class _FreezerOutBagsScreenViewState extends State<_FreezerOutBagsScreenView> {
                 );
               },
               closeFreezerSuccess: () {
-                context.go(AppRouter.taskStatus, extra: {
+                context.pushReplacement(AppRouter.taskStatus, extra: {
                   'isSuccess': true,
                   'message': isArabic 
                       ? 'تم إغلاق وتأكيد كافة حاويات المهمة بنجاح.' 
                       : 'All task containers closed and confirmed successfully.',
                   'taskId': widget.task.id,
+                  'popCount': 2,
                 });
               },
             );

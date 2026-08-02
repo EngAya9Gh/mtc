@@ -156,12 +156,13 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
               );
             },
             closeTasksSuccess: () {
-              context.go(AppRouter.taskStatus, extra: {
+              context.pushReplacement(AppRouter.taskStatus, extra: {
                 'isSuccess': true,
                 'message': isArabic 
                     ? 'تم إغلاق الحاويات بنجاح وانتهت عملية السحب.' 
                     : 'Freezers closed successfully and pull out is complete.',
                 'taskId': null,
+                'popCount': 3,
               });
             },
           );

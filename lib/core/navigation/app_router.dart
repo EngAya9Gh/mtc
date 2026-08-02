@@ -212,12 +212,17 @@ class AppRouter {
       ),
       GoRoute(
         path: taskStatus,
+        redirect: (context, state) {
+          if (state.extra == null) return main;
+          return null;
+        },
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>;
           return TaskStatusScreen(
             isSuccess: extra['isSuccess'] as bool,
             message: extra['message'] as String,
             taskId: extra['taskId'] as int?,
+            popCount: extra['popCount'] as int?,
           );
         },
       ),
