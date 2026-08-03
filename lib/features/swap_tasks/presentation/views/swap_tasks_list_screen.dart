@@ -78,7 +78,7 @@ class _SwapTasksListScreenState extends State<SwapTasksListScreen> {
                 children: [
                   const AppLoader(),
                   const SizedBox(height: 16),
-                  AppText(msg, style: const TextStyle(color: Colors.grey)),
+                  AppText(AppLocalizations.of(context).translateLoading(msg), style: const TextStyle(color: Colors.grey)),
                 ],
               ),
             ),

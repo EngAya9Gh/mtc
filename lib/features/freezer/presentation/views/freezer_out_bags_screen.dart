@@ -198,7 +198,7 @@ class _FreezerOutBagsScreenViewState extends State<_FreezerOutBagsScreenView> {
                   children: [
                     const AppLoader(),
                     const SizedBox(height: 16),
-                    AppText(msg),
+                    AppText(AppLocalizations.of(context).translateLoading(msg), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),

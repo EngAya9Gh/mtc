@@ -176,7 +176,7 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
                 children: [
                   const AppLoader(),
                   const SizedBox(height: 16),
-                  AppText(msg),
+                  AppText(AppLocalizations.of(context).translateLoading(msg)),
                 ],
               ),
             ),

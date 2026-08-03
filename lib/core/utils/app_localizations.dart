@@ -136,5 +136,83 @@ class AppLocalizations {
       'en': 'No tasks found',
     },
   };
+
+  // Helper for dynamic loading messages
+  String translateLoading(String message) {
+    if (message.isEmpty) return loading;
+
+    // Check if it's already translated dynamically
+    for (var key in _loadingTranslations.keys) {
+      final arText = _loadingTranslations[key]!['ar']!;
+      final enText = _loadingTranslations[key]!['en']!;
+      
+      // If the message exactly matches either English or Arabic, return the one for the CURRENT language
+      if (message == arText || message == enText) {
+        return isArabic ? arText : enText;
+      }
+    }
+
+    // Handle generic matches like "Uploading ROOM samples..."
+    if (message.contains('Uploading') || message.contains('رفع')) {
+      return isArabic ? 'جاري رفع العينات...' : 'Uploading samples...';
+    }
+
+    return message;
+  }
+
+  static const Map<String, Map<String, String>> _loadingTranslations = {
+    'loading_bags': {
+      'ar': 'جاري تحميل الحقائب...',
+      'en': 'Loading bags...',
+    },
+    'closing_containers': {
+      'ar': 'جاري إغلاق الحاويات...',
+      'en': 'Closing containers...',
+    },
+    'loading_swap_tasks': {
+      'ar': 'جاري تحميل مهام التبادل...',
+      'en': 'Loading swap tasks...',
+    },
+    'accepting_tasks': {
+      'ar': 'جاري قبول المهام...',
+      'en': 'Accepting tasks...',
+    },
+    'rejecting_task': {
+      'ar': 'جاري رفض المهمة...',
+      'en': 'Rejecting task...',
+    },
+    'confirming_receipt': {
+      'ar': 'جاري تأكيد استلام المهمة...',
+      'en': 'Confirming task receipt...',
+    },
+    'loading_drop_off': {
+      'ar': 'جاري تحميل مهام التسليم...',
+      'en': 'Loading drop off tasks...',
+    },
+    'verify_location': {
+      'ar': 'جاري التحقق من الموقع...',
+      'en': 'Verifying location...',
+    },
+    'verify_token': {
+      'ar': 'جاري التحقق من التوكن...',
+      'en': 'Verifying token...',
+    },
+    'confirm_location': {
+      'ar': 'جاري تأكيد الوصول للموقع...',
+      'en': 'Confirming location arrival...',
+    },
+    'loading_pull_out': {
+      'ar': 'جاري جلب المهام...',
+      'en': 'Fetching tasks...',
+    },
+    'closing_tasks': {
+      'ar': 'جاري إغلاق المهام...',
+      'en': 'Closing tasks...',
+    },
+    'reporting_no_samples': {
+      'ar': 'جاري الإبلاغ عن عدم وجود عينات...',
+      'en': 'Reporting no samples...',
+    }
+  };
 }
 
