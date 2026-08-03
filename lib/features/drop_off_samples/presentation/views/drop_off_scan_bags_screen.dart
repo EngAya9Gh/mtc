@@ -171,6 +171,7 @@ class _DropOffScanBagsScreenViewState extends State<_DropOffScanBagsScreenView> 
                     : 'Samples dropped off successfully and tasks closed.',
                 'taskId': null,
                 'popCount': 2,
+                'nextRoute': AppRouter.dropOffTasks,
               });
             },
           );

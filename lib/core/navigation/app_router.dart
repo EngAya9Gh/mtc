@@ -223,6 +223,7 @@ class AppRouter {
             message: extra['message'] as String,
             taskId: extra['taskId'] as int?,
             popCount: extra['popCount'] as int?,
+            nextRoute: extra['nextRoute'] as String?,
           );
         },
       ),

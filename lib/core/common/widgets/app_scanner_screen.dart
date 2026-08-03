@@ -108,18 +108,8 @@ class _AppScannerScreenState extends State<AppScannerScreen> {
             flex: widget.multiScan ? 4 : 10,
             child: Stack(
               children: [
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final double centerY = constraints.maxHeight / 2;
-                    // Logical-pixel rect centered on the red laser line (±60 px)
-                    final Rect scanWindow = Rect.fromLTRB(
-                      0,
-                      centerY - 60,
-                      constraints.maxWidth,
-                      centerY + 60,
-                    );
-                    return AppScanner(onDetect: _onDetect, scanWindow: scanWindow, formats: widget.formats);
-                  },
+                Positioned.fill(
+                  child: AppScanner(onDetect: _onDetect, formats: widget.formats),
                 ),
                 // Red laser line — aligned to center
                 Center(

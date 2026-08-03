@@ -118,17 +118,8 @@ class _SwapTaskScanBagsScreenState extends State<SwapTaskScanBagsScreen> {
               height: 250,
               child: Stack(
                 children: [
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final double centerY = constraints.maxHeight / 2;
-                      final Rect scanWindow = Rect.fromLTRB(
-                        0,
-                        centerY - 60,
-                        constraints.maxWidth,
-                        centerY + 60,
-                      );
-                      return AppScanner(onDetect: _onDetect, scanWindow: scanWindow);
-                    },
+                  Positioned.fill(
+                    child: AppScanner(onDetect: _onDetect),
                   ),
                   // Red laser line — aligned to center
                   Center(

@@ -185,6 +185,7 @@ class _FreezerOutBagsScreenViewState extends State<_FreezerOutBagsScreenView> {
                       : 'All task containers closed and confirmed successfully.',
                   'taskId': widget.task.id,
                   'popCount': 2,
+                  'nextRoute': AppRouter.taskList.replaceFirst(':status', widget.task.status ?? 'out_freezer'),
                 });
               },
             );

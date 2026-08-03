@@ -163,6 +163,7 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
                     : 'Freezers closed successfully and pull out is complete.',
                 'taskId': null,
                 'popCount': 3,
+                'nextRoute': AppRouter.pullOutTasks,
               });
             },
           );

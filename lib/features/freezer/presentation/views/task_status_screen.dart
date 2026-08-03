@@ -11,6 +11,7 @@ class TaskStatusScreen extends StatelessWidget {
   final String message;
   final int? taskId;
   final int? popCount;
+  final String? nextRoute;
 
   const TaskStatusScreen({
     super.key,
@@ -18,6 +19,7 @@ class TaskStatusScreen extends StatelessWidget {
     required this.message,
     this.taskId,
     this.popCount,
+    this.nextRoute,
   });
 
   @override
@@ -92,8 +94,13 @@ class TaskStatusScreen extends StatelessWidget {
                 backgroundColor: isSuccess ? AppColors.primary : Colors.red,
                 foregroundColor: Colors.white,
                 onPressed: () {
-                  if (popCount != null && popCount! > 0) {
-                    context.go(AppRouter.taskType);
+                  if (nextRoute != null) {
+                    context.go(AppRouter.main);
+                    context.push(AppRouter.taskType);
+                    context.push(nextRoute!);
+                  } else if (popCount != null && popCount! > 0) {
+                    context.go(AppRouter.main);
+                    context.push(AppRouter.taskType);
                   } else {
                     context.go(AppRouter.main);
                   }

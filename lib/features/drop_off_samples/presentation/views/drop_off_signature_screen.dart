@@ -103,6 +103,7 @@ class _DropOffSignatureScreenViewState extends State<_DropOffSignatureScreenView
                     : 'Samples dropped off successfully and tasks closed.',
                 'taskId': null,
                 'popCount': 3,
+                'nextRoute': AppRouter.dropOffTasks,
               });
             },
           );
