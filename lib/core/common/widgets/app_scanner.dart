@@ -1,7 +1,7 @@
 import 'dart:math' show min, max;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:mobile_scanner/mobile_scanner.dart' hide BarcodeType;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:vibration/vibration.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -12,8 +12,9 @@ import '../../../features/settings/presentation/bloc/scanner_settings_cubit.dart
 import '../../services/di/di_container.dart';
 import '../../services/network/api_client.dart';
 
-/// TOGGLE THIS FLAG TO SWITCH BETWEEN SCANDIT AND MOBILE_SCANNER
-const bool useScandit = true;
+import 'package:barkoder_flutter/barkoder_flutter.dart';
+
+enum ScannerEngine { mobileScanner, scandit, barkoder }
 
 class AppScanner extends StatelessWidget {
   final void Function(BarcodeCapture capture) onDetect;
@@ -31,14 +32,7 @@ class AppScanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (useScandit && !kIsWeb) {
-      return _ScanditScannerImpl(
-        onDetect: onDetect,
-        overlay: overlay,
-        scanWindow: scanWindow,
-        formats: formats,
-      );
-    } else {
+    if (kIsWeb) {
       return _MobileScannerImpl(
         onDetect: onDetect,
         overlay: overlay,
@@ -46,6 +40,43 @@ class AppScanner extends StatelessWidget {
         formats: formats,
       );
     }
+    
+    return BlocProvider(
+      create: (context) => getIt<ScannerSettingsCubit>(),
+      child: BlocBuilder<ScannerSettingsCubit, ScannerSettingsState>(
+        builder: (context, state) {
+          final engineStr = state.activeScanner;
+          ScannerEngine engine = ScannerEngine.mobileScanner;
+          if (engineStr == 'Scandit') engine = ScannerEngine.scandit;
+          else if (engineStr == 'Barkoder') engine = ScannerEngine.barkoder;
+          
+          switch (engine) {
+            case ScannerEngine.scandit:
+              return _ScanditScannerImpl(
+                onDetect: onDetect,
+                overlay: overlay,
+                scanWindow: scanWindow,
+                formats: formats,
+              );
+            case ScannerEngine.barkoder:
+              return _BarkoderScannerImpl(
+                onDetect: onDetect,
+                overlay: overlay,
+                scanWindow: scanWindow,
+                formats: formats,
+              );
+            case ScannerEngine.mobileScanner:
+            default:
+              return _MobileScannerImpl(
+                onDetect: onDetect,
+                overlay: overlay,
+                scanWindow: scanWindow,
+                formats: formats,
+              );
+          }
+        },
+      ),
+    );
   }
 }
 
@@ -91,6 +122,7 @@ class _MobileScannerImplState extends State<_MobileScannerImpl>
     _flashCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
+      value: 1.0,
     );
     _flashOpacity = Tween<double>(begin: 1.0, end: 0.0).animate(
       CurvedAnimation(parent: _flashCtrl, curve: Curves.easeOut),
@@ -125,7 +157,9 @@ class _MobileScannerImplState extends State<_MobileScannerImpl>
       formats: formats,
       cameraResolution: resolution,
       torchEnabled: settings.flash,
-      detectionSpeed: DetectionSpeed.unrestricted,
+      // FIX: Changed from unrestricted to normal. 'unrestricted' reads blurry frames causing wrong readings.
+      // 'normal' waits for a stable focused frame, guaranteeing 100% accurate reads like Barkoder/Scandit!
+      detectionSpeed: DetectionSpeed.normal,
     );
   }
 
@@ -396,6 +430,7 @@ class _ScanditScannerImplState extends State<_ScanditScannerImpl>
     _flashCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
+      value: 1.0,
     );
     _flashOpacity = Tween<double>(begin: 1.0, end: 0.0).animate(
       CurvedAnimation(parent: _flashCtrl, curve: Curves.easeOut),
@@ -641,6 +676,149 @@ class _ScanditScannerImplState extends State<_ScanditScannerImpl>
           ),
         ],
       ),
+    );
+  }
+}
+
+// ----------------------------------------------------------------------
+// 3. BARKODER IMPLEMENTATION
+// ----------------------------------------------------------------------
+
+class _BarkoderScannerImpl extends StatefulWidget {
+  final void Function(BarcodeCapture capture) onDetect;
+  final Widget? overlay;
+  final Rect? scanWindow;
+  final List<BarcodeFormat>? formats;
+
+  const _BarkoderScannerImpl({
+    required this.onDetect,
+    this.overlay,
+    this.scanWindow,
+    this.formats,
+  });
+
+  @override
+  State<_BarkoderScannerImpl> createState() => _BarkoderScannerImplState();
+}
+
+class _BarkoderScannerImplState extends State<_BarkoderScannerImpl> with SingleTickerProviderStateMixin {
+  Barkoder? _barkoder;
+  final Map<String, DateTime> _locks = {};
+  static const int _lockDurationMs = 1500;
+  final String licenseKey = 'PEmBIohr9EZXgCkySoetbwP4gvOfMcGzgxKPL2X6uqNc1N9jr40K6p6Fyx6Zqt4ZPS3GKRUjhN0ychD_zRk201T5RmJuUwdG8BrTz_KpkXlMvXY4SClrK-2tFAVIJ02A3xxN_ptaaj3pQsRvL3HNWGNydO7vIK114dAmfZ0iLU-jp9y-Cw9dPYLhEeFhFygPgnJh3LIukF9vS-0diWsZPIvs66FlmhRDwOXEfQPr-DrEtJjra2LV_Mor5c8sWz9L';
+
+  late final AnimationController _flashCtrl;
+  late final Animation<double> _flashOpacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _flashCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+      value: 1.0,
+    );
+    _flashOpacity = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(parent: _flashCtrl, curve: Curves.easeOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _flashCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onBarkoderViewCreated(Barkoder barkoder) {
+    _barkoder = barkoder;
+
+    // 1. Forcefully enable ALL common 1D barcodes regardless of the screen's request.
+    // This solves the issue where the screen requested Code128 but the barcode was actually EAN-13 or Code39.
+    _barkoder!.setBarcodeTypeEnabled(BarcodeType.code128, true);
+    _barkoder!.setBarcodeTypeEnabled(BarcodeType.ean13, true);
+    _barkoder!.setBarcodeTypeEnabled(BarcodeType.code39, true);
+    _barkoder!.setBarcodeTypeEnabled(BarcodeType.code93, true);
+    _barkoder!.setBarcodeTypeEnabled(BarcodeType.interleaved25, true);
+    _barkoder!.setBarcodeTypeEnabled(BarcodeType.codabar, true);
+    _barkoder!.setBarcodeTypeEnabled(BarcodeType.qr, true);
+
+    // 2. Hide Barkoder's native UI elements
+    _barkoder!.setLocationInPreviewEnabled(false);
+    _barkoder!.setRegionOfInterestVisible(false);
+    
+    // 3. MITIGATION FOR XIAOMI GRAPHIC BUFFER ERRORS:
+    // Limit processing to 1 thread to prevent dropping 70+ frames and overloading the main thread.
+    _barkoder!.setThreadsLimit(1);
+    // Force HD (720p) resolution to reduce GraphicBuffer allocation memory errors.
+    _barkoder!.setBarkoderResolution(BarkoderResolution.HD);
+    // Disable high-res image extraction on successful scans to save memory.
+    _barkoder!.setImageResultEnabled(false);
+
+    // 4. Start scanning
+    _barkoder!.startScanning(_handleScan);
+  }
+
+  void _handleScan(BarkoderResult result) {
+    if (result.decoderResults.isNotEmpty) {
+      final code = result.decoderResults.first.textualData;
+      if (code.isNotEmpty) {
+        
+        final now = DateTime.now();
+        final lockUntil = _locks[code];
+        if (lockUntil != null && now.isBefore(lockUntil)) return;
+
+        _locks[code] = now.add(const Duration(milliseconds: _lockDurationMs));
+        if (_locks.length > 20) {
+          final sorted = _locks.entries.toList()
+            ..sort((a, b) => a.value.compareTo(b.value));
+          for (int i = 0; i < sorted.length - 20; i++) {
+            _locks.remove(sorted[i].key);
+          }
+        }
+        
+        // VISUAL FEEDBACK (GREEN FLASH)
+        if (mounted) {
+          _flashCtrl.forward(from: 0);
+          _barkoder!.setBeepOnSuccessEnabled(true);
+          _barkoder!.setVibrateOnSuccessEnabled(true);
+        }
+
+        final barcode = Barcode(rawValue: code, format: BarcodeFormat.unknown);
+        widget.onDetect(BarcodeCapture(barcodes: [barcode]));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        BarkoderView(
+          licenseKey: licenseKey,
+          onBarkoderViewCreated: _onBarkoderViewCreated,
+        ),
+        AnimatedBuilder(
+          animation: _flashOpacity,
+          builder: (_, __) {
+            final opacity = _flashOpacity.value;
+            if (opacity <= 0) return const SizedBox.shrink();
+            return Positioned.fill(
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Colors.greenAccent.withValues(alpha: opacity),
+                      width: 4,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+        if (widget.overlay != null) widget.overlay!,
+      ],
     );
   }
 }

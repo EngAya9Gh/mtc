@@ -57,7 +57,7 @@ Future<void> initDi() async {
 
   final dio = Dio(
     BaseOptions(
-      baseUrl: EndPoints.debugBaseUrl,
+      baseUrl: EndPoints.baseUrl,
       receiveDataWhenStatusError: true,
       connectTimeout: const Duration(seconds: 60),
       receiveTimeout: const Duration(seconds: 60),

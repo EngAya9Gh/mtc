@@ -8,6 +8,7 @@ class ScannerSettingsState {
   final bool autoResume;
   final double holdTime;
   final String cameraResolution;
+  final String activeScanner;
   final Map<String, bool> symbologies;
 
   ScannerSettingsState({
@@ -25,6 +26,7 @@ class ScannerSettingsState {
       'UPC-E': false,
       'QR Code': false,
     },
+    this.activeScanner = 'MobileScanner',
   });
 
   ScannerSettingsState copyWith({
@@ -35,6 +37,7 @@ class ScannerSettingsState {
     double? holdTime,
     String? cameraResolution,
     Map<String, bool>? symbologies,
+    String? activeScanner,
   }) {
     return ScannerSettingsState(
       beep: beep ?? this.beep,
@@ -44,6 +47,7 @@ class ScannerSettingsState {
       holdTime: holdTime ?? this.holdTime,
       cameraResolution: cameraResolution ?? this.cameraResolution,
       symbologies: symbologies ?? this.symbologies,
+      activeScanner: activeScanner ?? this.activeScanner,
     );
   }
 }
@@ -71,6 +75,8 @@ class ScannerSettingsCubit extends Cubit<ScannerSettingsState> {
       'UPC-E': _prefs.getBool('sym_upce') ?? false,
       'QR Code': _prefs.getBool('sym_qrcode') ?? false,
     };
+    
+    final activeScanner = _prefs.getString('scanner_engine') ?? 'MobileScanner';
 
     emit(ScannerSettingsState(
       beep: beep,
@@ -80,6 +86,7 @@ class ScannerSettingsCubit extends Cubit<ScannerSettingsState> {
       holdTime: holdTime,
       cameraResolution: cameraResolution,
       symbologies: symbologies,
+      activeScanner: activeScanner,
     ));
   }
 
@@ -114,23 +121,29 @@ class ScannerSettingsCubit extends Cubit<ScannerSettingsState> {
   }
 
   Future<void> toggleSymbology(String key, bool value) async {
-    final Map<String, bool> updatedSymbologies = Map.from(state.symbologies);
-    updatedSymbologies[key] = value;
+    final updated = Map<String, bool>.from(state.symbologies);
+    updated[key] = value;
     
-    String prefKey = '';
+    final prefKey = _getPrefKeyForSymbology(key);
+    await _prefs.setBool(prefKey, value);
+    emit(state.copyWith(symbologies: updated));
+  }
+
+  Future<void> setScannerEngine(String engine) async {
+    await _prefs.setString('scanner_engine', engine);
+    emit(state.copyWith(activeScanner: engine));
+  }
+
+  String _getPrefKeyForSymbology(String key) {
     switch (key) {
-      case 'Code 128': prefKey = 'sym_code128'; break;
-      case 'Code 39': prefKey = 'sym_code39'; break;
-      case 'EAN-13': prefKey = 'sym_ean13'; break;
-      case 'EAN-8': prefKey = 'sym_ean8'; break;
-      case 'UPC-E': prefKey = 'sym_upce'; break;
-      case 'QR Code': prefKey = 'sym_qrcode'; break;
+      case 'Code 128': return 'sym_code128';
+      case 'Code 39': return 'sym_code39';
+      case 'EAN-13': return 'sym_ean13';
+      case 'EAN-8': return 'sym_ean8';
+      case 'UPC-E': return 'sym_upce';
+      case 'QR Code': return 'sym_qrcode';
+      default: return '';
     }
-    if (prefKey.isNotEmpty) {
-      await _prefs.setBool(prefKey, value);
-    }
-    
-    emit(state.copyWith(symbologies: updatedSymbologies));
   }
 
   Future<void> resetToDefaults() async {

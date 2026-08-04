@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../data/providers/user_info_provider.dart';
+import '../../navigation/app_router.dart';
 
 class ApiInterceptor extends Interceptor {
   final SharedPreferences sharedPreferences;
@@ -16,6 +18,11 @@ class ApiInterceptor extends Interceptor {
     final lang = sharedPreferences.getString('app_language') ?? 'ar';
     options.headers['Accept-Language'] = lang;
     super.onRequest(options, handler);
+  }
+
+  void _handleLogout() {
+    UserInfo().logout(sharedPreferences);
+    AppRouter.router.go(AppRouter.login);
   }
 
   @override
@@ -46,12 +53,17 @@ class ApiInterceptor extends Interceptor {
             final retryResponse = await dio.fetch(err.requestOptions);
             return handler.resolve(retryResponse);
           } else {
-             await sharedPreferences.remove('token');
+             _handleLogout();
+             return handler.reject(err);
           }
         } catch (e) {
           // Refresh failed, proceed to logout (clear token)
-          await sharedPreferences.remove('token');
+          _handleLogout();
+          return handler.reject(err);
         }
+      } else {
+        _handleLogout();
+        return handler.reject(err);
       }
     }
     super.onError(err, handler);
