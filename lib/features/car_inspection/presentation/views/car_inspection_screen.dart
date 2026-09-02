@@ -143,7 +143,7 @@ class _CarInspectionScreenState extends State<CarInspectionScreen> {
             });
           } else if (state is CarInspectionFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.error), backgroundColor: Colors.red),
+              SnackBar(content: Text(AppLocalizations.of(context).translateError(state.error)), backgroundColor: Colors.red),
             );
           }
         },

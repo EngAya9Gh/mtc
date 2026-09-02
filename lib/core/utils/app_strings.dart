@@ -26,4 +26,23 @@ class AppStrings {
   static const String schedule = 'الجدول الزمني';
   static const String notifications = 'الإشعارات';
   static const String logout = 'تسجيل الخروج';
+  
+  // Drop Off
+  static const String loadingDropOffTasks = 'جاري تحميل مهام التسليم...';
+  static const String driverDataNotFound = 'لم يتم العثور على بيانات السائق';
+  
+  // Swap Tasks
+  static const String loadingSwapTasks = 'جاري تحميل مهام التبادل...';
+  static const String acceptingTasks = 'جاري قبول المهام...';
+  static const String rejectingTask = 'جاري رفض المهمة...';
+  static const String confirmingTaskReceipt = 'جاري تأكيد استلام المهمة...';
+  
+  // Pull Out
+  static const String fetchingTasks = 'جاري جلب المهام...';
+  static const String invalidContainerBarcode = 'باركود الحاوية غير صالح. يجب أن ينتهي بـ -container';
+  static const String invalidContainerNumber = 'رقم الحاوية غير صحيح.';
+  static const String noContainersRegistered = 'لا توجد حاويات مسجلة لسيارتك. يرجى تحديث البيانات.';
+  static const String bagNotInContainer = 'هذا الكيس غير موجود في هذه الحاوية!';
+  static const String pullOutAllBagsBeforeClose = 'يرجى سحب جميع الأكياس من كافة الحاويات قبل إغلاق المهام.';
+  static const String closingTasks = 'جاري إغلاق المهام...';
 }

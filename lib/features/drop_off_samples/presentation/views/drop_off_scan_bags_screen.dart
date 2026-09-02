@@ -1,3 +1,4 @@
+import 'package:blazma_logistics/core/common/widgets/app_scanner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -6,7 +7,6 @@ import '../../../../core/common/widgets/app_elevated_button.dart';
 import '../../../../core/config/theme/color_scheme.dart';
 import '../../../../core/utils/app_localizations.dart';
 import '../../../../core/navigation/app_router.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
 import '../bloc/drop_off_cubit.dart';
 import '../bloc/drop_off_state.dart';
 import '../../../../core/common/widgets/app_scanner_screen.dart';
@@ -160,7 +160,7 @@ class _DropOffScanBagsScreenViewState extends State<_DropOffScanBagsScreenView> 
             error: (msg) {
               String displayMsg = AppLocalizations.of(context).translate(msg);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: AppText(displayMsg), backgroundColor: Colors.red),
+                SnackBar(content: AppText(AppLocalizations.of(context).translateError(displayMsg)), backgroundColor: Colors.red),
               );
             },
             closeTasksSuccess: () {

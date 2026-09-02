@@ -117,12 +117,6 @@ class _ScannerSettingsScreenView extends StatelessWidget {
                     state.cameraResolution,
                     (val) => context.read<ScannerSettingsCubit>().setCameraResolution(val ?? 'HD'),
                   ),
-                  _buildDropdownEngineTile(
-                    Icons.scanner,
-                    isArabic ? 'محرك المسح' : 'Scanner Engine',
-                    state.activeScanner,
-                    (val) => context.read<ScannerSettingsCubit>().setScannerEngine(val ?? 'MobileScanner'),
-                  ),
                 ],
               ),
               const SizedBox(height: 20),
@@ -272,26 +266,5 @@ class _ScannerSettingsScreenView extends StatelessWidget {
     );
   }
 
-  Widget _buildDropdownEngineTile(IconData icon, String title, String value, Function(String?) onChanged) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.05), borderRadius: BorderRadius.circular(10)),
-        child: Icon(icon, color: AppColors.primary, size: 22),
-      ),
-      title: AppText(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-      trailing: DropdownButton<String>(
-        value: value,
-        underline: const SizedBox(),
-        items: ['MobileScanner', 'Scandit', 'Barkoder'].map((String res) {
-          return DropdownMenuItem<String>(
-            value: res,
-            child: AppText(res, style: const TextStyle(fontSize: 14)),
-          );
-        }).toList(),
-        onChanged: onChanged,
-      ),
-    );
-  }
+
 }

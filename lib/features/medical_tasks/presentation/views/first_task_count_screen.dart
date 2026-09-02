@@ -145,7 +145,7 @@ class _FirstTaskCountViewState extends State<_FirstTaskCountView> {
         state.whenOrNull(
           success: (msg) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(msg), backgroundColor: AppColors.success),
+              SnackBar(content: Text(AppLocalizations.of(context).translateError(msg)), backgroundColor: AppColors.success),
             );
             // Trigger callback to clear scanned samples in parent list
             if (widget.onBoxSaved != null) {
@@ -156,7 +156,7 @@ class _FirstTaskCountViewState extends State<_FirstTaskCountView> {
           },
           error: (msg) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(msg), backgroundColor: AppColors.error),
+              SnackBar(content: Text(AppLocalizations.of(context).translateError(msg)), backgroundColor: AppColors.error),
             );
           },
         );

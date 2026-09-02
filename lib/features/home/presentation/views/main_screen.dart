@@ -58,11 +58,11 @@ class _MainScreenState extends State<MainScreen> {
             } else if (state is EmergencySuccess) {
               String displayMsg = AppLocalizations.of(context).translate(state.message);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(displayMsg), backgroundColor: Colors.green),
+                SnackBar(content: Text(AppLocalizations.of(context).translateError(displayMsg)), backgroundColor: Colors.green),
               );
             } else if (state is EmergencyFailure) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.error), backgroundColor: Colors.red),
+                SnackBar(content: Text(AppLocalizations.of(context).translateError(state.error)), backgroundColor: Colors.red),
               );
             }
           },
@@ -115,7 +115,7 @@ class _MainScreenState extends State<MainScreen> {
             } else if (state is ReleaseCarFailure) {
               Navigator.pop(context); // Close loading dialog
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.error), backgroundColor: Colors.red),
+                SnackBar(content: Text(AppLocalizations.of(context).translateError(state.error)), backgroundColor: Colors.red),
               );
             }
           },

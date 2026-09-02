@@ -126,7 +126,7 @@ class _SignatureSubmitViewState extends State<_SignatureSubmitView> {
           },
           error: (msg) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(msg), backgroundColor: Colors.red),
+              SnackBar(content: Text(AppLocalizations.of(context).translateError(msg)), backgroundColor: Colors.red),
             );
           },
         );

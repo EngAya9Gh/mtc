@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.1.1+16
+version: 1.2.0+17
 
 environment:
   sdk: ^3.10.1
@@ -44,9 +44,9 @@ dependencies:
   firebase_core: ^4.8.0
   firebase_messaging: ^16.2.1
   firebase_crashlytics: ^5.2.1
-  mobile_scanner: ^7.2.0
-  scandit_flutter_datacapture_core: ^7.4.0
-  scandit_flutter_datacapture_barcode: ^7.4.0
+  # mobile_scanner: ^7.2.0
+  # scandit_flutter_datacapture_core: ^7.4.0
+  # scandit_flutter_datacapture_barcode: ^7.4.0
   cached_network_image: ^3.4.1
   flutter_image_compress: ^2.4.0
   hand_signature: ^3.1.0+2
@@ -67,7 +67,11 @@ dependencies:
   flutter_ringtone_player: ^4.0.0+4
   audioplayers: ^6.1.0
   permission_handler: ^11.0.0
-  barkoder_flutter: ^1.6.8
+  webview_flutter: ^4.14.1
+  webview_flutter_android: ^4.12.0
+  webview_flutter_wkwebview: ^3.25.1
+  # dynamsoft_barcode_reader_bundle_flutter: ^11.4.3000
+  # dynamsoft_capture_vision_flutter: ^3.4.3000
 
 dev_dependencies:
   flutter_test:

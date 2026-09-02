@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/utils/app_strings.dart';
 import '../../domain/repositories/swap_tasks_repository.dart';
 import '../../../../data/providers/user_info_provider.dart';
 import '../../data/models/swap_task_model.dart';
@@ -8,47 +9,62 @@ import 'swap_tasks_state.dart';
 class SwapTasksCubit extends Cubit<SwapTasksState> {
   final SwapTasksRepository _repository;
 
+  String? _lastInvalidBagCode;
+  DateTime? _lastInvalidScanTime;
+
+  bool _isRecentInvalidScan(String bagCode) {
+    final now = DateTime.now();
+    if (_lastInvalidBagCode == bagCode && _lastInvalidScanTime != null) {
+      if (now.difference(_lastInvalidScanTime!).inSeconds < 2) {
+        return true;
+      }
+    }
+    _lastInvalidBagCode = bagCode;
+    _lastInvalidScanTime = now;
+    return false;
+  }
+
   SwapTasksCubit(this._repository) : super(const SwapTasksState.initial());
 
   Future<void> getSwapTasks() async {
-    emit(const SwapTasksState.loading('جاري تحميل مهام التبادل...'));
+    if (!isClosed) emit(const SwapTasksState.loading(AppStrings.loadingSwapTasks));
     try {
       final driverId = UserInfo().userId;
       if (driverId == null) {
-        emit(const SwapTasksState.error('لم يتم العثور على بيانات السائق'));
+        if (!isClosed) emit(const SwapTasksState.error(AppStrings.driverDataNotFound));
         return;
       }
 
       final tasks = await _repository.getSwapTasks(driverId);
-      emit(SwapTasksState.loaded(tasks: tasks));
+      if (!isClosed) emit(SwapTasksState.loaded(tasks: tasks));
     } catch (e) {
-      emit(SwapTasksState.error(e.toString()));
+      if (!isClosed) emit(SwapTasksState.error(e.toString()));
     }
   }
 
   Future<void> acceptAllTasks(List<SwapTaskModel> tasks) async {
-    emit(const SwapTasksState.loading('جاري قبول المهام...'));
+    if (!isClosed) emit(const SwapTasksState.loading(AppStrings.acceptingTasks));
     try {
       final taskIds = tasks.map((t) => t.id).toList();
       await _repository.acceptAllSwapTasks(taskIds);
       
       // Refresh the list after success
-      emit(const SwapTasksState.actionSuccess('all_tasks_accepted'));
+      if (!isClosed) emit(const SwapTasksState.actionSuccess('all_tasks_accepted'));
       getSwapTasks();
     } catch (e) {
-      emit(SwapTasksState.error(e.toString()));
+      if (!isClosed) emit(SwapTasksState.error(e.toString()));
       getSwapTasks(); // restore the list
     }
   }
 
   Future<void> rejectTask(int swapId) async {
-    emit(const SwapTasksState.loading('جاري رفض المهمة...'));
+    if (!isClosed) emit(const SwapTasksState.loading(AppStrings.rejectingTask));
     try {
       await _repository.rejectSwapTask(swapId);
-      emit(const SwapTasksState.actionSuccess('task_rejected'));
+      if (!isClosed) emit(const SwapTasksState.actionSuccess('task_rejected'));
       getSwapTasks();
     } catch (e) {
-      emit(SwapTasksState.error(e.toString()));
+      if (!isClosed) emit(SwapTasksState.error(e.toString()));
       getSwapTasks(); // restore the list
     }
   }
@@ -87,15 +103,20 @@ class SwapTasksCubit extends Cubit<SwapTasksState> {
             allBagsScanned: updatedRemaining.isEmpty,
           ));
         } else {
-          // Bag not found or already scanned
-          emit(const SwapTasksState.error('bag_not_required_swap'));
-          // Restore the scanning state
-          emit(SwapTasksState.scanningBags(
-            selectedTask: selectedTask,
-            remainingBags: remainingBags,
-            scannedBags: scannedBags,
-            allBagsScanned: allBagsScanned,
-          ));
+          // If the bag code is already scanned, silently ignore it
+          final isAlreadyScanned = scannedBags.any((bag) => bag.bagCode.toLowerCase() == bagCode.toLowerCase());
+          if (!isAlreadyScanned) {
+            if (!_isRecentInvalidScan(bagCode)) {
+              emit(const SwapTasksState.error('bag_not_required_swap'));
+              // Restore the scanning state
+              emit(SwapTasksState.scanningBags(
+                selectedTask: selectedTask,
+                remainingBags: remainingBags,
+                scannedBags: scannedBags,
+                allBagsScanned: allBagsScanned,
+              ));
+            }
+          }
         }
       },
       orElse: () {},
@@ -106,16 +127,16 @@ class SwapTasksCubit extends Cubit<SwapTasksState> {
     await state.maybeWhen(
       scanningBags: (selectedTask, remainingBags, scannedBags, allBagsScanned) async {
 
-        emit(const SwapTasksState.loading('جاري تأكيد استلام المهمة...'));
+        if (!isClosed) emit(const SwapTasksState.loading(AppStrings.confirmingTaskReceipt));
 
         try {
           // The API expects swap_ids. Since a selectedTask is a SwapTaskModel, its id is the swapId.
           await _repository.acceptSwapTask([selectedTask.id]);
-          emit(const SwapTasksState.actionSuccess('task_receipt_confirmed'));
+          if (!isClosed) emit(const SwapTasksState.actionSuccess('task_receipt_confirmed'));
         } catch (e) {
-          emit(SwapTasksState.error(e.toString()));
+          if (!isClosed) emit(SwapTasksState.error(e.toString()));
           // Restore scanning bags state so they can try again
-          emit(SwapTasksState.scanningBags(
+          if (!isClosed) emit(SwapTasksState.scanningBags(
             selectedTask: selectedTask,
             remainingBags: remainingBags,
             scannedBags: scannedBags,

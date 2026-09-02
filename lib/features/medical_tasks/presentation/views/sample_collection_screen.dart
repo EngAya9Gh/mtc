@@ -1,3 +1,4 @@
+import 'package:blazma_logistics/core/common/widgets/app_scanner.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/common/widgets/app_text.dart';
@@ -6,7 +7,6 @@ import '../../../../core/config/theme/color_scheme.dart';
 import '../../../../core/utils/app_localizations.dart';
 import '../../data/models/task_model.dart';
 import '../../../../core/common/widgets/app_scanner_screen.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/services/di/di_container.dart';
 import '../bloc/sample_collection_cubit.dart';
@@ -380,14 +380,14 @@ class _SampleCollectionScreenViewState extends State<_SampleCollectionScreenView
             // Show snackbar for reportNoSamples or generic success
             if (msg.toLowerCase().contains('no samples') || msg.contains('لا يوجد')) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(msg), backgroundColor: Colors.green),
+                SnackBar(content: Text(AppLocalizations.of(context).translateError(msg)), backgroundColor: Colors.green),
               );
               context.go(AppRouter.main);
             }
           },
           error: (msg) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(msg), backgroundColor: Colors.red),
+              SnackBar(content: Text(AppLocalizations.of(context).translateError(msg)), backgroundColor: Colors.red),
             );
           },
         );

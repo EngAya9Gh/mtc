@@ -6,7 +6,6 @@ import '../../../../core/config/theme/color_scheme.dart';
 import '../../../../core/utils/app_localizations.dart';
 import '../bloc/swap_tasks_cubit.dart';
 import '../bloc/swap_tasks_state.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../../core/common/widgets/app_scanner.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
@@ -160,14 +159,14 @@ class _SwapTaskScanBagsScreenState extends State<SwapTaskScanBagsScreen> {
                       } else {
                         ScaffoldMessenger.of(context).clearSnackBars();
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: AppText(displayMsg), backgroundColor: Colors.red),
+                          SnackBar(content: AppText(AppLocalizations.of(context).translateError(displayMsg)), backgroundColor: Colors.red),
                         );
                       }
                     },
                     actionSuccess: (message) {
                       String displayMsg = AppLocalizations.of(context).translate(message);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: AppText(displayMsg), backgroundColor: Colors.green),
+                        SnackBar(content: AppText(AppLocalizations.of(context).translateError(displayMsg)), backgroundColor: Colors.green),
                       );
                       // Go back to the Swap Tasks list
                       context.pop();

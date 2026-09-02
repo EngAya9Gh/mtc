@@ -46,7 +46,7 @@ class _DropOffTasksScreenView extends StatelessWidget {
           state.whenOrNull(
             error: (msg) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: AppText(msg), backgroundColor: Colors.red),
+                SnackBar(content: AppText(AppLocalizations.of(context).translateError(msg)), backgroundColor: Colors.red),
               );
             },
           );

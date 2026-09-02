@@ -90,7 +90,81 @@ class AppLocalizations {
     return translated;
   }
 
+  // Helper for dynamic error messages (translates static Arabic strings and parameterized keys)
+  String translateError(String err) {
+    if (err.isEmpty) return error;
+
+    // Check if it's a dynamic key with arguments separated by ||
+    if (err.contains('||')) {
+      final parts = err.split('||');
+      final key = parts[0];
+      final args = parts.sublist(1);
+      if (_dynamicTranslations.containsKey(key)) {
+        return translate(key, args);
+      }
+    }
+
+    // Check if it's a direct key
+    if (_dynamicTranslations.containsKey(err)) {
+      return isArabic ? _dynamicTranslations[err]!['ar']! : _dynamicTranslations[err]!['en']!;
+    }
+
+    // Check if it's already translated dynamically
+    for (var key in _dynamicTranslations.keys) {
+      final arText = _dynamicTranslations[key]!['ar']!;
+      final enText = _dynamicTranslations[key]!['en']!;
+      
+      // If the message exactly matches either English or Arabic, return the one for the CURRENT language
+      if (err == arText || err == enText) {
+        return isArabic ? arText : enText;
+      }
+    }
+
+    return err;
+  }
+
   static const Map<String, Map<String, String>> _dynamicTranslations = {
+
+    'verifying_location': {
+      'ar': 'جاري التحقق من الموقع...',
+      'en': 'Verifying location...',
+    },
+    'invalid_location_code': {
+      'ar': 'رمز الموقع غير صالح',
+      'en': 'Invalid location code',
+    },
+    'invalid_location_number': {
+      'ar': 'رقم الموقع غير صالح',
+      'en': 'Invalid location number',
+    },
+    'verifying_token': {
+      'ar': 'جاري التحقق من التوكن...',
+      'en': 'Verifying token...',
+    },
+    'enable_gps_service': {
+      'ar': 'يرجى تشغيل خدمة تحديد الموقع (GPS)',
+      'en': 'Please enable GPS location service',
+    },
+    'grant_location_permission': {
+      'ar': 'يرجى منح صلاحية الوصول للموقع',
+      'en': 'Please grant location access permission',
+    },
+    'location_permission_denied_forever': {
+      'ar': 'صلاحية الموقع مرفوضة دائماً، يرجى تفعيلها من إعدادات الجهاز',
+      'en': 'Location permission is permanently denied, please enable it from device settings',
+    },
+    'failed_get_current_location': {
+      'ar': 'فشل في الحصول على الموقع الحالي، تأكد من جودة الإشارة والمحاولة مجدداً.',
+      'en': 'Failed to get current location, please check your signal and try again.',
+    },
+    'confirming_location_arrival': {
+      'ar': 'جاري تأكيد الوصول للموقع...',
+      'en': 'Confirming arrival at location...',
+    },
+    'unknown_location': {
+      'ar': 'الموقع غير معروف',
+      'en': 'Unknown location',
+    },
     'bag_not_required': {
       'ar': 'عذراً، هذا الكيس غير مطلوب لهذه الوجهة أو تم مسحه بالفعل.',
       'en': 'Sorry, this bag is not required for this destination or has already been scanned.',
@@ -135,11 +209,86 @@ class AppLocalizations {
       'ar': 'لا توجد مهام',
       'en': 'No tasks found',
     },
+    // Added Hardcoded Errors Translations
+    'network_error': {
+      'ar': 'خطأ في الشبكة. الرجاء التأكد من اتصالك بالإنترنت.',
+      'en': 'Network error. Please check your internet connection.',
+    },
+    'car_images_upload_failed': {
+      'ar': 'تعذر رفع صور السيارة، يرجى المحاولة لاحقاً.',
+      'en': 'Failed to upload car images, please try again later.',
+    },
+    'driver_data_not_found': {
+      'ar': 'لم يتم العثور على بيانات السائق',
+      'en': 'Driver data not found',
+    },
+    'driver_number_not_found': {
+      'ar': 'لم يتم العثور على رقم السائق',
+      'en': 'Driver number not found',
+    },
+    'driver_data_unavailable': {
+      'ar': 'بيانات السائق غير متوفرة',
+      'en': 'Driver data not available',
+    },
+    'container_not_found_custody': {
+      'ar': 'الحاوية غير موجودة أو غير مسجلة في عهدتك',
+      'en': 'Container not found or not registered under your custody',
+    },
+    'container_mismatch': {
+      'ar': 'الحاوية الممسوحة ({0}) لا تتطابق مع نوع العينات المطلوبة ({1})',
+      'en': 'The scanned container ({0}) does not match the required sample type ({1})',
+    },
+    'driver_car_data_missing': {
+      'ar': 'بيانات السائق أو السيارة مفقودة',
+      'en': 'Driver or car data missing',
+    },
+    'car_release_failed': {
+      'ar': 'فشل في إخلاء السيارة',
+      'en': 'Failed to release the car',
+    },
+    'car_release_server_error': {
+      'ar': 'حدث خطأ في الخادم أثناء محاولة إخلاء السيارة. يرجى المحاولة لاحقاً.',
+      'en': 'A server error occurred while attempting to release the car. Please try again later.',
+    },
+    'invalid_container_barcode': {
+      'ar': 'باركود الحاوية غير صالح. يجب أن ينتهي بـ -container',
+      'en': 'Invalid container barcode. It must end with -container',
+    },
+    'invalid_container_number': {
+      'ar': 'رقم الحاوية غير صحيح.',
+      'en': 'Invalid container number.',
+    },
+    'no_containers_registered': {
+      'ar': 'لا توجد حاويات مسجلة لسيارتك. يرجى تحديث البيانات.',
+      'en': 'No containers registered for your car. Please update data.',
+    },
+    'bag_not_in_container': {
+      'ar': 'هذا الكيس غير موجود في هذه الحاوية!',
+      'en': 'This bag does not exist in this container!',
+    },
+    'pull_out_all_bags_before_close': {
+      'ar': 'يرجى سحب جميع الأكياس من كافة الحاويات قبل إغلاق المهام.',
+      'en': 'Please pull out all bags from all containers before closing tasks.',
+    },
+    'emergency_request_failed': {
+      'ar': 'فشل إرسال طلب الطوارئ',
+      'en': 'Failed to send emergency request',
+    },
   };
 
   // Helper for dynamic loading messages
   String translateLoading(String message) {
     if (message.isEmpty) return loading;
+
+    // Check dynamic translations first for direct key
+    if (_dynamicTranslations.containsKey(message)) {
+      return isArabic ? _dynamicTranslations[message]!['ar']! : _dynamicTranslations[message]!['en']!;
+    }
+
+    // Check loading translations for direct key
+    if (_loadingTranslations.containsKey(message)) {
+      return isArabic ? _loadingTranslations[message]!['ar']! : _loadingTranslations[message]!['en']!;
+    }
 
     // Check if it's already translated dynamically
     for (var key in _loadingTranslations.keys) {

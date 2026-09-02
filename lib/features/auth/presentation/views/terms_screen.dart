@@ -48,7 +48,7 @@ class _TermsScreenState extends State<TermsScreen> {
             },
             error: (message) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(message), backgroundColor: AppColors.error),
+                SnackBar(content: Text(AppLocalizations.of(context).translateError(message)), backgroundColor: AppColors.error),
               );
             },
             orElse: () {},

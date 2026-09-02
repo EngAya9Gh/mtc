@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/utils/app_strings.dart';
 import '../../domain/repositories/samples_pull_out_repository.dart';
 import 'pull_out_state.dart';
 import '../../../../data/providers/user_info_provider.dart';
@@ -18,21 +19,36 @@ class PullOutCubit extends Cubit<PullOutState> {
   bool _isContainerValidated = false;
   bool _isContainerScanMode = true;
 
+  String? _lastInvalidBagCode;
+  DateTime? _lastInvalidScanTime;
+
+  bool _isRecentInvalidScan(String bagCode) {
+    final now = DateTime.now();
+    if (_lastInvalidBagCode == bagCode && _lastInvalidScanTime != null) {
+      if (now.difference(_lastInvalidScanTime!).inSeconds < 2) {
+        return true;
+      }
+    }
+    _lastInvalidBagCode = bagCode;
+    _lastInvalidScanTime = now;
+    return false;
+  }
+
   void loadTasks() async {
-    emit(const PullOutState.loading('جاري جلب المهام...'));
+    if (!isClosed) emit(const PullOutState.loading(AppStrings.fetchingTasks));
     try {
       final driverId = UserInfo().userId;
       if (driverId == null) {
-        emit(const PullOutState.error('بيانات السائق غير متوفرة'));
+        if (!isClosed) emit(const PullOutState.error(AppStrings.driverDataNotFound));
         return;
       }
       final tasks = await _repository.getInFreezerTasks(driverId);
-      emit(PullOutState.tasksLoaded(tasks: tasks));
+      if (!isClosed) emit(PullOutState.tasksLoaded(tasks: tasks));
     } catch (e, stackTrace) {
       print('=== ERROR IN loadTasks ===');
       print(e.toString());
       print(stackTrace.toString());
-      emit(PullOutState.error(e.toString()));
+      if (!isClosed) emit(PullOutState.error(e.toString()));
     }
   }
 
@@ -67,7 +83,7 @@ class PullOutCubit extends Cubit<PullOutState> {
     // Example barcode: "12-container"
     final parts = barcode.split('-');
     if (parts.length < 2 || parts[1].toLowerCase() != 'container') {
-      emit(const PullOutState.error('باركود الحاوية غير صالح. يجب أن ينتهي بـ -container'));
+      emit(const PullOutState.error(AppStrings.invalidContainerBarcode));
       _emitCurrentState();
       return;
     }
@@ -76,7 +92,7 @@ class PullOutCubit extends Cubit<PullOutState> {
     final int? extractedId = int.tryParse(extractedIdStr);
     
     if (extractedId == null) {
-      emit(const PullOutState.error('رقم الحاوية غير صحيح.'));
+      emit(const PullOutState.error(AppStrings.invalidContainerNumber));
       _emitCurrentState();
       return;
     }
@@ -96,7 +112,7 @@ class PullOutCubit extends Cubit<PullOutState> {
 
     final containers = UserInfo().carInfo?.containers;
     if (containers == null || containers.isEmpty) {
-      emit(const PullOutState.error('لا توجد حاويات مسجلة لسيارتك. يرجى تحديث البيانات.'));
+      emit(const PullOutState.error(AppStrings.noContainersRegistered));
       _emitCurrentState();
       return;
     }
@@ -134,16 +150,16 @@ class PullOutCubit extends Cubit<PullOutState> {
 
     final matchingBags = _currentContainerBags.where((b) => b.bagCode == bagCode).toList();
     if (matchingBags.isEmpty) {
-      emit(const PullOutState.error('هذا الكيس غير موجود في هذه الحاوية!'));
-      _emitCurrentState();
+      if (!_isRecentInvalidScan(bagCode)) {
+        emit(const PullOutState.error(AppStrings.bagNotInContainer));
+        _emitCurrentState();
+      }
       return;
     }
     
     // Check if already scanned
     if (_scannedBagsToRemove.any((b) => b.bagCode == bagCode)) {
-      emit(const PullOutState.error('bag_already_scanned'));
-      _emitCurrentState();
-      return;
+      return; // Silently ignore duplicate scans of the same bag
     }
 
     _scannedBagsToRemove.add(matchingBags.first);
@@ -183,13 +199,13 @@ class PullOutCubit extends Cubit<PullOutState> {
         msg += '|${failedBags.join(", ")}';
       }
 
-      emit(PullOutState.success(msg));
+      if (!isClosed) emit(PullOutState.success(msg));
       _emitCurrentState();
     } catch (e, stackTrace) {
       print('=== ERROR IN confirmRemoveBags ===');
       print(e.toString());
       print(stackTrace.toString());
-      emit(PullOutState.error(e.toString()));
+      if (!isClosed) emit(PullOutState.error(e.toString()));
       _emitCurrentState();
     }
   }
@@ -209,20 +225,20 @@ class PullOutCubit extends Cubit<PullOutState> {
 
     final bagsInContainers = _allDestinationBags.where((b) => b.containerId != null).toList();
     if (bagsInContainers.isNotEmpty) {
-      emit(const PullOutState.error('يرجى سحب جميع الأكياس من كافة الحاويات قبل إغلاق المهام.'));
+      emit(const PullOutState.error(AppStrings.pullOutAllBagsBeforeClose));
       _emitCurrentState();
       return;
     }
 
-    emit(const PullOutState.loading('جاري إغلاق المهام...'));
+    if (!isClosed) emit(const PullOutState.loading(AppStrings.closingTasks));
     try {
       await _repository.closeInFreezerTasks(_selectedTask!.taskIds);
-      emit(const PullOutState.closeTasksSuccess());
+      if (!isClosed) emit(const PullOutState.closeTasksSuccess());
     } catch (e, stackTrace) {
       print('=== ERROR IN closeTasks ===');
       print(e.toString());
       print(stackTrace.toString());
-      emit(PullOutState.error(e.toString()));
+      if (!isClosed) emit(PullOutState.error(e.toString()));
       _emitCurrentState();
     }
   }
@@ -233,7 +249,7 @@ class PullOutCubit extends Cubit<PullOutState> {
     final allFinished = _allDestinationBags.where((b) => b.containerId != null).isEmpty;
     final hasBagsInOtherContainers = !allFinished && _currentContainerBags.isEmpty;
 
-    emit(PullOutState.pullOutState(
+    if (!isClosed) emit(PullOutState.pullOutState(
       selectedTask: _selectedTask!,
       allDestinationBags: List.from(_allDestinationBags),
       currentContainerBags: List.from(_currentContainerBags),

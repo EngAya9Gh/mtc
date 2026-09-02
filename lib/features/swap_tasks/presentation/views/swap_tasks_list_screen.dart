@@ -54,13 +54,13 @@ class _SwapTasksListScreenState extends State<SwapTasksListScreen> {
             error: (message) {
               String displayMsg = AppLocalizations.of(context).translate(message);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: AppText(displayMsg), backgroundColor: Colors.red),
+                SnackBar(content: AppText(AppLocalizations.of(context).translateError(displayMsg)), backgroundColor: Colors.red),
               );
             },
             actionSuccess: (message) {
               String displayMsg = AppLocalizations.of(context).translate(message);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: AppText(displayMsg), backgroundColor: Colors.green),
+                SnackBar(content: AppText(AppLocalizations.of(context).translateError(displayMsg)), backgroundColor: Colors.green),
               );
             },
             scanningBags: (selectedTask, remaining, scanned, allScanned) {

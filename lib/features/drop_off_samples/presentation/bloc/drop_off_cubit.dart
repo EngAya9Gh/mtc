@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/utils/app_strings.dart';
 import '../../../../data/providers/user_info_provider.dart';
 import '../../../samples_pull_out/data/models/client_task_model.dart';
 import '../../domain/repositories/drop_off_repository.dart';
@@ -13,21 +14,36 @@ class DropOffCubit extends Cubit<DropOffState> {
 
   int? _scannedLocationId;
 
+  String? _lastInvalidBagCode;
+  DateTime? _lastInvalidScanTime;
+
+  bool _isRecentInvalidScan(String bagCode) {
+    final now = DateTime.now();
+    if (_lastInvalidBagCode == bagCode && _lastInvalidScanTime != null) {
+      if (now.difference(_lastInvalidScanTime!).inSeconds < 2) {
+        return true;
+      }
+    }
+    _lastInvalidBagCode = bagCode;
+    _lastInvalidScanTime = now;
+    return false;
+  }
+
   DropOffCubit(this._repository) : super(const DropOffState.initial());
 
   Future<void> getDropOffTasks() async {
-    emit(const DropOffState.loading('جاري تحميل مهام التسليم...'));
+    if (!isClosed) emit(const DropOffState.loading(AppStrings.loadingDropOffTasks));
     try {
       final driverId = UserInfo().userId;
       if (driverId == null) {
-        emit(const DropOffState.error('لم يتم العثور على بيانات السائق'));
+        if (!isClosed) emit(const DropOffState.error(AppStrings.driverDataNotFound));
         return;
       }
 
       final tasks = await _repository.getDropOffTasks(driverId);
-      emit(DropOffState.tasksLoaded(tasks: tasks));
+      if (!isClosed) emit(DropOffState.tasksLoaded(tasks: tasks));
     } catch (e) {
-      emit(DropOffState.error(e.toString()));
+      if (!isClosed) emit(DropOffState.error(e.toString()));
     }
   }
 
@@ -57,16 +73,16 @@ class DropOffCubit extends Cubit<DropOffState> {
   }
 
   Future<void> checkLocation(ClientTaskModel selectedTask, String scannedLocationBarcode) async {
-    emit(const DropOffState.loading('جاري التحقق من الموقع...'));
+    emit(const DropOffState.loading('verifying_location'));
     try {
       final parts = scannedLocationBarcode.split('-');
       if (parts.length != 2 || parts[1].toLowerCase() != 'location') {
-        throw Exception('رمز الموقع غير صالح');
+        throw Exception('invalid_location_code');
       }
       
       final locationId = int.tryParse(parts[0]);
       if (locationId == null) {
-        throw Exception('رقم الموقع غير صالح');
+        throw Exception('invalid_location_number');
       }
 
       List<int> taskIds = selectedTask.tasks?.map((t) => t.id).toList() ?? [];
@@ -85,7 +101,7 @@ class DropOffCubit extends Cubit<DropOffState> {
   }
 
   Future<void> checkTaskToken(ClientTaskModel selectedTask, String scannedToken) async {
-    emit(const DropOffState.loading('جاري التحقق من التوكن...'));
+    emit(const DropOffState.loading('verifying_token'));
     try {
       final locationId = _scannedLocationId ?? 0;
 
@@ -119,15 +135,20 @@ class DropOffCubit extends Cubit<DropOffState> {
             allBagsScanned: updatedRemaining.isEmpty,
           ));
         } else {
-          // If the bag code is not in remaining bags, it might have been already scanned or it's invalid
-          emit(const DropOffState.error('bag_not_required'));
-          // Restore the scanning state
-          emit(DropOffState.scanningBags(
-            selectedTask: selectedTask,
-            remainingBags: remainingBags,
-            scannedBags: scannedBags,
-            allBagsScanned: allBagsScanned,
-          ));
+          // If the bag code is already scanned, silently ignore it
+          final isAlreadyScanned = scannedBags.any((bag) => bag.bagCode?.toLowerCase() == bagCode.toLowerCase());
+          if (!isAlreadyScanned) {
+            if (!_isRecentInvalidScan(bagCode)) {
+              emit(const DropOffState.error('bag_not_required'));
+              // Restore the scanning state
+              emit(DropOffState.scanningBags(
+                selectedTask: selectedTask,
+                remainingBags: remainingBags,
+                scannedBags: scannedBags,
+                allBagsScanned: allBagsScanned,
+              ));
+            }
+          }
         }
       },
       orElse: () {},
@@ -174,15 +195,15 @@ class DropOffCubit extends Cubit<DropOffState> {
               currentLng = selectedTask.toLocationLng ?? 0.0;
             } else {
               bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-              if (!serviceEnabled) throw Exception('يرجى تشغيل خدمة تحديد الموقع (GPS)');
+              if (!serviceEnabled) throw Exception('enable_gps_service');
               
               LocationPermission permission = await Geolocator.checkPermission();
               if (permission == LocationPermission.denied) {
                 permission = await Geolocator.requestPermission();
-                if (permission == LocationPermission.denied) throw Exception('يرجى منح صلاحية الوصول للموقع');
+                if (permission == LocationPermission.denied) throw Exception('grant_location_permission');
               }
               if (permission == LocationPermission.deniedForever) {
-                throw Exception('صلاحية الموقع مرفوضة دائماً، يرجى تفعيلها من إعدادات الجهاز');
+                throw Exception('location_permission_denied_forever');
               }
 
               try {
@@ -193,36 +214,36 @@ class DropOffCubit extends Cubit<DropOffState> {
                 currentLat = p.latitude;
                 currentLng = p.longitude;
               } catch (e) {
-                throw Exception('فشل في الحصول على الموقع الحالي، تأكد من جودة الإشارة والمحاولة مجدداً.');
+                throw Exception('failed_get_current_location');
               }
             }
 
             await _repository.closeDropOffTasks(taskIds, signatureBytes, currentLat, currentLng);
-            emit(const DropOffState.closeTasksSuccess());
+            if (!isClosed) emit(const DropOffState.closeTasksSuccess());
           } catch (e) {
             String errorMessage = e.toString();
             if (errorMessage.startsWith('Exception: ')) {
               errorMessage = errorMessage.substring(11);
             }
-            emit(DropOffState.error(errorMessage));
-            emit(DropOffState.signatureReady(
+            if (!isClosed) emit(DropOffState.error(errorMessage));
+            if (!isClosed) emit(DropOffState.signatureReady(
               selectedTask: selectedTask,
               scannedBags: scannedBags,
               isSubmitting: false,
             ));
           }
-        },
-        orElse: () async {},
+      },
+      orElse: () async {},
     );
   }
 
   Future<void> reachDropOffLocation(ClientTaskModel selectedTask) async {
-    emit(const DropOffState.loading('جاري تأكيد الوصول للموقع...'));
+    if (!isClosed) emit(const DropOffState.loading('confirming_location_arrival'));
     try {
       final driverId = UserInfo().userId;
-      if (driverId == null) throw Exception('لم يتم العثور على بيانات السائق');
+      if (driverId == null) throw Exception('driver_data_not_found');
       final locationId = selectedTask.toLocation;
-      if (locationId == null) throw Exception('الموقع غير معروف');
+      if (locationId == null) throw Exception('unknown_location');
 
       List<int> taskIds = selectedTask.tasks?.map((t) => t.id).toList() ?? [];
       if (taskIds.isEmpty) taskIds = selectedTask.taskIds ?? [];
@@ -236,15 +257,15 @@ class DropOffCubit extends Cubit<DropOffState> {
         currentLng = selectedTask.toLocationLng ?? 0.0;
       } else {
         bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-        if (!serviceEnabled) throw Exception('يرجى تشغيل خدمة تحديد الموقع (GPS)');
+        if (!serviceEnabled) throw Exception('enable_gps_service');
         
         LocationPermission permission = await Geolocator.checkPermission();
         if (permission == LocationPermission.denied) {
           permission = await Geolocator.requestPermission();
-          if (permission == LocationPermission.denied) throw Exception('يرجى منح صلاحية الوصول للموقع');
+          if (permission == LocationPermission.denied) throw Exception('grant_location_permission');
         }
         if (permission == LocationPermission.deniedForever) {
-          throw Exception('صلاحية الموقع مرفوضة دائماً، يرجى تفعيلها من إعدادات الجهاز');
+          throw Exception('location_permission_denied_forever');
         }
 
         try {
@@ -255,15 +276,15 @@ class DropOffCubit extends Cubit<DropOffState> {
           currentLat = p.latitude;
           currentLng = p.longitude;
         } catch (e) {
-          throw Exception('فشل في الحصول على الموقع الحالي، تأكد من جودة الإشارة والمحاولة مجدداً.');
+          throw Exception('failed_get_current_location');
         }
       }
 
       await _repository.confirmToLocation(driverId, locationId, taskIds, currentLat, currentLng);
       
       // Refresh the list to get updated status
-      emit(const DropOffState.locationCheckSuccess());
-      getDropOffTasks(); 
+      if (!isClosed) emit(const DropOffState.locationCheckSuccess());
+      if (!isClosed) getDropOffTasks(); 
     } catch (e) {
       String errorMessage = e.toString();
       if (errorMessage.startsWith('Exception: ')) {

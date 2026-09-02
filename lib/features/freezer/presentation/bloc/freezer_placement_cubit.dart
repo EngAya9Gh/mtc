@@ -110,7 +110,7 @@ class FreezerPlacementCubit extends Cubit<FreezerPlacementState> {
     if (targetTemp == 'FRZ' && (cType.contains('FRZ') || cType.contains('FREEZ') || cType.contains('FROZEN'))) isValidTemp = true;
 
     if (!isValidTemp) {
-      emit(FreezerPlacementState.error('الحاوية الممسوحة ($cType) لا تتطابق مع نوع العينات المطلوبة ($targetTemp)'));
+      emit(FreezerPlacementState.error('container_mismatch||$cType||$targetTemp'));
       emit(currentState);
       return false;
     }

@@ -1,3 +1,4 @@
+import 'package:blazma_logistics/core/common/widgets/app_scanner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -14,7 +15,6 @@ import '../bloc/freezer_placement_state.dart';
 import '../../../../data/providers/user_info_provider.dart';
 import '../../data/models/bag_item_model.dart';
 import '../../../../core/common/widgets/app_scanner_screen.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
 
 class FreezerOutBagsScreen extends StatelessWidget {
   final MedicalTask task;
@@ -169,12 +169,12 @@ class _FreezerOutBagsScreenViewState extends State<_FreezerOutBagsScreenView> {
             state.whenOrNull(
               success: (msg) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: AppText(msg), backgroundColor: Colors.green),
+                  SnackBar(content: AppText(AppLocalizations.of(context).translateError(msg)), backgroundColor: Colors.green),
                 );
               },
               error: (err) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: AppText(err), backgroundColor: Colors.red),
+                  SnackBar(content: AppText(AppLocalizations.of(context).translateError(err)), backgroundColor: Colors.red),
                 );
               },
               closeFreezerSuccess: () {

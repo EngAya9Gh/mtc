@@ -1,3 +1,4 @@
+import 'package:blazma_logistics/core/common/widgets/app_scanner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -13,7 +14,6 @@ import '../../../../core/services/di/di_container.dart';
 import '../../../../core/utils/end_points.dart';
 import '../bloc/pull_out_state.dart';
 import '../../../../core/common/widgets/app_scanner_screen.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../data/models/client_task_model.dart';
 
 class PullOutRemoveBagsScreen extends StatelessWidget {
@@ -137,7 +137,7 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
             error: (msg) {
               String displayMsg = AppLocalizations.of(context).translate(msg);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: AppText(displayMsg), backgroundColor: Colors.red),
+                SnackBar(content: AppText(AppLocalizations.of(context).translateError(displayMsg)), backgroundColor: Colors.red),
               );
             },
             success: (msg) {
@@ -152,7 +152,7 @@ class _PullOutRemoveBagsScreenViewState extends State<_PullOutRemoveBagsScreenVi
                 displayMsg = AppLocalizations.of(context).translate(msg);
               }
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: AppText(displayMsg), backgroundColor: Colors.green),
+                SnackBar(content: AppText(AppLocalizations.of(context).translateError(displayMsg)), backgroundColor: Colors.green),
               );
             },
             closeTasksSuccess: () {

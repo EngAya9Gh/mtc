@@ -5,7 +5,6 @@ import '../../../../core/common/widgets/app_elevated_button.dart';
 import '../../../../core/config/theme/color_scheme.dart';
 import '../../../../core/utils/app_localizations.dart';
 import '../../../../core/common/widgets/app_scanner.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../../core/services/di/di_container.dart';
 import '../../../../core/services/network/api_client.dart';
 class BagScanScreen extends StatefulWidget {

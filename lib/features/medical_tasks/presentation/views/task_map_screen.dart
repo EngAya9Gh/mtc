@@ -306,11 +306,14 @@ class _TaskMapScreenViewState extends State<_TaskMapScreenView> {
                         children: [
                           const Icon(Icons.access_time_rounded, size: 18, color: Colors.grey),
                           const SizedBox(width: 6),
-                          AppText(
-                            '${_currentTask.date ?? ''} - ${_currentTask.pickupTime ?? _currentTask.time ?? ''}',
-                            style: const TextStyle(color: Colors.grey, fontSize: 13),
+                          Expanded(
+                            child: AppText(
+                              '${_currentTask.date ?? ''} - ${_currentTask.pickupTime ?? _currentTask.time ?? ''}',
+                              style: const TextStyle(color: Colors.grey, fontSize: 13),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                          const Spacer(),
+
                           GestureDetector(
                             onTap: () => _makePhoneCall('0500000000'), // Replace with actual phone if available
                             child: Container(

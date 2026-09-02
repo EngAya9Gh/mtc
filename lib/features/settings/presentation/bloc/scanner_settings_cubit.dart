@@ -16,17 +16,17 @@ class ScannerSettingsState {
     this.vibrate = true,
     this.flash = false,
     this.autoResume = true,
-    this.holdTime = 1.0,
+    this.holdTime = 3.0,
     this.cameraResolution = 'HD',
     this.symbologies = const {
       'Code 128': true,
-      'Code 39': false,
-      'EAN-13': false,
+      'Code 39': true,
+      'EAN-13': true,
       'EAN-8': false,
       'UPC-E': false,
       'QR Code': false,
     },
-    this.activeScanner = 'MobileScanner',
+    this.activeScanner = 'B',
   });
 
   ScannerSettingsState copyWith({
@@ -64,19 +64,31 @@ class ScannerSettingsCubit extends Cubit<ScannerSettingsState> {
     final vibrate = _prefs.getBool('scanner_vibrate') ?? true;
     final flash = _prefs.getBool('scanner_flash') ?? false;
     final autoResume = _prefs.getBool('scanner_auto_resume') ?? true;
-    final holdTime = _prefs.getDouble('scanner_hold_time') ?? 1.5;
+    final holdTime = _prefs.getDouble('scanner_hold_time') ?? 3.0;
     final cameraResolution = _prefs.getString('scanner_camera_resolution') ?? 'HD';
     
     final Map<String, bool> symbologies = {
       'Code 128': _prefs.getBool('sym_code128') ?? true,
-      'Code 39': _prefs.getBool('sym_code39') ?? false,
-      'EAN-13': _prefs.getBool('sym_ean13') ?? false,
+      'Code 39': _prefs.getBool('sym_code39') ?? true,
+      'EAN-13': _prefs.getBool('sym_ean13') ?? true,
       'EAN-8': _prefs.getBool('sym_ean8') ?? false,
       'UPC-E': _prefs.getBool('sym_upce') ?? false,
       'QR Code': _prefs.getBool('sym_qrcode') ?? false,
     };
     
-    final activeScanner = _prefs.getString('scanner_engine') ?? 'MobileScanner';
+    String activeScanner = _prefs.getString('scanner_engine') ?? 'B';
+    
+    // Force migrate existing users to B (Scanbot) on first update
+    final bool migrated = _prefs.getBool('migrated_to_scanbot_b') ?? false;
+    if (!migrated) {
+      activeScanner = 'B';
+      _prefs.setBool('migrated_to_scanbot_b', true);
+      _prefs.setString('scanner_engine', 'B');
+    }
+
+    if (!['A', 'B'].contains(activeScanner)) {
+      activeScanner = 'B';
+    }
 
     emit(ScannerSettingsState(
       beep: beep,
@@ -151,11 +163,11 @@ class ScannerSettingsCubit extends Cubit<ScannerSettingsState> {
     await _prefs.setBool('scanner_vibrate', true);
     await _prefs.setBool('scanner_flash', false);
     await _prefs.setBool('scanner_auto_resume', true);
-    await _prefs.setDouble('scanner_hold_time', 1.5);
+    await _prefs.setDouble('scanner_hold_time', 3.0);
     await _prefs.setString('scanner_camera_resolution', 'HD');
     await _prefs.setBool('sym_code128', true);
-    await _prefs.setBool('sym_code39', false);
-    await _prefs.setBool('sym_ean13', false);
+    await _prefs.setBool('sym_code39', true);
+    await _prefs.setBool('sym_ean13', true);
     await _prefs.setBool('sym_ean8', false);
     await _prefs.setBool('sym_upce', false);
     await _prefs.setBool('sym_qrcode', false);
