@@ -5,12 +5,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../navigation/app_router.dart';
 import '../../utils/end_points.dart';
 import '../network/api_client.dart';
 import '../../../data/providers/user_info_provider.dart';
-import '../../../features/medical_tasks/data/models/task_model.dart';
-import '../../../features/samples_pull_out/data/models/client_task_model.dart';
+import 'notification_navigator.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -36,6 +34,9 @@ class NotificationService {
 
   // Data of the notification that launched the app, opened once the main screen is ready.
   Map<String, dynamic>? _pendingData;
+
+  // Token being sent right now, so startup and onTokenRefresh don't send it twice.
+  String? _syncingToken;
 
   Future<void> initialize() async {
     try {
@@ -149,41 +150,11 @@ class NotificationService {
     if (data != null) _handleNotificationTap(data);
   }
 
-  void _handleNotificationTap(Map<String, dynamic> data) {
-    if (data['action'] == 'open_task') {
-      try {
-        final taskType = data['task_type'];
-        final taskObjectStr = data['task_object'];
-
-        if (taskObjectStr == null) return;
-
-        final Map<String, dynamic> taskJson = jsonDecode(taskObjectStr);
-
-        switch (taskType) {
-          case 'NEW':
-            final task = MedicalTask.fromJson(taskJson);
-            AppRouter.router.push(AppRouter.taskMap, extra: task);
-            break;
-          case 'COLLECTED':
-            final task = MedicalTask.fromJson(taskJson);
-            AppRouter.router.push(AppRouter.freezerOutBags, extra: task);
-            break;
-          case 'IN_FREEZER':
-            // E.g. scan container barcode. Currently mapping to pull out main screen or equivalent
-            AppRouter.router.push(AppRouter.pullOutTasks);
-            break;
-          case 'OUT_FREEZER':
-            // Handle ClientTaskModel for Phase 2
-            // If the backend passes a single task we might need a dummy ClientTaskModel wrapper
-            final clientTask = ClientTaskModel.fromJson(taskJson);
-            AppRouter.router.push(AppRouter.dropOffLocationCheck, extra: clientTask);
-            break;
-          default:
-            debugPrint("Unknown task_type: $taskType");
-        }
-      } catch (e) {
-        debugPrint("Error handling deep link routing: $e");
-      }
+  Future<void> _handleNotificationTap(Map<String, dynamic> data) async {
+    try {
+      await NotificationNavigator.open(data);
+    } catch (e) {
+      debugPrint("Error handling deep link routing: $e");
     }
   }
 
@@ -214,10 +185,11 @@ class NotificationService {
   }
 
   Future<void> _syncToken(String token) async {
-    if (!UserInfo().isLoggedIn) return;
+    if (!UserInfo().isLoggedIn || _syncingToken == token) return;
     final prefs = GetIt.instance<SharedPreferences>();
     if (prefs.getString(_syncedTokenKey) == token) return;
 
+    _syncingToken = token;
     try {
       final response = await GetIt.instance<ApiClient>().post(
         EndPoints.updateFcmToken,
@@ -232,6 +204,8 @@ class NotificationService {
       }
     } catch (e) {
       debugPrint('FCM token sync failed: $e');
+    } finally {
+      _syncingToken = null;
     }
   }
 
