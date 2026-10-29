@@ -230,10 +230,10 @@ class _ScannerSettingsScreenView extends StatelessWidget {
             ],
           ),
           Slider(
-            value: value,
+            value: value.clamp(0.5, 5.0),
             min: 0.5,
-            max: 3.0,
-            divisions: 25,
+            max: 5.0,
+            divisions: 45,
             activeColor: AppColors.primary,
             label: '${value.toStringAsFixed(1)}s',
             onChanged: enabled ? onChanged : null,

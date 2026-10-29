@@ -13,7 +13,15 @@
         
         <meta-data android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyBVFLV0iPiQJtCu4q-y5pq_Qr2dqSu4Pw8"/>
-            
+
+        <!-- Push notifications (FCM) shown while the app is in background -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="high_importance_channel" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
+
         <service
             android:name="id.flutter.flutter_background_service.BackgroundService"
             android:foregroundServiceType="location" />

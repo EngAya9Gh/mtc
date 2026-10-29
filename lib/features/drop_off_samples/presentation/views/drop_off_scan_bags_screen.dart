@@ -153,6 +153,13 @@ class _DropOffScanBagsScreenViewState extends State<_DropOffScanBagsScreenView> 
         elevation: 0,
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: AppColors.primary),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined, color: AppColors.primary),
+            tooltip: isArabic ? 'إعدادات الماسح' : 'Scanner Settings',
+            onPressed: () => context.push('/scanner_settings'),
+          ),
+        ],
       ),
       body: BlocConsumer<DropOffCubit, DropOffState>(
         listener: (context, state) {

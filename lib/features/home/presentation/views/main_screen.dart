@@ -9,6 +9,7 @@ import '../../../../core/services/locale/locale_cubit.dart';
 import '../../../../core/utils/app_localizations.dart';
 import '../../../../data/providers/user_info_provider.dart';
 import '../../../../core/services/di/di_container.dart';
+import '../../../../core/services/notifications/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
@@ -27,6 +28,9 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     _refreshProfile();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      NotificationService().handlePendingNavigation();
+    });
   }
 
   void _refreshProfile() async {

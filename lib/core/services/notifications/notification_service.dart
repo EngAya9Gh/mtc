@@ -1,16 +1,20 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:go_router/go_router.dart';
+import 'package:get_it/get_it.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../navigation/app_router.dart';
+import '../../utils/end_points.dart';
+import '../network/api_client.dart';
+import '../../../data/providers/user_info_provider.dart';
 import '../../../features/medical_tasks/data/models/task_model.dart';
 import '../../../features/samples_pull_out/data/models/client_task_model.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // Setup background message handling if needed.
+  // Notification messages are displayed by the system while the app is in background.
 }
 
 class NotificationService {
@@ -18,8 +22,20 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final dynamic _localNotificationsPlugin =
+  static const String _syncedTokenKey = 'fcm_token_synced';
+
+  static const AndroidNotificationChannel _channel = AndroidNotificationChannel(
+    'high_importance_channel',
+    'High Importance Notifications',
+    description: 'This channel is used for important notifications.',
+    importance: Importance.max,
+  );
+
+  final FlutterLocalNotificationsPlugin _localNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
+
+  // Data of the notification that launched the app, opened once the main screen is ready.
+  Map<String, dynamic>? _pendingData;
 
   Future<void> initialize() async {
     try {
@@ -27,91 +43,120 @@ class NotificationService {
 
       FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-      // Request permissions
       final messaging = FirebaseMessaging.instance;
-      await messaging.requestPermission();
 
-      if (!kIsWeb) {
-        // Initialize local notifications
-        const AndroidInitializationSettings initializationSettingsAndroid =
-            AndroidInitializationSettings('@mipmap/ic_launcher');
-        const DarwinInitializationSettings initializationSettingsIOS =
-            DarwinInitializationSettings(
+      // Initialize local notifications
+      const InitializationSettings initializationSettings = InitializationSettings(
+        android: AndroidInitializationSettings('@drawable/ic_notification'),
+        iOS: DarwinInitializationSettings(
           requestAlertPermission: true,
           requestBadgePermission: true,
           requestSoundPermission: true,
-        );
-        const InitializationSettings initializationSettings =
-            InitializationSettings(
-          android: initializationSettingsAndroid,
-          iOS: initializationSettingsIOS,
-        );
-        
-        await _localNotificationsPlugin.initialize(
-          initializationSettings,
-          onDidReceiveNotificationResponse: (response) {
-             // Handle local notification tap
-          },
-        );
-      }
+        ),
+      );
+
+      await _localNotificationsPlugin.initialize(
+        settings: initializationSettings,
+        onDidReceiveNotificationResponse: (response) {
+          final data = _decodePayload(response.payload);
+          if (data != null) _handleNotificationTap(data);
+        },
+      );
+
+      // Also used by FCM for background notifications (see AndroidManifest meta-data)
+      await _localNotificationsPlugin
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(_channel);
 
       // Terminated State (App is completely closed)
-      RemoteMessage? initialMessage = await messaging.getInitialMessage();
+      final initialMessage = await messaging.getInitialMessage();
       if (initialMessage != null) {
-        _handleNotificationTap(initialMessage);
+        _pendingData = initialMessage.data;
+      } else {
+        final launchDetails = await _localNotificationsPlugin.getNotificationAppLaunchDetails();
+        if (launchDetails?.didNotificationLaunchApp ?? false) {
+          _pendingData = _decodePayload(launchDetails!.notificationResponse?.payload);
+        }
       }
 
       // Foreground State
-      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-        _showLocalNotification(message);
-      });
+      FirebaseMessaging.onMessage.listen(_showLocalNotification);
 
       // Background State (App is in background but not killed)
       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-        _handleNotificationTap(message);
+        _handleNotificationTap(message.data);
       });
+
+      messaging.onTokenRefresh.listen(_syncToken);
+
+      // Request permissions
+      await messaging.requestPermission();
+
+      // iOS presents foreground notifications itself, Android uses a local notification
+      await messaging.setForegroundNotificationPresentationOptions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+
+      unawaited(syncToken());
     } catch (e) {
       debugPrint("Notification init failed: $e");
     }
   }
 
-  void _showLocalNotification(RemoteMessage message) {
-    if (kIsWeb) return;
-    
+  Future<void> _showLocalNotification(RemoteMessage message) async {
+    if (defaultTargetPlatform != TargetPlatform.android) return;
+
     final notification = message.notification;
-    if (notification != null) {
-      try {
-        const NotificationDetails notificationDetails = NotificationDetails(
+    if (notification == null) return;
+
+    try {
+      await _localNotificationsPlugin.show(
+        id: notification.hashCode,
+        title: notification.title,
+        body: notification.body,
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
-            'high_importance_channel',
-            'High Importance Notifications',
-            channelDescription: 'This channel is used for important notifications.',
+            _channel.id,
+            _channel.name,
+            channelDescription: _channel.description,
             importance: Importance.max,
             priority: Priority.high,
           ),
-          iOS: DarwinNotificationDetails(),
-        );
-
-        _localNotificationsPlugin.show(
-          notification.hashCode,
-          notification.title,
-          notification.body,
-          notificationDetails,
-        );
-      } catch (e) {
-        debugPrint('Local notification error: $e');
-      }
+        ),
+        payload: jsonEncode(message.data),
+      );
+    } catch (e) {
+      debugPrint('Local notification error: $e');
     }
   }
 
-  void _handleNotificationTap(RemoteMessage message) {
-    if (message.data.containsKey('action') && message.data['action'] == 'open_task') {
+  Map<String, dynamic>? _decodePayload(String? payload) {
+    if (payload == null || payload.isEmpty) return null;
+    try {
+      return Map<String, dynamic>.from(jsonDecode(payload));
+    } catch (e) {
+      debugPrint('Invalid notification payload: $e');
+      return null;
+    }
+  }
+
+  /// Opens the screen of the notification that launched the app.
+  void handlePendingNavigation() {
+    final data = _pendingData;
+    _pendingData = null;
+    if (data != null) _handleNotificationTap(data);
+  }
+
+  void _handleNotificationTap(Map<String, dynamic> data) {
+    if (data['action'] == 'open_task') {
       try {
-        final taskType = message.data['task_type'];
-        final taskObjectStr = message.data['task_object'];
-        
+        final taskType = data['task_type'];
+        final taskObjectStr = data['task_object'];
+
         if (taskObjectStr == null) return;
-        
+
         final Map<String, dynamic> taskJson = jsonDecode(taskObjectStr);
 
         switch (taskType) {
@@ -125,8 +170,7 @@ class NotificationService {
             break;
           case 'IN_FREEZER':
             // E.g. scan container barcode. Currently mapping to pull out main screen or equivalent
-            final task = MedicalTask.fromJson(taskJson);
-            AppRouter.router.push(AppRouter.pullOutTasks); 
+            AppRouter.router.push(AppRouter.pullOutTasks);
             break;
           case 'OUT_FREEZER':
             // Handle ClientTaskModel for Phase 2
@@ -155,6 +199,55 @@ class NotificationService {
       // Return a fallback token so the app doesn't crash and login can proceed
       // Using a very realistic looking token (length > 150) to pass backend validation
       return 'eF1_2X3Y_4Z5_aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789:APA91bE_fG_hI_jK_lM_nO_pQ_rS_tU_vW_xY_z0_1A_2B_3C_4D_5E_6F_7G_8H_9I_0J_1K_2L_3M_4N_5O_6P_7Q_8R_9S_0T_1U_2V_3W_4X_5Y_6Z_7a_8b_9c_0d';
+    }
+  }
+
+  /// Sends the current FCM token to the backend if it changed since the last sync.
+  Future<void> syncToken() async {
+    if (kIsWeb || !UserInfo().isLoggedIn) return;
+    try {
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token != null) await _syncToken(token);
+    } catch (e) {
+      debugPrint('FCM token sync failed: $e');
+    }
+  }
+
+  Future<void> _syncToken(String token) async {
+    if (!UserInfo().isLoggedIn) return;
+    final prefs = GetIt.instance<SharedPreferences>();
+    if (prefs.getString(_syncedTokenKey) == token) return;
+
+    try {
+      final response = await GetIt.instance<ApiClient>().post(
+        EndPoints.updateFcmToken,
+        data: {
+          'driver_id': UserInfo().userId,
+          'fcm_token': token,
+          'platform': defaultTargetPlatform.name,
+        },
+      );
+      if (response.data['status'] == true) {
+        await markTokenSynced(token);
+      }
+    } catch (e) {
+      debugPrint('FCM token sync failed: $e');
+    }
+  }
+
+  /// Marks [token] as already known by the backend (e.g. sent with login).
+  Future<void> markTokenSynced(String token) async {
+    await GetIt.instance<SharedPreferences>().setString(_syncedTokenKey, token);
+  }
+
+  /// Invalidates this device's token so a logged-out driver stops receiving notifications.
+  Future<void> deleteToken() async {
+    if (kIsWeb) return;
+    try {
+      await GetIt.instance<SharedPreferences>().remove(_syncedTokenKey);
+      await FirebaseMessaging.instance.deleteToken();
+    } catch (e) {
+      debugPrint('FCM token delete failed: $e');
     }
   }
 }

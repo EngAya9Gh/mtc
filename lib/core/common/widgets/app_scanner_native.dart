@@ -287,7 +287,7 @@ class _BarqScanWebViewImplState extends State<_BarqScanWebViewImpl>
     // ── Main scanner init ────────────────────────────────────────────────────
     (async function() {
       try {
-        await BarqScan.configure("BARQ-9JS0N-SKFM6-WWZR1-SBW9Z");
+        await BarqScan.configure("BARQ-E32J3-BJMWC-0Q6JW-58JV1");
 
         window.activeScanner = await BarqScan.ScannerView.create(
           document.getElementById("scanner"),
@@ -424,7 +424,7 @@ class _BarqScanWebViewImplState extends State<_BarqScanWebViewImpl>
       ac.setOnPlatformPermissionRequest((r) => r.grant());
     }
 
-    _controller.loadHtmlString(_barqscanHtml, baseUrl: 'https://localhost/');
+    _controller.loadHtmlString(_barqscanHtml, baseUrl: 'https://gosample.com/');
 
     // Safety timeout: if JS never sends "ready" in 20s, show camera anyway
     _readyTimeout = Timer(const Duration(seconds: 20), () {
@@ -491,7 +491,7 @@ class _BarqScanWebViewImplState extends State<_BarqScanWebViewImpl>
           // Add delay to let Android camera service release the lock
           Future.delayed(const Duration(milliseconds: 500), () {
             if (!mounted) return;
-            _controller.loadHtmlString(_barqscanHtml, baseUrl: 'https://localhost/');
+            _controller.loadHtmlString(_barqscanHtml, baseUrl: 'https://gosample.com/');
             _readyTimeout = Timer(const Duration(seconds: 20), () {
               if (mounted && !_isScannerReady) setState(() => _isScannerReady = true);
             });

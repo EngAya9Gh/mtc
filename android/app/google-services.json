@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "194510704333",
-    "project_id": "gosmple-d2fd1",
-    "storage_bucket": "gosmple-d2fd1.appspot.com"
+    "project_number": "1019246166179",
+    "project_id": "gosample-66448",
+    "storage_bucket": "gosample-66448.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:194510704333:android:0d7b8279bbcad02ebbe384",
+        "mobilesdk_app_id": "1:1019246166179:android:79113b4a83d09333a27f16",
         "android_client_info": {
           "package_name": "com.blazma.logistics"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyD7obQ9z1UkYZAwVCKMLMemdlrNlMsYkGU"
+          "current_key": "AIzaSyC2pOdo7VQ2yeSovYQYuc3FlGtAHz4CV6U"
         }
       ],
       "services": {

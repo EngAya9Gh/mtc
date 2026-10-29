@@ -32,6 +32,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         await _sharedPreferences.setString('api_token', response.data!.token);
         await _sharedPreferences.setInt('driver_id', response.data!.id);
         UserInfo().loginInfo = response.data;
+        await _notificationService.markTokenSynced(fcmToken);
         BackgroundLocationService().startService();
         emit(AuthState.authenticated(data: response.data!));
       } else {
@@ -57,6 +58,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         await _sharedPreferences.setString('api_token', response.data!.token);
         await _sharedPreferences.setInt('driver_id', response.data!.id);
         UserInfo().loginInfo = response.data;
+        await _notificationService.markTokenSynced(fcmToken);
         BackgroundLocationService().startService();
         emit(AuthState.authenticated(data: response.data!));
       } else {

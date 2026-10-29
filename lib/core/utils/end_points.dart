@@ -8,6 +8,7 @@ class EndPoints {
   static const String profile = 'driver/profile';
   static const String acceptTerms = 'driver/terms/accept';
   static const String getTerms = 'driver/terms/get';
+  static const String updateFcmToken = 'driver/fcm-token/update';
 
   // Tasks
   static const String tasks = 'driver/tasks';

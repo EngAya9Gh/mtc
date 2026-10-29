@@ -109,6 +109,13 @@ class _SwapTaskScanBagsScreenState extends State<SwapTaskScanBagsScreen> {
               context.pop();
             },
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.settings_outlined, color: Colors.white),
+              tooltip: isArabic ? 'إعدادات الماسح' : 'Scanner Settings',
+              onPressed: () => context.push('/scanner_settings'),
+            ),
+          ],
         ),
         body: Column(
           children: [

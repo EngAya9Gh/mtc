@@ -16,7 +16,7 @@ class ScannerSettingsState {
     this.vibrate = true,
     this.flash = false,
     this.autoResume = true,
-    this.holdTime = 3.0,
+    this.holdTime = 1.0,
     this.cameraResolution = 'HD',
     this.symbologies = const {
       'Code 128': true,
@@ -64,7 +64,7 @@ class ScannerSettingsCubit extends Cubit<ScannerSettingsState> {
     final vibrate = _prefs.getBool('scanner_vibrate') ?? true;
     final flash = _prefs.getBool('scanner_flash') ?? false;
     final autoResume = _prefs.getBool('scanner_auto_resume') ?? true;
-    final holdTime = _prefs.getDouble('scanner_hold_time') ?? 3.0;
+    final holdTime = _prefs.getDouble('scanner_hold_time') ?? 1.0;
     final cameraResolution = _prefs.getString('scanner_camera_resolution') ?? 'HD';
     
     final Map<String, bool> symbologies = {
@@ -123,8 +123,9 @@ class ScannerSettingsCubit extends Cubit<ScannerSettingsState> {
   }
 
   Future<void> setHoldTime(double value) async {
-    await _prefs.setDouble('scanner_hold_time', value);
-    emit(state.copyWith(holdTime: value));
+    final rounded = double.parse(value.toStringAsFixed(1));
+    await _prefs.setDouble('scanner_hold_time', rounded);
+    emit(state.copyWith(holdTime: rounded));
   }
 
   Future<void> setCameraResolution(String value) async {
