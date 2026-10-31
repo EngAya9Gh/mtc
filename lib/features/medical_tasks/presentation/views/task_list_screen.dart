@@ -7,6 +7,7 @@ import '../../../../core/utils/app_localizations.dart';
 import '../../../../core/config/theme/color_scheme.dart';
 import '../../../../core/services/di/di_container.dart';
 import '../../../../data/providers/user_info_provider.dart';
+import '../../data/models/task_model.dart';
 import '../bloc/medical_task_bloc.dart';
 import '../bloc/medical_task_event.dart';
 import '../bloc/medical_task_state.dart';
@@ -107,13 +108,14 @@ class TaskListScreen extends StatelessWidget {
 }
 
 class _TaskCard extends StatelessWidget {
-  final dynamic task;
+  final MedicalTask task;
 
   const _TaskCard({required this.task});
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = AppLocalizations.of(context).isArabic;
+    final l = AppLocalizations.of(context);
+    final isArabic = l.isArabic;
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
@@ -146,7 +148,7 @@ class _TaskCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Column(
@@ -156,89 +158,63 @@ class _TaskCard extends StatelessWidget {
                           isArabic ? 'مهمة #${task.id}' : 'Task #${task.id}',
                           style: const TextStyle(color: Colors.grey, fontSize: 12),
                         ),
+                        const SizedBox(height: 2),
                         AppText(
-                          task.clientName,
+                          task.localizedClientName(isArabic),
                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 6),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.circle, size: 8, color: Colors.green),
-                                const SizedBox(width: 6),
-                                Expanded(child: AppText(task.fromLocationName, style: const TextStyle(fontSize: 12, color: Colors.black87), maxLines: 1, overflow: TextOverflow.ellipsis)),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                const Icon(Icons.location_on, size: 10, color: Colors.red),
-                                const SizedBox(width: 4),
-                                Expanded(child: AppText(task.toLocationName, style: const TextStyle(fontSize: 12, color: Colors.black87), maxLines: 1, overflow: TextOverflow.ellipsis)),
-                              ],
-                            ),
-                          ],
+                        const SizedBox(height: 8),
+                        _LocationLine(
+                          icon: Icons.circle,
+                          iconSize: 8,
+                          color: Colors.green,
+                          text: task.localizedFromLocation(isArabic),
+                        ),
+                        const SizedBox(height: 4),
+                        _LocationLine(
+                          icon: Icons.location_on,
+                          iconSize: 12,
+                          color: Colors.red,
+                          text: task.localizedToLocation(isArabic),
                         ),
                       ],
                     ),
                   ),
+                  const SizedBox(width: 12),
                   _StatusBadge(confirmed: task.confirmedByDriver == 1),
                 ],
               ),
-              const Divider(height: 24),
-              const SizedBox(height: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.calendar_today_outlined, size: 16, color: Colors.grey),
-                      const SizedBox(width: 4),
-                      AppText(isArabic ? 'تاريخ المهمة: ' : 'Task Date: ', style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                      Directionality(
-                        textDirection: TextDirection.ltr,
-                        child: AppText('${task.date ?? ''}', style: const TextStyle(color: Colors.black87, fontSize: 12, fontWeight: FontWeight.w500)),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      const Icon(Icons.access_time, size: 16, color: Colors.grey),
-                      const SizedBox(width: 4),
-                      AppText(isArabic ? 'وقت الاستلام: ' : 'Pickup Time: ', style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                      Directionality(
-                        textDirection: TextDirection.ltr,
-                        child: AppText('${task.pickupTime ?? task.time ?? ''}', style: const TextStyle(color: Colors.black87, fontSize: 12, fontWeight: FontWeight.w500)),
-                      ),
-                    ],
-                  ),
-                ],
+              Divider(height: 28, color: Colors.grey.shade200),
+              _InfoRow(
+                icon: Icons.calendar_today_outlined,
+                label: isArabic ? 'تاريخ المهمة: ' : 'Task Date: ',
+                value: task.date ?? '',
+                ltrValue: true,
               ),
-              if (task.taskType != null && task.taskType.toString().isNotEmpty) ...[
+              const SizedBox(height: 8),
+              _InfoRow(
+                icon: Icons.access_time,
+                label: isArabic ? 'وقت الاستلام: ' : 'Pickup Time: ',
+                value: task.pickupTime ?? task.time ?? '',
+                ltrValue: true,
+              ),
+              if (task.taskType?.isNotEmpty == true) ...[
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.category_outlined, size: 16, color: Colors.grey),
-                    const SizedBox(width: 4),
-                    AppText(isArabic ? 'نوع المهمة: ${task.taskType}' : 'Task Type: ${task.taskType}',
-                        style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                  ],
+                _InfoRow(
+                  icon: Icons.category_outlined,
+                  label: isArabic ? 'نوع المهمة: ' : 'Task Type: ',
+                  value: l.taskTypeLabel(task.taskType!),
                 ),
               ],
               if (task.boxCount != null || task.sampleCount != null) ...[
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.inventory_2_outlined, size: 16, color: Colors.grey),
-                    const SizedBox(width: 4),
-                    AppText(isArabic 
-                        ? 'الصناديق: ${task.boxCount ?? 0}  |  العينات: ${task.sampleCount ?? 0}' 
-                        : 'Boxes: ${task.boxCount ?? 0}  |  Samples: ${task.sampleCount ?? 0}',
-                        style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                  ],
+                _InfoRow(
+                  icon: Icons.inventory_2_outlined,
+                  label: isArabic ? 'الصناديق / العينات: ' : 'Boxes / Samples: ',
+                  value: '${task.boxCount ?? 0} / ${task.sampleCount ?? 0}',
+                  ltrValue: true,
                 ),
               ],
             ],
@@ -277,33 +253,74 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
-class _LocationRow extends StatelessWidget {
+class _LocationLine extends StatelessWidget {
   final IconData icon;
-  final String label;
-  final String value;
+  final double iconSize;
   final Color color;
+  final String text;
 
-  const _LocationRow({
+  const _LocationLine({
     required this.icon,
-    required this.label,
-    required this.value,
+    required this.iconSize,
     required this.color,
+    required this.text,
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 18, color: color),
-        const SizedBox(width: 8),
+        // Same height as one text line so the icon stays on the first line when the name wraps.
+        SizedBox(
+          width: 14,
+          height: 18,
+          child: Center(child: Icon(icon, size: iconSize, color: color)),
+        ),
+        const SizedBox(width: 6),
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppText(label, style: const TextStyle(color: Colors.grey, fontSize: 10)),
-              AppText(value, style: const TextStyle(fontSize: 13)),
-            ],
+          child: AppText(
+            text,
+            style: const TextStyle(fontSize: 12, height: 1.5, color: Colors.black87),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
+        ),
+      ],
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final bool ltrValue;
+
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.ltrValue = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final valueText = AppText(
+      value,
+      style: const TextStyle(color: Colors.black87, fontSize: 12, fontWeight: FontWeight.w500),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: Colors.grey),
+        const SizedBox(width: 6),
+        AppText(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+        Flexible(
+          child: ltrValue
+              ? Directionality(textDirection: TextDirection.ltr, child: valueText)
+              : valueText,
         ),
       ],
     );

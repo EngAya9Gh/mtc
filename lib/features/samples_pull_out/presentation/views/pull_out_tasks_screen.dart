@@ -147,7 +147,7 @@ class _DestinationCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Column(
@@ -183,6 +183,7 @@ class _DestinationCard extends StatelessWidget {
                       ],
                     ),
                   ),
+                  const SizedBox(width: 12),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
@@ -190,7 +191,7 @@ class _DestinationCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: AppText(
-                      '${destination.taskIds.length} ${isArabic ? "مهام" : "Tasks"}',
+                      AppLocalizations.of(context).tasksCount(destination.taskIds.length),
                       style: const TextStyle(
                         color: AppColors.primary,
                         fontWeight: FontWeight.bold,

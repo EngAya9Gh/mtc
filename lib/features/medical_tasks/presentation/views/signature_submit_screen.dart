@@ -159,7 +159,7 @@ class _SignatureSubmitViewState extends State<_SignatureSubmitView> {
                       const Icon(Icons.location_on, color: AppColors.primary, size: 30),
                       const SizedBox(height: 12),
                       AppText(
-                        widget.task.clientName,
+                        widget.task.localizedClientName(isArabic),
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                         textAlign: TextAlign.center,
                       ),
@@ -176,7 +176,7 @@ class _SignatureSubmitViewState extends State<_SignatureSubmitView> {
                             children: [
                               const Icon(Icons.circle, size: 10, color: Colors.green),
                               const SizedBox(width: 6),
-                              Flexible(child: AppText(widget.task.fromLocationName, style: const TextStyle(fontSize: 12, color: Colors.black87))),
+                              Flexible(child: AppText(widget.task.localizedFromLocation(isArabic), style: const TextStyle(fontSize: 12, color: Colors.black87))),
                             ],
                           ),
                           const SizedBox(height: 4),
@@ -185,7 +185,7 @@ class _SignatureSubmitViewState extends State<_SignatureSubmitView> {
                             children: [
                               const Icon(Icons.location_on, size: 12, color: Colors.red),
                               const SizedBox(width: 4),
-                              Flexible(child: AppText(widget.task.toLocationName, style: const TextStyle(fontSize: 12, color: Colors.black87))),
+                              Flexible(child: AppText(widget.task.localizedToLocation(isArabic), style: const TextStyle(fontSize: 12, color: Colors.black87))),
                             ],
                           ),
                         ],

@@ -146,8 +146,15 @@ class _DropOffDestinationCard extends StatelessWidget {
       }
     }
     int totalBags = uniqueBags.length;
-    
-    final destinationName = isArabic 
+    final l = AppLocalizations.of(context);
+    final taskIds = destination.taskIds.isNotEmpty
+        ? destination.taskIds
+        : destination.tasks.map((t) => t.id).toList();
+    final taskIdsLabel = taskIds.length == 1
+        ? (isArabic ? 'مهمة' : 'Task')
+        : (isArabic ? 'مهام' : 'Tasks');
+
+    final destinationName = isArabic
         ? (destination.arabicName ?? destination.name ?? 'وجهة غير معروفة')
         : (destination.englishName ?? destination.name ?? 'Unknown Destination');
 
@@ -172,15 +179,17 @@ class _DropOffDestinationCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         AppText(
-                          'Tasks #${(destination.taskIds.isNotEmpty) ? destination.taskIds.join(", ") : destination.tasks?.map((t) => t.id).join(", ")}',
+                          '$taskIdsLabel #${taskIds.join(", ")}',
                           style: const TextStyle(color: Colors.grey, fontSize: 12),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         AppText(
                           isArabic ? 'موقع التسليم:' : 'To Delivery Location:',
@@ -212,6 +221,7 @@ class _DropOffDestinationCard extends StatelessWidget {
                       ],
                     ),
                   ),
+                  const SizedBox(width: 12),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
@@ -219,7 +229,7 @@ class _DropOffDestinationCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: AppText(
-                      '${destination.tasks?.length ?? 0} ${isArabic ? "مهام" : "Tasks"}',
+                      l.tasksCount(destination.tasks.length),
                       style: const TextStyle(
                         color: AppColors.primary,
                         fontWeight: FontWeight.bold,
@@ -238,7 +248,7 @@ class _DropOffDestinationCard extends StatelessWidget {
                       const Icon(Icons.science, color: Colors.blue, size: 18),
                       const SizedBox(width: 4),
                       AppText(
-                        '$totalSamples ${isArabic ? "عينات" : "Samples"}',
+                        l.samplesCount(totalSamples),
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontSize: 13,
@@ -248,7 +258,7 @@ class _DropOffDestinationCard extends StatelessWidget {
                       const Icon(Icons.outbox_rounded, color: Colors.orange, size: 18),
                       const SizedBox(width: 4),
                       AppText(
-                        '$totalBags ${isArabic ? "أكياس" : "Bags"}',
+                        l.bagsCount(totalBags),
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontSize: 13,

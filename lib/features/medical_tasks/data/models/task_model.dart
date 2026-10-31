@@ -6,11 +6,18 @@ part 'task_model.g.dart';
 
 @freezed
 abstract class MedicalTask with _$MedicalTask {
+  const MedicalTask._();
+
   const factory MedicalTask({
     @JsonKey(fromJson: _toIntRequired) required int id,
     @JsonKey(name: 'client_english_name') required String clientName,
+    @JsonKey(name: 'client_arabic_name') String? clientArabicName,
     @JsonKey(name: 'from_location_name') required String fromLocationName,
+    @JsonKey(name: 'from_location_arabic_name') String? fromLocationArabicName,
+    @JsonKey(name: 'from_location_english_name') String? fromLocationEnglishName,
     @JsonKey(name: 'to_location_name') required String toLocationName,
+    @JsonKey(name: 'to_location_arabic_name') String? toLocationArabicName,
+    @JsonKey(name: 'to_location_english_name') String? toLocationEnglishName,
     @JsonKey(name: 'dateString') String? date,
     @JsonKey(name: 'timeString') String? time,
     @JsonKey(name: 'pickup_time') String? pickupTime,
@@ -30,6 +37,17 @@ abstract class MedicalTask with _$MedicalTask {
     @JsonKey(name: 'sample_count', fromJson: ParserUtils.toInt) int? sampleCount,
     String? otp,
   }) = _MedicalTask;
+
+  String localizedClientName(bool isArabic) =>
+      ParserUtils.pickLocalized(isArabic, arabic: clientArabicName, english: clientName) ?? clientName;
+
+  String localizedFromLocation(bool isArabic) =>
+      ParserUtils.pickLocalized(isArabic, arabic: fromLocationArabicName, english: fromLocationEnglishName) ??
+      fromLocationName;
+
+  String localizedToLocation(bool isArabic) =>
+      ParserUtils.pickLocalized(isArabic, arabic: toLocationArabicName, english: toLocationEnglishName) ??
+      toLocationName;
 
   factory MedicalTask.fromJson(Map<String, dynamic> json) =>
       _$MedicalTaskFromJson(json);

@@ -50,6 +50,37 @@ class AppLocalizations {
   String get pickup => isArabic ? 'نقطة الاستلام' : 'Pickup';
   String get dropoff => isArabic ? 'نقطة التسليم' : 'Dropoff';
 
+  String taskTypeLabel(String type) {
+    switch (type.toUpperCase()) {
+      case 'SAMPLE':
+        return isArabic ? 'عينات' : 'Samples';
+      case 'BOX':
+        return isArabic ? 'صناديق' : 'Boxes';
+      default:
+        return type;
+    }
+  }
+
+  // Counts
+  String tasksCount(int n) => isArabic
+      ? _arabicCount(n, 'مهمة واحدة', 'مهمتان', 'مهام', 'مهمة')
+      : '$n ${n == 1 ? 'Task' : 'Tasks'}';
+  String samplesCount(int n) => isArabic
+      ? _arabicCount(n, 'عينة واحدة', 'عينتان', 'عينات', 'عينة')
+      : '$n ${n == 1 ? 'Sample' : 'Samples'}';
+  String bagsCount(int n) => isArabic
+      ? _arabicCount(n, 'كيس واحد', 'كيسان', 'أكياس', 'كيس')
+      : '$n ${n == 1 ? 'Bag' : 'Bags'}';
+
+  // Arabic number agreement: 1 and 2 use their own forms, 3–10 take the plural, 11+ the singular.
+  String _arabicCount(int n, String one, String two, String few, String many) {
+    if (n == 1) return one;
+    if (n == 2) return two;
+    final lastTwo = n % 100;
+    if (n == 0 || (lastTwo >= 3 && lastTwo <= 10)) return '$n $few';
+    return '$n $many';
+  }
+
   // Drawer
   String get profile => isArabic ? 'الملف الشخصي' : 'PROFILE';
   String get mySchedule => isArabic ? 'الجدول' : 'SCHEDULE';

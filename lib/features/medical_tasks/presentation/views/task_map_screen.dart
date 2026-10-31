@@ -248,7 +248,7 @@ class _TaskMapScreenViewState extends State<_TaskMapScreenView> {
                         children: [
                           Expanded(
                             child: AppText(
-                              _currentTask.clientName,
+                              _currentTask.localizedClientName(isArabic),
                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                             ),
                           ),
@@ -272,14 +272,14 @@ class _TaskMapScreenViewState extends State<_TaskMapScreenView> {
                         icon: Icons.circle,
                         color: Colors.green,
                         title: isArabic ? 'من موقع:' : 'From Location:',
-                        value: _currentTask.fromLocationName,
+                        value: _currentTask.localizedFromLocation(isArabic),
                       ),
                       const SizedBox(height: 8),
                       _LocationRow(
                         icon: Icons.location_on,
                         color: Colors.red,
                         title: isArabic ? 'إلى موقع:' : 'To Location:',
-                        value: _currentTask.toLocationName,
+                        value: _currentTask.localizedToLocation(isArabic),
                       ),
                       
                       const SizedBox(height: 12),

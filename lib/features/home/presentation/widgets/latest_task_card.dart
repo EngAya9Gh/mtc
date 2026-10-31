@@ -100,8 +100,10 @@ class LatestTaskCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             AppText(
-                              task.clientName,
+                              task.localizedClientName(l.isArabic),
                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
                             AppText(
                               'Task #${task.id}',
@@ -141,7 +143,7 @@ class LatestTaskCard extends StatelessWidget {
                       children: [
                         _buildLocationPoint(
                           label: l.pickup,
-                          value: task.fromLocationName,
+                          value: task.localizedFromLocation(l.isArabic),
                           icon: Icons.circle,
                           iconColor: AppColors.primary,
                         ),
@@ -161,7 +163,7 @@ class LatestTaskCard extends StatelessWidget {
                         ),
                         _buildLocationPoint(
                           label: l.dropoff,
-                          value: task.toLocationName,
+                          value: task.localizedToLocation(l.isArabic),
                           icon: Icons.location_on_rounded,
                           iconColor: Colors.red,
                           align: CrossAxisAlignment.end,

@@ -147,6 +147,8 @@ class _SwapTasksListScreenState extends State<SwapTasksListScreen> {
   }
 
   Widget _buildSwapTaskCard(BuildContext context, SwapTaskModel task, bool isArabic) {
+    final fromLocation = task.localizedFromLocation(isArabic);
+    final toLocation = task.localizedToLocation(isArabic);
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -230,9 +232,10 @@ class _SwapTasksListScreenState extends State<SwapTasksListScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: AppText(
-                        task.fromLocationName?.isNotEmpty == true ? task.fromLocationName! : (isArabic ? 'غير محدد' : 'Not specified'),
+                        fromLocation?.isNotEmpty == true ? fromLocation! : (isArabic ? 'غير محدد' : 'Not specified'),
                         style: const TextStyle(color: Colors.black87, fontSize: 13),
-                        maxLines: 1,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     Padding(
@@ -243,9 +246,10 @@ class _SwapTasksListScreenState extends State<SwapTasksListScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: AppText(
-                        task.toLocationName?.isNotEmpty == true ? task.toLocationName! : (isArabic ? 'غير محدد' : 'Not specified'),
+                        toLocation?.isNotEmpty == true ? toLocation! : (isArabic ? 'غير محدد' : 'Not specified'),
                         style: const TextStyle(color: Colors.black87, fontSize: 13),
-                        maxLines: 1,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],

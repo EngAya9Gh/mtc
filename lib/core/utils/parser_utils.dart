@@ -14,4 +14,11 @@ class ParserUtils {
     if (value is String) return double.tryParse(value);
     return null;
   }
+
+  /// Returns the name in the current language, or null when the API sent none,
+  /// so callers can fall back to the untranslated field.
+  static String? pickLocalized(bool isArabic, {String? arabic, String? english}) {
+    final preferred = isArabic ? arabic : english;
+    return (preferred != null && preferred.trim().isNotEmpty) ? preferred : null;
+  }
 }
