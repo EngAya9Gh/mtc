@@ -160,7 +160,7 @@ class _TaskCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         AppText(
-                          task.localizedClientName(isArabic),
+                          task.localizedClientName(isArabic) ?? l.noClient,
                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,

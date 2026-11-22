@@ -10,7 +10,7 @@ abstract class MedicalTask with _$MedicalTask {
 
   const factory MedicalTask({
     @JsonKey(fromJson: _toIntRequired) required int id,
-    @JsonKey(name: 'client_english_name') required String clientName,
+    @JsonKey(name: 'client_english_name') String? clientName,
     @JsonKey(name: 'client_arabic_name') String? clientArabicName,
     @JsonKey(name: 'from_location_name') required String fromLocationName,
     @JsonKey(name: 'from_location_arabic_name') String? fromLocationArabicName,
@@ -38,8 +38,10 @@ abstract class MedicalTask with _$MedicalTask {
     String? otp,
   }) = _MedicalTask;
 
-  String localizedClientName(bool isArabic) =>
-      ParserUtils.pickLocalized(isArabic, arabic: clientArabicName, english: clientName) ?? clientName;
+  // Tries the current language, then the other one; null means the task has no client name.
+  String? localizedClientName(bool isArabic) =>
+      ParserUtils.pickLocalized(isArabic, arabic: clientArabicName, english: clientName) ??
+      ParserUtils.pickLocalized(!isArabic, arabic: clientArabicName, english: clientName);
 
   String localizedFromLocation(bool isArabic) =>
       ParserUtils.pickLocalized(isArabic, arabic: fromLocationArabicName, english: fromLocationEnglishName) ??

@@ -1,32 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-// --- MOCK CLASSES TO REPLACE MOBILE SCANNER ---
-enum BarcodeFormat {
-  unknown, aztec, code39, code93, code128, dataMatrix, ean8, ean13, itf,
-  pdf417, qrCode, upca, upce, all
-}
-
-class Barcode {
-  final String? rawValue;
-  final String? displayValue;
-  final BarcodeFormat format;
-
-  const Barcode({
-    this.rawValue,
-    this.displayValue,
-    this.format = BarcodeFormat.unknown,
-  });
-}
-
-class BarcodeCapture {
-  final List<Barcode> barcodes;
-
-  const BarcodeCapture({
-    required this.barcodes,
-  });
-}
-// ----------------------------------------------
+import 'app_scanner.dart';
 
 enum ScannerEngine { mobileScanner, scandit, barkoder, scanbot, dynamsoft }
 

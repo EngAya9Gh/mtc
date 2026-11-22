@@ -248,7 +248,7 @@ class _TaskMapScreenViewState extends State<_TaskMapScreenView> {
                         children: [
                           Expanded(
                             child: AppText(
-                              _currentTask.localizedClientName(isArabic),
+                              _currentTask.localizedClientName(isArabic) ?? l.noClient,
                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                             ),
                           ),

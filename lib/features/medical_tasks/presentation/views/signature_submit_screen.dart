@@ -159,7 +159,7 @@ class _SignatureSubmitViewState extends State<_SignatureSubmitView> {
                       const Icon(Icons.location_on, color: AppColors.primary, size: 30),
                       const SizedBox(height: 12),
                       AppText(
-                        widget.task.localizedClientName(isArabic),
+                        widget.task.localizedClientName(isArabic) ?? l.noClient,
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                         textAlign: TextAlign.center,
                       ),

@@ -251,7 +251,7 @@ class _FreezerOutBagsScreenViewState extends State<_FreezerOutBagsScreenView> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           AppText.titleLarge(
-                            widget.task.localizedClientName(isArabic),
+                            widget.task.localizedClientName(isArabic) ?? l.noClient,
                             color: AppColors.primary,
                           ),
                           const SizedBox(height: 6),

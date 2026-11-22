@@ -229,6 +229,8 @@ class _MainScreenState extends State<MainScreen> {
                                 ),
                                 AppText(
                                   driverName,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 18,
@@ -242,11 +244,15 @@ class _MainScreenState extends State<MainScreen> {
                                       children: [
                                         const Icon(Icons.directions_car_rounded, size: 14, color: Colors.white70),
                                         const SizedBox(width: 4),
-                                        AppText(
-                                          carInfo,
-                                          style: TextStyle(
-                                            color: Colors.white.withOpacity(0.9),
-                                            fontSize: 12,
+                                        Flexible(
+                                          child: AppText(
+                                            carInfo,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              color: Colors.white.withOpacity(0.9),
+                                              fontSize: 12,
+                                            ),
                                           ),
                                         ),
                                       ],

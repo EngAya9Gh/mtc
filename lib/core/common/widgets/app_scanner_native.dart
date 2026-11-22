@@ -103,6 +103,9 @@ class _BarqScanWebViewImplState extends State<_BarqScanWebViewImpl>
   bool _isCameraGranted = false;
   bool _isScannerReady = false;
   late bool _isFlashOn;
+  bool _torchSupported = false;
+  bool _torchBusy = false;
+  String? _errorMessage;
   Timer? _readyTimeout;
 
   // Dart-level duplicate-scan guard (supplements BarqScan's duplicateFilter)
@@ -147,7 +150,7 @@ class _BarqScanWebViewImplState extends State<_BarqScanWebViewImpl>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <style>
     html, body { margin:0; padding:0; width:100%; height:100%; background:#000; overflow:hidden; }
-    #scanner { width:100vw; height:100vh; overflow:hidden; }
+    #scanner { position:absolute; top:0; left:0; width:100vw; height:100vh; overflow:hidden; pointer-events:none; }
     video { display:block; }
     /* Hide native video controls & play overlay */
     video::-webkit-media-controls,
@@ -155,95 +158,32 @@ class _BarqScanWebViewImplState extends State<_BarqScanWebViewImpl>
     video::-webkit-media-controls-panel,
     video::-webkit-media-controls-play-button,
     video::-webkit-media-controls-overlay-play-button { display:none !important; opacity:0 !important; }
-    
-    /* Hide BarqScan's container completely to hide its white mask and green boxes */
-    #scanner { opacity: 0 !important; position: absolute; top:0; left:0; width: 100vw; height: 100vh; pointer-events: none !important; z-index: 2; }
-    
-    /* Our custom video will be the ONLY thing visible */
-    #bg-video { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: 1; }
+
+    /* BarqScan's only UI layer is a canvas drawing green boxes around reads — hide it */
+    #scanner canvas { display:none !important; }
   </style>
 </head>
 <body>
-  <!-- Clean camera feed without BarqScan UI -->
-  <video id="bg-video" playsinline autoplay muted></video>
-  <!-- Hidden BarqScan container -->
+  <!-- BarqScan renders its own camera <video> inside this container -->
   <div id="scanner"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@barqscan/web@0.1.3/dist/index.global.js"></script>
   <script>
     // ── Bridge to Flutter ────────────────────────────────────────────────────
     function toNative(msg) {
       if (window.BarqScanNative) window.BarqScanNative.postMessage(JSON.stringify(msg));
     }
-
-    // ── Torch suppression via getUserMedia intercept ─────────────────────────
-    // Merge resolution preference + strip torch from BarqScan's constraints.
-    (function() {
-      var idealWidth  = $_maxDecodeWidth;
-      var idealHeight = Math.round(idealWidth * 9 / 16);
-
-      var _origGUM = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
-      navigator.mediaDevices.getUserMedia = async function(constraints) {
-        if (constraints && constraints.video && typeof constraints.video === "object") {
-          if (!constraints.video.width)  constraints.video.width  = { ideal: idealWidth };
-          if (!constraints.video.height) constraints.video.height = { ideal: idealHeight };
-          delete constraints.video.torch;
-          if (Array.isArray(constraints.video.advanced)) {
-            constraints.video.advanced = constraints.video.advanced.filter(function(c) {
-              return !Object.prototype.hasOwnProperty.call(c, "torch");
-            });
-            if (!constraints.video.advanced.length) delete constraints.video.advanced;
-          }
-        }
-        var stream = await _origGUM(constraints);
-        
-        // Attach stream to our clean bg-video
-        var bgVideo = document.getElementById('bg-video');
-        if (bgVideo) {
-          bgVideo.srcObject = stream;
-          bgVideo.play().catch(function(){});
-        }
-
-        // Log actual resolution chosen by the camera
-        var tracks = stream.getVideoTracks();
-        if (tracks.length > 0) {
-          var settings = tracks[0].getSettings ? tracks[0].getSettings() : {};
-          toNative({ type: "resolution", width: settings.width || 0, height: settings.height || 0 });
-          // Apply torch=false immediately after stream opens
-          var caps = tracks[0].getCapabilities ? tracks[0].getCapabilities() : {};
-          if (caps.torch) {
-            try { await tracks[0].applyConstraints({ advanced: [{ torch: false }] }); } catch(e) {}
-          }
-        }
-        return stream;
-      };
-    })();
-
-    // ── Smart torch watcher ──────────────────────────────────────────────────
-    // Checks every 500ms if torch turned ON without user request → turns it off.
-    // Unlike unconditional setInterval, this ONLY calls applyConstraints when
-    // torch is actually on — no flicker from unnecessary toggling.
-    setInterval(async function() {
-      if (window._torchState) return; // user intentionally enabled torch
-      document.querySelectorAll("video").forEach(async function(v) {
-        if (!v.srcObject) return;
-        v.srcObject.getVideoTracks().forEach(async function(track) {
-          var settings = track.getSettings ? track.getSettings() : {};
-          if (settings.torch === true) {
-            var caps = track.getCapabilities ? track.getCapabilities() : {};
-            if (caps.torch) {
-              try { await track.applyConstraints({ advanced: [{ torch: false }] }); } catch(e) {}
-            }
-          }
-        });
-      });
-    }, 500);
-
+    function scannerVideo() {
+      return document.querySelector("#scanner video");
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@barqscan/web@0.1.3/dist/index.global.js"
+          onerror="toNative({ type: 'error', code: 'sdk_load_failed', message: 'Failed to load BarqScan SDK' })"></script>
+  <script>
     // ── Camera stream health monitor ─────────────────────────────────────────
     // Detects when the camera stream dies (phone face-down, screen off, etc.)
     // and notifies Flutter to reload the scanner.
     setInterval(function() {
-      var video = document.getElementById("bg-video");
+      var video = scannerVideo();
       if (!video || !video.srcObject) return;
       var tracks = video.srcObject.getVideoTracks();
       if (tracks.length > 0 && tracks[0].readyState === "ended") {
@@ -255,8 +195,8 @@ class _BarqScanWebViewImplState extends State<_BarqScanWebViewImpl>
     document.addEventListener("visibilitychange", function() {
       if (document.visibilityState !== "visible") return;
       setTimeout(function() {
-        var video = document.getElementById("bg-video");
-        if (!video) return;
+        var video = scannerVideo();
+        if (!video || !window.activeScanner) return;
         if (video.srcObject) {
           var tracks = video.srcObject.getVideoTracks();
           if (tracks.length > 0 && tracks[0].readyState !== "ended") {
@@ -286,7 +226,13 @@ class _BarqScanWebViewImplState extends State<_BarqScanWebViewImpl>
 
     // ── Main scanner init ────────────────────────────────────────────────────
     (async function() {
+      if (typeof BarqScan === "undefined") return; // load failure already reported
       try {
+        // BarqScan's low-light handling turns the torch on by itself, then raises
+        // exposureCompensation and never lowers it again — the preview turns white
+        // once the phone is back in normal light. Flash is user-controlled only.
+        BarqScan.ScannerView.prototype.handleDarkness = async function() {};
+
         await BarqScan.configure("BARQ-E32J3-BJMWC-0Q6JW-58JV1");
 
         window.activeScanner = await BarqScan.ScannerView.create(
@@ -295,7 +241,9 @@ class _BarqScanWebViewImplState extends State<_BarqScanWebViewImpl>
             symbologies:     [$_jsSymbologies],
             duplicateFilter: $_duplicateFilterMs,
             playSoundOnScan: ${widget.settings.beep},
+            vibrateOnScan:   false, // vibration is handled in Flutter
             autoZoom:        false,
+            autoTorch:       false,
             maxDecodeWidth:  $_maxDecodeWidth,
             // ROI: center 10% of frame strictly for red line
             roi: { x: 0.0, y: 0.45, width: 1.0, height: 0.10 }
@@ -303,32 +251,16 @@ class _BarqScanWebViewImplState extends State<_BarqScanWebViewImpl>
         );
 
         // ── Torch control ────────────────────────────────────────────────────
-        // Save the real SDK setTorch, then replace it with a no-op so
-        // BarqScan cannot auto-activate the flash.
-        var _realTorch = window.activeScanner.torchSupported
-          ? window.activeScanner.setTorch.bind(window.activeScanner)
-          : function() {};
-
-        // userSetTorch() is called by Flutter via runJavaScript
-        window.userSetTorch = function(on) {
-          window._torchState = on;
-          _realTorch(on);
-          // Also push directly to track for hardware control
-          document.querySelectorAll("video").forEach(async function(v) {
-            if (!v.srcObject) return;
-            v.srcObject.getVideoTracks().forEach(async function(track) {
-              var caps = track.getCapabilities ? track.getCapabilities() : {};
-              if (caps.torch) {
-                try { await track.applyConstraints({ advanced: [{ torch: on }] }); } catch(e) {}
-              }
-            });
-          });
+        // Single path through the SDK; reports the real torch state to Flutter.
+        window.userSetTorch = async function(on) {
+          var ok = true;
+          try { await window.activeScanner.setTorch(on); } catch(e) { ok = false; }
+          var video = scannerVideo();
+          var track = video && video.srcObject ? video.srcObject.getVideoTracks()[0] : null;
+          var settings = track && track.getSettings ? track.getSettings() : {};
+          var actual = typeof settings.torch === "boolean" ? settings.torch : (ok ? on : !on);
+          toNative({ type: "torch", on: actual });
         };
-
-        // Block all internal BarqScan torch calls
-        window.activeScanner.setTorch = function() {};
-        window._torchState = $_isFlashOn;
-        _realTorch($_isFlashOn); // apply initial torch state
 
         // ── Scan event ───────────────────────────────────────────────────────
         window.activeScanner.on("scan", function(evt) {
@@ -337,11 +269,20 @@ class _BarqScanWebViewImplState extends State<_BarqScanWebViewImpl>
           }
         });
 
+        // Log actual resolution chosen by the camera
+        var video = scannerVideo();
+        if (video) toNative({ type: "resolution", width: video.videoWidth, height: video.videoHeight });
+
         enforceVideo();
-        toNative({ type: "ready" });
+        toNative({ type: "ready", torchSupported: window.activeScanner.torchSupported });
+        if ($_isFlashOn) window.userSetTorch(true);
 
       } catch(err) {
-        toNative({ type: "error", message: String((err && err.message) || err) });
+        toNative({
+          type: "error",
+          code: String((err && (err.code || err.name)) || ""),
+          message: String((err && err.message) || err)
+        });
       }
     })();
   </script>
@@ -385,7 +326,7 @@ class _BarqScanWebViewImplState extends State<_BarqScanWebViewImpl>
       // Stream resume is handled by visibilitychange in JS, but we ensure
       // the flutter side doesn't block it.
       _controller.runJavaScript('''
-        var v = document.getElementById("bg-video");
+        var v = document.querySelector("#scanner video");
         if (v) v.play().catch(function(){});
       ''');
     }
@@ -424,14 +365,50 @@ class _BarqScanWebViewImplState extends State<_BarqScanWebViewImpl>
       ac.setOnPlatformPermissionRequest((r) => r.grant());
     }
 
+    _loadScanner();
+  }
+
+  /// (Re)loads the scanner page. Used on first open, retry, and stream recovery.
+  void _loadScanner() {
+    _readyTimeout?.cancel();
+    _torchBusy = false;
     _controller.loadHtmlString(_barqscanHtml, baseUrl: 'https://gosample.com/');
 
-    // Safety timeout: if JS never sends "ready" in 20s, show camera anyway
+    // Safety timeout: if JS never sends "ready" in 20s, show an error with retry
     _readyTimeout = Timer(const Duration(seconds: 20), () {
-      if (mounted && !_isScannerReady) {
-        setState(() => _isScannerReady = true);
+      if (mounted && !_isScannerReady && _errorMessage == null) {
+        setState(() => _errorMessage = 'تعذّر تشغيل الكاميرا');
       }
     });
+  }
+
+  void _retry() {
+    setState(() {
+      _errorMessage = null;
+      _isScannerReady = false;
+    });
+    _loadScanner();
+  }
+
+  /// User-facing message for a failed scanner start, by BarqScan / browser error code.
+  String _errorMessageFor(String code) {
+    switch (code) {
+      case 'sdk_load_failed':
+      case 'activation_failed':
+        return 'تعذّر تحميل الماسح، تحقق من اتصال الإنترنت';
+      case 'key_not_found':
+      case 'key_revoked':
+      case 'domain_not_licensed':
+      case 'subscription_inactive':
+      case 'invalid_token':
+        return 'ترخيص الماسح غير صالح ($code)';
+      case 'NotAllowedError':
+        return 'لم يتم السماح باستخدام الكاميرا';
+      case 'NotReadableError':
+        return 'الكاميرا مستخدمة من تطبيق آخر';
+      default:
+        return 'تعذّر تشغيل الكاميرا';
+    }
   }
 
   void _onJsMessage(JavaScriptMessage msg) {
@@ -440,7 +417,23 @@ class _BarqScanWebViewImplState extends State<_BarqScanWebViewImpl>
       switch (data['type']) {
         case 'ready':
           _readyTimeout?.cancel();
-          if (mounted) setState(() => _isScannerReady = true);
+          if (mounted) {
+            setState(() {
+              _isScannerReady = true;
+              _errorMessage = null;
+              _torchSupported = data['torchSupported'] == true;
+              _torchBusy = false;
+            });
+          }
+          break;
+
+        case 'torch':
+          if (mounted) {
+            setState(() {
+              _isFlashOn = data['on'] == true;
+              _torchBusy = false;
+            });
+          }
           break;
 
         case 'scan':
@@ -475,7 +468,7 @@ class _BarqScanWebViewImplState extends State<_BarqScanWebViewImpl>
           // Log the actual camera resolution chosen by the device
           final w = data['width'] ?? 0;
           final h = data['height'] ?? 0;
-          debugPrint('[BarqScan] Actual camera resolution: ${w}x${h}');
+          debugPrint('[BarqScan] Actual camera resolution: ${w}x$h');
           break;
 
         case 'stream_ended':
@@ -484,24 +477,27 @@ class _BarqScanWebViewImplState extends State<_BarqScanWebViewImpl>
           if (!mounted) break;
           setState(() => _isScannerReady = false);
           _readyTimeout?.cancel();
-          
+
           // Force stop any lingering tracks before reloading
           _controller.runJavaScript('document.querySelectorAll("video").forEach(function(v){ if(v.srcObject) v.srcObject.getTracks().forEach(function(t){t.stop();}); });');
-          
+
           // Add delay to let Android camera service release the lock
           Future.delayed(const Duration(milliseconds: 500), () {
             if (!mounted) return;
-            _controller.loadHtmlString(_barqscanHtml, baseUrl: 'https://gosample.com/');
-            _readyTimeout = Timer(const Duration(seconds: 20), () {
-              if (mounted && !_isScannerReady) setState(() => _isScannerReady = true);
-            });
+            _loadScanner();
           });
           break;
 
         case 'error':
-          debugPrint('[BarqScan] JS Error: ${data["message"]}');
+          final code = (data['code'] ?? '').toString();
+          debugPrint('[BarqScan] JS Error ($code): ${data["message"]}');
           _readyTimeout?.cancel();
-          if (mounted && !_isScannerReady) setState(() => _isScannerReady = true);
+          if (mounted) {
+            setState(() {
+              _isScannerReady = false;
+              _errorMessage = _errorMessageFor(code);
+            });
+          }
           break;
       }
     } catch (e) {
@@ -511,10 +507,12 @@ class _BarqScanWebViewImplState extends State<_BarqScanWebViewImpl>
 
 
   void _toggleFlash() {
-    final newVal = !_isFlashOn;
-    setState(() => _isFlashOn = newVal);
-    final jsVal = newVal ? 'true' : 'false';
+    if (_torchBusy) return; // wait for the previous toggle to be confirmed
+    _torchBusy = true;
+    final jsVal = !_isFlashOn ? 'true' : 'false';
     _controller.runJavaScript('if(window.userSetTorch) window.userSetTorch($jsVal);');
+    // Never leave the button locked if the page doesn't answer
+    Future.delayed(const Duration(seconds: 3), () => _torchBusy = false);
   }
 
   // ── Build ──────────────────────────────────────────────────────────────────
@@ -547,8 +545,8 @@ class _BarqScanWebViewImplState extends State<_BarqScanWebViewImpl>
       children: [
         cameraView,
 
-        // Loading overlay — hidden once JS sends "ready" (or after 20s timeout)
-        if (!_isScannerReady)
+        // Loading overlay — hidden once JS sends "ready"
+        if (!_isScannerReady && _errorMessage == null)
           Container(
             color: Colors.black,
             child: const Center(
@@ -566,10 +564,36 @@ class _BarqScanWebViewImplState extends State<_BarqScanWebViewImpl>
             ),
           ),
 
+        // Error overlay — scanner failed to start (no internet, license, camera busy…)
+        if (_errorMessage != null)
+          Container(
+            color: Colors.black,
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.videocam_off, color: Colors.white54, size: 52),
+                  const SizedBox(height: 16),
+                  Text(_errorMessage!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.white70, fontSize: 14)),
+                  const SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    onPressed: _retry,
+                    icon: const Icon(Icons.refresh, color: Colors.white),
+                    label: const Text('إعادة المحاولة', style: TextStyle(color: Colors.white)),
+                    style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.white38)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
         if (widget.overlay != null) widget.overlay!,
 
-        // Flash toggle button
-        if (_isScannerReady)
+        // Flash toggle button — only when the camera actually has a torch
+        if (_isScannerReady && _torchSupported)
           Positioned(
             top: 20,
             right: 16,
@@ -591,4 +615,3 @@ class _BarqScanWebViewImplState extends State<_BarqScanWebViewImpl>
     );
   }
 }
-

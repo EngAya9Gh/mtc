@@ -100,7 +100,7 @@ class LatestTaskCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             AppText(
-                              task.localizedClientName(l.isArabic),
+                              task.localizedClientName(l.isArabic) ?? l.noClient,
                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,

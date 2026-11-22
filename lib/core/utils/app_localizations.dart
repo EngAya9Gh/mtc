@@ -50,6 +50,8 @@ class AppLocalizations {
   String get pickup => isArabic ? 'نقطة الاستلام' : 'Pickup';
   String get dropoff => isArabic ? 'نقطة التسليم' : 'Dropoff';
 
+  String get noClient => isArabic ? 'بدون عميل' : 'No client';
+
   String taskTypeLabel(String type) {
     switch (type.toUpperCase()) {
       case 'SAMPLE':
